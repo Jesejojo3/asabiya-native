@@ -1,0 +1,86 @@
+package main
+
+import (
+	"encoding/json"
+	"errors"
+	"flag"
+	"fmt"
+	"github.com/Jesejojo3/asabiya-native/internal/app"
+	"github.com/Jesejojo3/asabiya-native/internal/presentation/terrain"
+	"github.com/Jesejojo3/asabiya-native/internal/sim"
+	"io"
+	"os"
+	"runtime"
+	"runtime/debug"
+)
+
+type environment struct {
+	Go             string `json:"go"`
+	OS             string `json:"os"`
+	Arch           string `json:"arch"`
+	GOAMD64        string `json:"goamd64"`
+	NumericBackend string `json:"numericBackend"`
+}
+
+type report struct {
+	Schema      string               `json:"schema"`
+	Environment environment          `json:"environment"`
+	World       sim.WorldSummary     `json:"world"`
+	Simulation  sim.SimulationStatus `json:"simulation"`
+	Cell        *sim.Cell            `json:"cell,omitempty"`
+}
+
+func run(args []string, stdout, stderr io.Writer) error {
+	o, err := app.Parse(args, stderr)
+	if err != nil {
+		return err
+	}
+	w, err := sim.GenerateWorld(o.World)
+	if err != nil {
+		return err
+	}
+	s, err := sim.NewSimulation(w, o.HistorySeed)
+	if err != nil {
+		return err
+	}
+	cell, err := o.QueryCell(w)
+	if err != nil {
+		return err
+	}
+	if o.PNG != "" {
+		if err := terrain.WritePNG(o.PNG, w); err != nil {
+			return err
+		}
+	}
+	env := environment{Go: runtime.Version(), OS: runtime.GOOS, Arch: runtime.GOARCH, NumericBackend: "Go math; no V8 parity"}
+	if bi, ok := debug.ReadBuildInfo(); ok {
+		for _, v := range bi.Settings {
+			if v.Key == "GOAMD64" {
+				env.GOAMD64 = v.Value
+			}
+		}
+	}
+	r := report{Schema: "asabiya/headless-v1", Environment: env, World: w.Summary(), Simulation: s.Status(), Cell: cell}
+	data, err := json.MarshalIndent(r, "", "  ")
+	if err != nil {
+		return err
+	}
+	data = append(data, '\n')
+	if o.Output != "" {
+		if err := os.WriteFile(o.Output, data, 0644); err != nil {
+			return err
+		}
+	}
+	_, err = stdout.Write(data)
+	return err
+}
+
+func main() {
+	if err := run(os.Args[1:], os.Stdout, os.Stderr); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return
+		}
+		fmt.Fprintln(os.Stderr, "asabiya-headless:", err)
+		os.Exit(1)
+	}
+}
