@@ -11,6 +11,7 @@ import (
 // the history's peoples list, assigned in creation order and never reused.
 // Culture is stored as float32, like the original Float32Array.
 type People struct {
+	Stillborn     bool       `json:"stillborn,omitempty"`
 	LastMigration int        `json:"lastMigration,omitempty"`
 	ID            int        `json:"id"`
 	Name          string     `json:"name"`

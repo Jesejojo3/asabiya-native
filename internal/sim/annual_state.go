@@ -3,6 +3,16 @@ package sim
 // Annual state is added together with its causal systems. It is not a second
 // simulation and does not expose a partial AdvanceYear API.
 type annualState struct {
+	cities                        []*City
+	figures                       []*Figure
+	rulers                        []*Ruler
+	familyTitles                  map[int]FamilyTitle
+	lab, bfsParent, bfsMark       []int32
+	bfsDistance                   []int16
+	bfsStamp                      int32
+	exit                          []float32
+	routes                        []*TradeRoute
+	caravanPairs                  orderedSet[string]
 	annualReady                   bool
 	anom                          []float32
 	firstDiscoveries              [techCount]*Discovery
@@ -49,6 +59,12 @@ func (h *history) prepareAnnualState() {
 	h.infection = make([]uint8, n)
 	h.outbreakAt = newInt32(n, -1)
 	h.polities = []*Polity{nil}
+	h.familyTitles = make(map[int]FamilyTitle)
+	h.lab = make([]int32, n)
+	h.bfsParent = make([]int32, n)
+	h.bfsMark = make([]int32, n)
+	h.bfsDistance = make([]int16, n)
+	h.exit = make([]float32, n)
 	h.annualReady = true
 }
 

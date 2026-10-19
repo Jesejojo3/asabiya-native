@@ -6,7 +6,7 @@ El usuario autorizó completar autónomamente todas las etapas, sin auditorías 
 
 - Prerrequisito cerrado: EraShare copiado profundamente y opciones de reglas incluidas en Digest; regresiones antes/después, tests/vet, builds, reproducción y CI Windows nativa/legado pasan. HTML y golden intactos.
 - Etapa A: weather, hearthCheck, growth, migrate, seaHop, techStep y disease portados. Contratos controlados contra JavaScript verifican posición RNG, identidades y orden de infecciones, epidemias, sumas y muestras de arrays. No equivalen a una historia anual completa. No hay avance anual público parcial.
-- B pendiente: religión, mezcla cultural, ciudades/regiones y comercio/contactos.
+- B en curso: mezcla cultural, fundación/censo/cismas religiosos, ciudades, pools epidemiológicos, salida territorial y caravanas portados; contrato original controlado cubre 22 religiones y creación/caducidad de rutas desérticas. Regiones y cultura cortesana dependen todavía de los estados. newRuler/figuras se incorporaron como dependencias reales de profetas y reformadores.
 - C pendiente: estados, gobernantes, sucesión y crisis.
 - D pendiente: guerra, diplomacia y consecuencias demográficas.
 - E pendiente: ocho presagios y siete cataclismos.

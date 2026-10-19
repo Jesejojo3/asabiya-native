@@ -3,6 +3,11 @@ package sim
 // Entity records are owned by history. ID relationships are indices/sentinels,
 // never object addresses. Fields grow with the systems that consume them.
 type Polity struct {
+	Tier                                             string
+	CityPopulation, MaxProvincePopulation            float64
+	Ruler                                            *Ruler
+	Rulers                                           []RulerRecord
+	NameUse                                          map[string]int
 	ID                                               int
 	Kind, Full                                       string
 	Capital                                          CellID
@@ -13,16 +18,66 @@ type Polity struct {
 }
 
 type Religion struct {
-	ID                         int
-	Name, Kind                 string
-	Family                     int
-	Missionary, Centralization float64
+	Founder, Born, Polity, People, Holder, Parent int
+	Origin, Holy                                  CellID
+	RGB                                           [3]uint8
+	Kids, States                                  []int
+	Cells, Peak, Councils                         int
+	Population, Lon, Lat                          float64
+	Alive                                         bool
+	Died                                          int
+	ID                                            int
+	Name, Kind                                    string
+	Family                                        int
+	Missionary, Centralization                    float64
 }
 
 type Spotlight struct {
 	Year int
 	Text string
 	Cell CellID
+}
+
+type City struct {
+	ID           int
+	Name         string
+	Cell         CellID
+	Born, People int
+	Peak         float64
+	Holy         bool
+}
+type Ruler struct {
+	ID                                                 int
+	Base, Name, Epithet, Exceptional                   string
+	Female                                             bool
+	Aggression, Competence, Charisma, Piety            float64
+	Conquests, Since, MilitaryInventions, Birth, Death int
+	Figure                                             int
+}
+type RulerRecord struct {
+	Name, Base, Epithet, Dynasty string
+	From, To, Conquests, Figure  int
+}
+type Deed struct {
+	Year int
+	Text string
+}
+type Figure struct {
+	ID                                                            int
+	Name, Kind, Title, Exceptional                                string
+	Polity, People, Born, Died, Conquests, Realm, Religion, Works int
+	Deeds                                                         []Deed
+}
+type FamilyTitle struct {
+	Word           string
+	Figure, Polity int
+}
+type TradeRoute struct {
+	ID         int
+	Key        string
+	Born, Last int
+	A, B       CellID
+	Path       []CellID
 }
 
 type Outbreak struct {
