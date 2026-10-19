@@ -1,6 +1,6 @@
 # Arquitectura propuesta: Go + Ebitengine
 
-Estado: diseño corregido tras primera auditoría, pendiente de segunda aprobación de Claude y autorización humana; sin código de mecánicas ni dependencias Go instaladas. El contrato numérico corregido está en [NUMERIC_COMPATIBILITY.md](NUMERIC_COMPATIBILITY.md). Se mantienen perfiles permanentes `v06-compat` y `native`, sin modificar el HTML.
+Estado: diseño de Fase 0 aprobado con condición documental en la segunda revisión estática de Claude; sin código de mecánicas ni dependencias Go instaladas. Uso personal exclusivo Windows x64; merge/tag y comienzo de Fase 1 requieren autorización del usuario. El contrato numérico corregido está en [NUMERIC_COMPATIBILITY.md](NUMERIC_COMPATIBILITY.md). Se mantienen perfiles permanentes `v06-compat` y `native`, sin modificar el HTML.
 
 ```text
 cmd/asabiya (composición)                 cmd/asabiya-headless (replay / medición)
@@ -9,7 +9,7 @@ internal/presentation/ebiten --> internal/app --> internal/sim
           |                       |                   |
           +--> snapshots de vista |              world / state / systems
                                   +--> internal/rules, internal/replay
-internal/sim --> internal/rules + internal/rng + internal/jsmath
+internal/sim --> internal/rules + internal/rng + math (Go estándar, perfil native)
 internal/app --> internal/save + internal/history + internal/replay
 internal/presentation/ebiten --> internal/narrative
 ```
@@ -37,7 +37,7 @@ El nombre y la firma Go exactos se definirán en Fase 1 después de revisar las 
 | `cmd/asabiya-headless/` | Ejecución reproducible sin render, exportación y benchmarks. |
 | `internal/sim/` | Mundo, estado, sistemas y secuencia anual; estructura por arrays tipados equivalente a la original antes de optimizar. |
 | `internal/rng/` | Hash de semillas UTF-16 y Mulberry32 con compatibilidad JS. |
-| `internal/jsmath/` | Backend matemático Go puro equivalente al V8 fijado, pendiente de prueba técnica y validación; no usar math de Go como sustituto supuesto. |
+| `internal/jsmath/` | Reserva opcional, sin implementación ni dependencia; equivalencia V8 exacta descartada como requisito del perfil native. |
 | `internal/rules/` | Definiciones validadas, IDs estables y valores por defecto versionados. |
 | `internal/replay/` | Semillas, configuración completa, recursos y comandos ordenados. |
 | `internal/save/` | Contenedor versionado de partida completa y validación de restauración. |
@@ -56,7 +56,7 @@ Cada carpeta reservada contiene un README de alcance, sin implementación. Un pa
 
 Separar datos (`PDEF`, `CDEF`, `TECH`, `ERAS`, `OMENS`, `CATA`, estilos y semillas históricas) de los algoritmos. La futura extracción conservará orden, IDs, valores, prerequisitos, campos opcionales y distinción entre ausente/cero/falso. Mantener alias de los arrays tecnológicos. Los números JSON se validarán explícitamente; rechazar IDs duplicados, dependencias inexistentes, ciclos tecnológicos no permitidos y rangos inválidos antes de crear el mundo.
 
-El catálogo no convierte fórmulas causales en scripts arbitrarios. Primero extraer tablas sin cambiar comportamiento; cualquier ajuste de balance será una PR distinta después de lograr equivalencia. Guardar versión y SHA-256 de reglas efectivas y recursos en cada replay. El inventario de Fase 0 es evidencia, no un segundo catálogo operativo.
+El catálogo no convierte fórmulas causales en scripts arbitrarios. Primero extraer tablas sin cambiar comportamiento; cualquier ajuste de balance se documentará separadamente para distinguir port y evolución nativa; no se exige equivalencia bit a bit con V8. Guardar versión y SHA-256 de reglas efectivas y recursos en cada replay. El inventario de Fase 0 es evidencia, no un segundo catálogo operativo.
 
 ## Integración de render
 
