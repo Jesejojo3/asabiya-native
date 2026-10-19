@@ -43,3 +43,11 @@ Objetivo inicial propuesto: **Windows amd64**, `GOAMD64=v1`, backend puro y tool
 El backend puro podría perder rendimiento frente al ensamblador de Go; no se asigna un porcentaje inventado. Medir por función, generación de mundo y año completo, separando hashing y render. No se sustituye por aproximaciones para alcanzar FPS. Una alternativa con V8 embebido conservaría un runtime extranjero y distribución compleja; cgo/fdlibm tampoco garantiza por sí solo la semántica V8. Se descartan como ruta por defecto, conservándolas como alternativas a revisar si el port puro falla.
 
 **Puerta numérica pendiente:** revisión humana del contrato, prueba técnica jsmath y sus licencias, vectores Go/V8 sin diferencias dentro del ámbito publicado, controles FMA y fixtures causales aprobados. Sin ello no se declara resuelto el objetivo de equivalencia estricta ni se inicia automáticamente el port de mecánicas.
+
+## Hallazgo nuevo durante las correcciones: el Node fijado tampoco basta como contrato multiplataforma
+
+La CI ejecutó Node/V8 fijados en Windows 2022 y Ubuntu 24.04. El golden histórico completo pasó en ambos; el corpus matemático detectó **tres diferencias de un ULP en pow entre 2 273 entradas idénticas**. Se conservaron entradas/salidas por bits y diagnóstico en evidence/math-pow.platform-mismatch.node24.json y math-pow.quick.windows-node24.json. Ejemplo: pow(9.149881526827812, 11.74791868776083) produjo bits Windows 4246f1484cecb063 frente a Linux 4246f1484cecb064.
+
+No se ha aislado si la causa es compilación, ruta de runtime, CPU u otra diferencia de implementación; no atribuirla sin prueba a FMA o al sistema operativo en general. La observación demuestra que fijar sólo el número de versión no certifica todo el corpus entre esos entornos. La futura puerta técnica debe fijar build/ruta y oráculo matemático canónico, no buscar coincidencia simultánea con dos resultados diferentes. Windows x64 es el candidato inicial, pendiente de aprobación.
+
+**La comprobación Linux permanece estricta y fallando ante esta diferencia.** No se cambia el fixture, se añade tolerancia, se omite pow ni se convierte el fallo en éxito. La equivalencia matemática Linux/Windows queda pendiente y visible para la segunda auditoría. Una reproducción de los primeros 54 años no la resuelve.

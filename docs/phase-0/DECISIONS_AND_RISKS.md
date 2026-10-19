@@ -39,3 +39,5 @@
 - Conservar el commit dedicado mediante merge; tras integración aprobada, autorizar por separado el tag sobre ese commit.
 
 Primera auditoría íntegra recibida por el usuario e incorporada en AUDIT_FINDINGS.md. Correcciones pendientes de segunda aprobación de Claude y autorización expresa del usuario. No hay aprobación de Fase 1. ADR y límites numéricos corregidos en ARCHITECTURAL_DECISIONS.md y NUMERIC_COMPATIBILITY.md.
+
+R13 (alto, observado durante correcciones): Node/V8 fijados no bastaron para igualar todo el corpus pow entre Windows y Linux; 3 entradas difieren un ULP. Causa precisa pendiente, evidencia por bits conservada. La CI Linux permanece fallida ante ese control; no declarar portabilidad matemática ni alterar fixtures para ocultarlo. Ver ADR-0006 y NUMERIC_COMPATIBILITY.md.

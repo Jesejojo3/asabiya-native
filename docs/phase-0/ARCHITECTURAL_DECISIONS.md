@@ -29,3 +29,7 @@ Estado: propuesta explícita, pendiente de segunda aprobación. Comparar riguros
 Estado: herramientas de oráculo implementadas en Fase 0. Node/V8 exactos; CI rápido exige valores originales y corpus matemático fijo; pruebas extensas en workflow manual separado. El fixture tardío se genera desde el original y se exige que tenga estados y guerras. Su primera generación es una baseline nueva, no reemplaza valores para esconder discrepancias. Semántica de colecciones documentada con inventario AST completo; codificación exacta v2 para diagnóstico preserva −0/orden/alias sin cambiar el smoke.
 
 Decisiones aún humanas antes de migrar: aceptar alcance textual, perfiles, fronteras de comandos, guardar/IDs, selección posterior de ejecución/UI y puerta matemática. Ni el informe de primera auditoría ni esta corrección autorizan integrar o iniciar Fase 1.
+
+## ADR-0006 — discrepancia de pow observada en CI
+
+Estado: hallazgo abierto. Mantener comparación estricta y datos Windows originales. Se observan 3/2 273 diferencias de un ULP en Linux; golden histórico pasa. No aprobar portabilidad matemática por versión de Node sola ni cambiar fixture para obtener verde. Elegir oráculo/build canónico y diagnosticar rutas forma parte de la prueba técnica pendiente, con aprobación. La CI Linux se conserva fallando como señal explícita; no hay mecánicas Go añadidas para resolverla en esta fase.

@@ -58,7 +58,14 @@
   "quickMathVectors": 27869,
   "extendedMathVectors": 2601245,
   "mathGoComparison": "NOT RUN: no Go/jsmath implementation in Phase 0",
-  "remoteCorrectiveCI": "check PR run for final commit; not inferred from YAML",
+  "remoteCorrectiveCI": {
+    "testedHead": "58f875eb9ed87e72bb68a4c9dceaf6cf4fb389ce",
+    "run": "https://github.com/Jesejojo3/asabiya-native/actions/runs/39194565396",
+    "windows": "success, all checks including pow and corpus",
+    "linux": "failure: 3/2273 pow vectors differ by 1 ULP; prior reference/golden/RNG/encoding/inventory passed",
+    "policy": "strict failing assertion kept; no fixture changes or claimed portability",
+    "initialWindowsFailure": "SHA256SUMS checkout CRLF, fixed by runner core.autocrlf=false without changing reference/verifier"
+  },
   "lateFixture": {
     "generation": "passed, one full local process; independent repeat pending",
     "stateDigest": "eb6326feccc32ae93d7d7f5c8c2e312dae9a7e998006b8b491405850d55f5ade",

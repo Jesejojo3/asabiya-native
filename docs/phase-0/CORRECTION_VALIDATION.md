@@ -36,3 +36,11 @@ Primera ejecución correctiva de Windows (run 39194292609): el verificador detec
 - Diseño de proyección de eventos por sistema y su comparador Go; mantener visibles los campos narrativos excluidos.
 - Implementar/validar guardar/restaurar, UI, concurrencia elegida y benchmarks Go; no existen mecánicas Go en esta fase.
 - Segunda aprobación de Claude y autorización explícita del usuario antes de integrar o iniciar Fase 1. Tag legacy-v0.6 no creado.
+
+## Discrepancia matemática remota conservada
+
+En run 39194565396, Windows aprobó las comprobaciones (resultado final verificable en la PR); Linux aprobó referencia, golden original, RNG, codificador e inventario, y falló en diagnose-pow con 3/2 273 diferencias de un ULP frente a Windows. La ejecución anterior también falló en el SHA de pow (c7b803… frente a 73330a…). Se guardan vectores concretos, hash y enlaces de job en evidence/math-pow.platform-mismatch.node24.json. El origen preciso no está demostrado.
+
+El fallo numérico no se resuelve cambiando datos esperados ni excluyendo Linux del workflow. Se mantiene la señal roja para la segunda revisión; no se presenta la CI completa como aprobada ni hay validación matemática multiplataforma. El contrato/perfil debe aprobar un oráculo canónico y la prueba jsmath antes de portar mecánicas. La reproducción independiente del fixture tardío sigue pendiente; no depende de ocultar esta diferencia.
+
+El workflow extenso manual usa Windows 2022, coherente con el origen de sus corpus, para poder verificar esa baseline y después la historia tardía. La matriz rápida mantiene Linux y la comparación estricta fallida; mover la prueba extensa no elimina ni relaja ese control. Seleccionar de forma definitiva el oráculo numérico de producto sigue siendo una decisión pendiente de revisión.

@@ -27,3 +27,7 @@ No se rechaza ninguno de los problemas. Las soluciones de C1/I6/I7/I8 se modific
 ## Bloqueos antes de integrar o comenzar mecánicas
 
 Segunda revisión independiente de estos commits, dictamen de Claude y autorización explícita del usuario. Sin merge ni tag. Antes del port de mecánicas, aceptar formalmente alcance textual/perfiles/comandos/guardado y resolver la puerta técnica numérica. No se interpreta la primera auditoría como autorización de la siguiente fase.
+
+## Evidencia adicional que afecta C1/I3
+
+La CI reforzada detectó 3 diferencias de un ULP en Math.pow entre Windows y Linux con el mismo Node/V8 fijado. Se aceptan como un bloqueo de portabilidad pendiente, no se atribuye una causa no medida, y se conservan estrictos los tests y fixtures. Ver NUMERIC_COMPATIBILITY.md y evidencia de bits. C1 queda corregido como contrato de Fase 0, pero no cerrado técnicamente como equivalencia matemática validada. La segunda revisión debe evaluar este resultado adicional.

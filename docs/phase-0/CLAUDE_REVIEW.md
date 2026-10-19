@@ -43,3 +43,7 @@ node tools/reference-late.mjs --verify docs/phase-0/evidence/reference-late.eart
 Para verificar la cadena de custodia local: `node tools/verify-reference.mjs "RUTA_DEL_ORIGINAL"`. Los comandos de verificación nunca regeneran baseline. `reference-late --out` sólo crea un archivo nuevo y falla si ya existe. Exportar vectores matemáticos completos con `--vectors-out` es opcional, no parte del CI rápido. No se necesita Go para estas comprobaciones; el futuro comparador Go y backend jsmath no están implementados.
 
 Entrega dictamen por hallazgo, evidencia reproducida y no reproducida, severidades nuevas y SHA auditado. Distingue aprobación de estas correcciones de autorización de pruebas técnicas/mecánicas futuras. Devuelve el informe al usuario para entrega manual a Codex.
+
+## Hallazgo nuevo que debes revisar
+
+La nueva CI identifica diferencias concretas de pow entre Windows y Linux con Node/V8 exactos. Lee evidence/math-pow.platform-mismatch.node24.json y ejecuta tools/diagnose-pow.mjs. El test sigue siendo estricto y Linux falla; no se cambian fixtures ni se afirma que el contrato numérico esté técnicamente validado. Tu segunda revisión debe pronunciarse sobre el oráculo canónico propuesto y la puerta matemática antes de cualquier Fase 1.
