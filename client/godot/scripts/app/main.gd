@@ -1,13 +1,13 @@
 extends Node
-## Entry point and controller. Loads an engine snapshot, chooses the history
-## source (live Go bridge when present, otherwise the snapshot alone) and wires
-## the 3D map and the observer UI. It never simulates anything itself.
+## Starts the local Go server and wires its immutable publications to the
+## existing 3D map and observer UI. It never simulates anything itself.
 ##
 ## User args (after `--`):
 ##   --snapshot PATH     load an engine snapshot (.asw)
-##   --seed TEXT         generate one with asabiya-snapshot(.exe) next to the app
+##   --seed TEXT         world seed for the owned local Go server
 ##   --no-bridge         do not start the Go bridge even if it exists
-##   --bridge PATH       bridge executable to use
+##   --server PATH       local Go server executable to use
+##   --world-source PATH Earth/import/climate source configuration
 ##   --layer ID          initial map mode (see MapLayers.DEFS)
 ##   --capture PNG       render, save a screenshot and quit (tests/docs)
 ##   --frames N          frames to wait before capturing (default 45)
@@ -15,7 +15,17 @@ extends Node
 ##   --select x,y        select a cell
 ##   --ui-scale F        override the automatic interface scale
 
-static var pending_snapshot := ""
+static var pending_world: Dictionary = {}
+static var pending_source: Dictionary = {}
+
+var _startup: CanvasLayer
+var _loading_label: Label
+var _following_live := true
+var _quitting := false
+var _province_details: Dictionary = {}
+var _province_history: Array = []
+var _entity_query_key := ""
+var _entity_details: Dictionary = {}
 
 var args := {}
 var world: WorldData
@@ -43,25 +53,98 @@ const RELIEF_SCALE := [1.0 / 650.0, 1.0 / 420.0, 1.0 / 300.0]
 func _ready() -> void:
 	args = parse_args(OS.get_cmdline_user_args())
 	_apply_ui_scale()
-	var path := resolve_snapshot()
-	if path == "":
-		_fatal("No hay ningún mundo para abrir.\nColoca asabiya-snapshot.exe junto a la aplicación o usa --snapshot RUTA.")
-		return
-	world = WorldData.load_file(path)
-	if world == null:
-		_fatal("No se pudo abrir el mundo:\n%s" % path)
-		return
-	current_year = int(world.header.get("session", {}).get("year", -9000))
 	_load_settings()
+	get_tree().auto_accept_quit = false
+	if args.has("snapshot"):
+		world = WorldData.load_file(str(args["snapshot"]))
+		if world == null:
+			_fatal("No se pudo abrir la geografía indicada.")
+			return
+	if args.has("no-bridge"):
+		if world == null:
+			_fatal("--no-bridge requiere --snapshot para abrir una geografía existente.")
+			return
+		source = GeographySource.new(world)
+		_accept_world(world)
+		return
+	var bridge := BridgeSource.new(world, str(args.get("server", args.get("bridge", ""))))
+	source = bridge
+	if world == null:
+		var defaults_path := OS.get_executable_path().get_base_dir().path_join("asabiya.json")
+		var config: Variant = JSON.parse_string(FileAccess.get_file_as_string(defaults_path)) if FileAccess.file_exists(defaults_path) else {}
+		if config is Dictionary:
+			bridge.world_config.merge(config.get("world", {}), true)
+			bridge.history_seed = str(config.get("historySeed", "1"))
+			bridge.source_config = config.get("source", {})
+		var resuming_pending := not pending_world.is_empty()
+		if resuming_pending:
+			bridge.world_config = pending_world.duplicate(true)
+			bridge.source_config = pending_source.duplicate(true)
+			pending_world.clear(); pending_source.clear()
+		if args.has("seed") and not resuming_pending: bridge.world_config["seed"] = str(args["seed"])
+		if args.has("history-seed"): bridge.history_seed = str(args["history-seed"])
+		if args.has("world-source") and not resuming_pending:
+			var source_path: String = args["world-source"]
+			var config_source: Variant = JSON.parse_string(FileAccess.get_file_as_string(source_path))
+			if not config_source is Dictionary:
+				_fatal("El archivo de configuración del mundo no es JSON válido.")
+				return
+			bridge.source_config = config_source
+			for asset: Dictionary in bridge.source_config.get("assets", []):
+				if not str(asset.get("path", "")).is_absolute_path():
+					asset["path"] = source_path.get_base_dir().path_join(str(asset["path"]))
+		for asset: Dictionary in bridge.source_config.get("assets", []):
+			if not str(asset.get("path", "")).is_absolute_path():
+				asset["path"] = OS.get_executable_path().get_base_dir().path_join(str(asset["path"]))
+	_show_loading("Iniciando Asabiya Native…")
+	bridge.world_ready.connect(_accept_world)
+	bridge.frames_changed.connect(_on_frames_changed)
+	bridge.status_changed.connect(func(text: String) -> void:
+		if hud != null:
+			hud.set_status(text)
+			hud.set_session(source, world)
+			_refresh_ui()
+		elif _loading_label != null:
+			_loading_label.text = text)
+	if not bridge.start():
+		_loading_label.text = bridge.last_error
+
+
+func _show_loading(text: String) -> void:
+	_startup = CanvasLayer.new()
+	add_child(_startup)
+	var panel := PanelContainer.new()
+	panel.theme = UiTheme.build()
+	panel.set_anchors_preset(Control.PRESET_CENTER)
+	panel.position = Vector2(180, 240)
+	_startup.add_child(panel)
+	var box := VBoxContainer.new()
+	panel.add_child(box)
+	_loading_label = Label.new()
+	_loading_label.text = text
+	box.add_child(_loading_label)
+	var retry := Button.new()
+	retry.text = "Reiniciar sesión"
+	retry.pressed.connect(func() -> void:
+		if source != null: source.close()
+		get_tree().reload_current_scene())
+	box.add_child(retry)
+
+
+func _accept_world(value: WorldData) -> void:
+	world = value
+	if _startup != null:
+		_startup.queue_free()
+		_startup = null
+		_loading_label = null
+	current_year = int(world.header.get("session", {}).get("year", -9000))
 	_build_scene()
-	_choose_source()
+	hud.set_session(source, world)
 	if args.has("layer"):
 		requested_layer = str(args["layer"])
-		current_layer = requested_layer
 	_on_frames_changed()
 	_apply_initial_view()
-	if args.has("capture"):
-		_capture(str(args["capture"]))
+	if args.has("capture"): _capture(str(args["capture"]))
 
 
 # ---------------------------------------------------------------- setup
@@ -80,21 +163,6 @@ static func parse_args(raw: PackedStringArray) -> Dictionary:
 				out[key] = true
 		i += 1
 	return out
-
-
-func resolve_snapshot() -> String:
-	if pending_snapshot != "":
-		var p := pending_snapshot
-		pending_snapshot = ""
-		return p
-	if args.has("snapshot"):
-		return str(args["snapshot"])
-	if args.has("seed"):
-		var r := SnapshotLocator.generate(str(args["seed"]))
-		if r.has("error"):
-			push_error(r["error"])
-		return r.get("path", "")
-	return SnapshotLocator.find_default()
 
 
 func _apply_ui_scale() -> void:
@@ -162,8 +230,11 @@ func _build_scene() -> void:
 	hud.year_requested.connect(set_year)
 	hud.advance_requested.connect(func(n: int):
 		if source.can_advance():
+			_following_live = true
 			source.advance(n))
-	hud.play_toggled.connect(func(_on: bool): _play_accum = 0.0)
+	hud.play_toggled.connect(func(on: bool):
+		_play_accum = 0.0
+		if not on and source is BridgeSource: (source as BridgeSource).pause())
 	hud.fly_to.connect(func(c: int): select_entity("cell", c, true))
 	hud.entity_requested.connect(func(kind: String, id: int): select_entity(kind, id, true))
 	hud.world_requested.connect(_generate_world)
@@ -173,22 +244,6 @@ func _build_scene() -> void:
 		_save_settings()
 		_apply_settings(k == "relief"))
 	_apply_settings(false)
-
-
-func _choose_source() -> void:
-	var bridge := BridgeSource.new(world, str(args.get("bridge", "")))
-	if bridge.available and not args.has("no-bridge"):
-		source = bridge
-		bridge.frames_changed.connect(_on_frames_changed)
-		bridge.status_changed.connect(func(t: String):
-			hud.set_status(t)
-			hud.set_session(source, world)
-			_refresh_ui())
-		if not bridge.start():
-			hud.set_status(bridge.last_error)
-	else:
-		source = GeographySource.new(world)
-	hud.set_session(source, world)
 
 
 func _apply_initial_view() -> void:
@@ -240,13 +295,15 @@ func _apply_settings(relief_changed: bool) -> void:
 # ---------------------------------------------------------------- frames & layers
 
 func _on_frames_changed() -> void:
+	if hud == null: return
 	var ys := source.years()
-	if not ys.is_empty() and not ys.has(current_year):
+	if not ys.is_empty() and (_following_live or not ys.has(current_year)):
 		current_year = ys[ys.size() - 1]
 	_load_frame()
 
 
 func set_year(y: int) -> void:
+	_following_live = false
 	current_year = y
 	_load_frame()
 
@@ -271,15 +328,9 @@ func _load_frame() -> void:
 
 
 func _collect_events() -> Array:
-	var out := []
-	for y in source.years():
-		if y > current_year:
-			break
-		var f := source.frame(y)
-		if f != null:
-			for e in f.events:
-				out.append(e)
-	return out
+	# Every publication includes the retained event window. Do not repeat it
+	# once per cached frame.
+	return current_frame.events if current_frame != null else []
 
 
 func set_layer(id: String) -> void:
@@ -352,6 +403,7 @@ func _process(dt: float) -> void:
 			if idx + 1 < ys.size():
 				set_year(ys[idx + 1])
 			elif source.can_advance():
+				_following_live = true
 				source.advance(10)
 			elif not (source is BridgeSource and (source as BridgeSource).busy):
 				hud.stop_playing()
@@ -382,12 +434,18 @@ func _deselect() -> void:
 
 func select_entity(kind: String, id: int, fly: bool) -> void:
 	selection = {"kind": kind, "id": id}
+	if kind.begins_with("engine:"):
+		_show_engine_entity(kind.trim_prefix("engine:"), id)
+		return
 	match kind:
 		"cell":
 			map_view.select_cell(id, -2.0)
 			if fly:
 				map_view.camera.focus_on(world.cell_center(id), minf(map_view.camera.distance, 60.0))
+			_province_details.clear()
+			_province_history.clear()
 			_show_cell(id)
+			_request_province_details(id)
 		"settlement":
 			var s := current_frame.settlement_by_id(id) if current_frame != null else {}
 			if s.is_empty():
@@ -505,7 +563,7 @@ func _show_cell(c: int) -> void:
 			pol.append(["Religión", null, _need("religions")])
 		pol.append(["Población", Hud._fmt_int(f.population[c]) if f != null and f.has_layer("population") else null, _need("population")])
 		pol.append(["Capacidad de carga", Hud._fmt_int(f.carrying[c]) if f != null and f.has_layer("carrying") else null, _need("carrying")])
-		pol.append(["Tecnología", ("%d %%" % int(f.technology[c] * 100.0)) if f != null and f.has_layer("technology") else null, _need("technology")])
+		pol.append(["Era tecnológica", ("%d de 7" % int(round(f.technology[c] * 7.0))) if f != null and f.has_layer("technology") else null, _need("technology")])
 		sections.append(["Historia y sociedad", pol])
 		var here := []
 		if f != null:
@@ -517,8 +575,26 @@ func _show_cell(c: int) -> void:
 			here.append(["Asentamientos", null if f == null or not source.has_system("settlements") else "Ninguno", _need("settlements")])
 		here.append(["Infraestructura", null, _need("infrastructure")])
 		here.append(["Construcciones", null, _need("buildings")])
-		here.append(["Historia territorial", null, _need("cellHistory")])
+		here.append(["Historia territorial", "Observaciones decenales del motor" if source.has_system("cellHistory") else null, _need("cellHistory")])
 		sections.append(["Ocupación", here])
+	if land and int(_province_details.get("year", -999999)) == current_year and int(_province_details.get("id", -1)) == c:
+		var details: Dictionary = _province_details.get("data", {})
+		var rows := []
+		for key in ["carryingCapacity","fortification","integration","cohesion","forest","fertility","salinity","malariaAdaptation","immunity","infection","caravanActivity"]:
+			rows.append([str(key), str(details.get(key, "No disponible"))])
+		var levels: Array = details.get("technology", [])
+		for k in levels.size():
+			var name := "Técnica %d" % k
+			if source is BridgeSource and k < (source as BridgeSource).tech_catalog.size():
+				name = str((source as BridgeSource).tech_catalog[k].get("name", name))
+			rows.append([name, "%.1f %%" % (float(levels[k]) * 100.0)])
+		sections.append(["Consulta provincial directa a Go", rows])
+	if not _province_history.is_empty():
+		var changes := []
+		for item: Dictionary in _province_history:
+			if int(item.get("year", 0)) <= current_year:
+				changes.append([Hud.fmt_year(int(item["year"])), "Estado #%d" % int(item["ownerPolityId"])])
+		sections.append(["Propiedad observada cada 10 años", changes])
 	hud.show_info(title, sub, sections)
 
 
@@ -527,7 +603,7 @@ func _show_settlement(s: Dictionary) -> void:
 	var f := current_frame
 	var rows := [
 		["Categoría", SettlementLayer.TIER_NAMES[tier]],
-		["Población", Hud._fmt_int(float(s["population"])) if s.has("population") else null, "el motor no la envía"],
+		["Población provincial", Hud._fmt_int(float(s["population"])) if s.has("population") else null, "el motor no la envía"],
 		["Fundación", Hud.fmt_year(int(s["founded"])) if s.has("founded") else null, "el motor no la envía"],
 	]
 	var st := int(s.get("state", -1))
@@ -542,7 +618,7 @@ func _show_settlement(s: Dictionary) -> void:
 			feats.append({"walls": "Murallas", "castle": "Fortaleza", "temple": "Templo", "port": "Puerto", "market": "Mercado"}.get(k, str(k)))
 	rows.append(["Construcciones", ", ".join(feats) if not feats.is_empty() else "Ninguna registrada"])
 	hud.show_info(str(s.get("name", "Asentamiento")), "Asentamiento del motor · %s" % Hud.fmt_year(current_year), [["Asentamiento", rows],
-		["Representación", [UiTheme.muted("La disposición interna de edificios es una representación visual; la existencia, tamaño y construcciones vienen del motor.", 11)]]])
+		["Representación", [UiTheme.muted("La disposición interna de edificios es una representación visual; la ciudad existe en Go; el tamaño visual usa población provincial y las murallas son un proxy de fortificación. No son entidades nuevas de edificios.", 11)]]])
 
 
 func _show_state(id: int) -> void:
@@ -566,6 +642,10 @@ func _show_state(id: int) -> void:
 		["Cohesión", ("%.2f" % float(s["cohesion"])) if s.has("cohesion") else null, "el motor no la envía"],
 		["Fundación", Hud.fmt_year(int(s["founded"])) if s.has("founded") else null, "el motor no la envía"],
 	]
+	rows.append(["Detalles históricos", func(): select_entity("engine:polity", id, false), "Ver detalles"])
+	var ruler_id := int(s.get("rulerId", -1))
+	if ruler_id >= 0:
+		rows[2] = ["Gobernante", func(): select_entity("engine:ruler", ruler_id, false), str(s.get("ruler", "#%d" % ruler_id))]
 	var hist := []
 	for h in s.get("history", []):
 		hist.append(UiTheme.muted("• " + str(h), 12))
@@ -584,7 +664,7 @@ func _show_people(id: int) -> void:
 	var rows := [
 		["Lengua", p.get("language"), "el motor no la envía"],
 		["Familia", p.get("familyName", p.get("family")), "el motor no la envía"],
-		["Cultura", p.get("cultureName"), "el motor no la envía"],
+		["Índice cultural", p.get("culture"), "el motor no lo envía"],
 		["Tierra natal", p.get("homeland"), "el motor no la envía"],
 		["Territorio", "%d provincias" % cells],
 	]
@@ -608,12 +688,13 @@ func _show_people(id: int) -> void:
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	var k := event as InputEventKey
+	if hud == null: return
 	if k == null or not k.pressed or k.echo:
 		return
 	if k.ctrl_pressed and k.keycode == KEY_F:
 		hud.focus_search()
 	elif k.ctrl_pressed and k.keycode == KEY_Q:
-		get_tree().quit()
+		_request_close()
 	elif k.keycode == KEY_F1:
 		hud.help_panel.visible = not hud.help_panel.visible
 	elif k.keycode == KEY_ESCAPE:
@@ -630,16 +711,28 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 func _generate_world(seed_text: String) -> void:
-	hud.set_status("Generando «%s» con el motor…" % seed_text)
-	await get_tree().process_frame
-	var r := SnapshotLocator.generate(seed_text)
-	if r.has("error"):
-		hud.set_status(str(r["error"]))
-		return
-	pending_snapshot = r["path"]
-	if source != null:
-		source.close()
+	hud.set_status("Cerrando la sesión anterior y generando «%s»…" % seed_text)
+	if source is BridgeSource:
+		var bridge := source as BridgeSource
+		pending_world = bridge.world_config.duplicate(true)
+		pending_world["seed"] = seed_text
+		pending_source = bridge.source_config.duplicate(true)
+		await bridge.shutdown()
+	else:
+		pending_world = {"seed":seed_text,"width":400,"height":200,"detail":4,"landFraction":0.33}
+		if source != null: source.close()
 	get_tree().reload_current_scene()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST: _request_close()
+
+
+func _request_close() -> void:
+	if _quitting: return
+	_quitting = true
+	if source is BridgeSource: await (source as BridgeSource).shutdown()
+	get_tree().quit()
 
 
 func _exit_tree() -> void:
@@ -668,3 +761,56 @@ func _fatal(msg: String) -> void:
 	var l := Label.new()
 	l.text = msg
 	p.add_child(l)
+
+
+func _request_province_details(id: int) -> void:
+	if not source is BridgeSource or not (source as BridgeSource).connected or (source as BridgeSource).busy: return
+	var expected_year := current_year
+	var latest := source.years()
+	if latest.is_empty() or latest[latest.size() - 1] != expected_year: return
+	(source as BridgeSource).query_province(id, func(response: Dictionary) -> void:
+		if current_year != expected_year or selection != {"kind":"cell","id":id}: return
+		if int(response.get("year", -999999)) != expected_year: return
+		_province_details = {"year":expected_year,"id":id,"data":response.get("data", {})}
+		_show_cell(id))
+	(source as BridgeSource).query_history(id, func(response: Dictionary) -> void:
+		if current_year != expected_year or selection != {"kind":"cell","id":id}: return
+		if int(response.get("year", -999999)) != expected_year: return
+		var records: Variant = response.get("data", {}).get("records", [])
+		_province_history = records if records is Array else []
+		_show_cell(id))
+
+
+func _show_engine_entity(kind_name: String, id: int) -> void:
+	if current_frame == null: return
+	var value: Dictionary = current_frame.entity_records.get(kind_name, {}).get(id, {})
+	if kind_name == "event":
+		for item: Dictionary in current_frame.events:
+			if int(item.get("id", -1)) == id:
+				value = item
+				break
+	var key := "%s:%d:%d" % [kind_name, id, current_year]
+	if kind_name != "event" and source is BridgeSource and (source as BridgeSource).connected and not (source as BridgeSource).busy:
+		var ys := source.years()
+		if not ys.is_empty() and ys[ys.size() - 1] == current_year and _entity_query_key != key:
+			_entity_query_key = key
+			var expected_year := current_year
+			(source as BridgeSource).query_entity(kind_name, id, func(response: Dictionary) -> void:
+				if selection != {"kind":"engine:" + kind_name,"id":id} or current_year != expected_year: return
+				if int(response.get("year", -999999)) != expected_year: return
+				_entity_details = {"key":key,"fields":response.get("data", {}).get("fields", {})}
+				_show_engine_entity(kind_name, id))
+	if _entity_details.get("key", "") == key: value = _entity_details.get("fields", {})
+	if value.is_empty():
+		hud.set_status("No hay datos de esa entidad en la publicación seleccionada.")
+		return
+	var rows := []
+	for key: String in value:
+		var field: Variant = value[key]
+		var text := JSON.stringify(field) if field is Array or field is Dictionary else str(field)
+		if field == null: text = "No disponible en el motor"
+		if text.length() > 800: text = text.substr(0, 800) + "…"
+		rows.append([key, text])
+	hud.show_info(str(value.get("name", value.get("text", "%s #%d" % [kind_name, id]))),
+		"%s #%d · publicación %s" % [kind_name, id, Hud.fmt_year(current_year)],
+		[["Datos del motor", rows]])

@@ -145,23 +145,28 @@ func test_rivers() -> void:
 
 
 func _fixture_frame(n: int) -> Dictionary:
-	var owner := PackedInt32Array()
-	owner.resize(n)
-	owner.fill(-1)
-	owner[world.land_cells[0]] = 7
-	return {"year": -2500, "cells": {"owner": Marshalls.raw_to_base64(owner.to_byte_array()), "people": "AAAA"},
-		"states": [{"id": 7, "name": "Prueba", "rgb": [10, 20, 30]}], "settlements": [{"id": 1, "cell": world.land_cells[0], "tier": 2}]}
+	var provinces := []
+	for i in n:
+		provinces.append({"id":i,"ownerPolityId":7 if i == world.land_cells[0] else 0,"peopleId":-1,"religionId":-1,"population":0.0,"carryingCapacity":0.0,"era":0,"fortification":0.0})
+	return {"schema":"asabiya/map-state-v1","year":-2500,"worldSHA256":world.header["world"]["digest"],"stateSHA256":"fixture",
+		"provinces":provinces,"entities":{"polity":[{"id":7,"fields":{"name":"Prueba","alive":true,"rgb":[10,20,30]}}]}}
 
 
 func test_frame_decoding() -> void:
-	var f := BridgeSource.parse_frame(_fixture_frame(world.cell_count()), world.cell_count())
-	check(f != null and f.year == -2500, "frame decodes")
-	check(f.owner.size() == world.cell_count() and f.owner[world.land_cells[0]] == 7, "owner layer decoded")
-	check(f.people.is_empty(), "wrong-size layer dropped")
+	var decoder := NativeFrameDecoder.new(world)
+	var f := decoder.consume(_fixture_frame(world.cell_count()), false)
+	check(f != null and f.year == -2500, "native frame decodes")
+	check(f.owner.size() == world.cell_count() and f.owner[world.land_cells[0]] == 7, "owner IDs preserved")
+	check(f.owner[world.land_cells[1]] == 0, "polity zero means unowned")
 	check((f.states[7]["rgb"] as Color).is_equal_approx(Color8(10, 20, 30)), "state colour")
-	var r := MapLayers.build("states", world, f)
-	check((r["colors"] as PackedByteArray)[world.land_cells[0] * 4 + 3] > 0, "state layer paints engine cells")
-	check(BridgeSource.parse_frame({}, 10) == null, "frame without year rejected")
+	var result := MapLayers.build("states", world, f)
+	check((result["colors"] as PackedByteArray)[world.land_cells[0] * 4 + 3] > 0, "state layer paints engine cells")
+	check(decoder.consume({}, false) == null, "unknown schema rejected")
+	var changed := {"schema":"asabiya/map-delta-v1","year":-2499,"fromYear":-2500,"provinces":[{"id":int(world.land_cells[0]),"ownerPolityId":0}]}
+	var later := decoder.consume(changed, true)
+	check(later != null and later.owner[world.land_cells[0]] == 0, "delta replaces a province")
+	check(f.owner[world.land_cells[0]] == 7, "published old frame is immutable")
+	check(decoder.consume(changed, true) == null, "out-of-order delta rejected")
 
 
 func test_settlement_tiers() -> void:
@@ -170,17 +175,18 @@ func test_settlement_tiers() -> void:
 	check(SettlementLayer.tier_of({"population": 30000}) == 3, "city by population")
 
 
-func start_bridge_test(snapshot: String) -> void:
-	var py := "python3"
-	var out := []
-	if OS.execute("python3", ["--version"], out) != 0:
-		print("SKIP bridge plumbing (python3 not available)")
+func start_bridge_test(_snapshot: String) -> void:
+	var server := BridgeSource.find_executable()
+	var raw := OS.get_cmdline_user_args()
+	for k in raw.size():
+		if raw[k] == "--server" and k + 1 < raw.size(): server = raw[k + 1]
+	if server == "":
+		print("SKIP real TCP integration: pass --server PATH (no old stdio mock is used)")
 		finish()
 		return
-	bridge = BridgeSource.new(world, py)
-	bridge.prefix_args = PackedStringArray([ProjectSettings.globalize_path("res://tests/mock_bridge.py"), "--snapshot", snapshot])
-	check(bridge.start(), "bridge process starts")
-	_bridge_deadline = Time.get_ticks_msec() + 15000.0
+	bridge = BridgeSource.new(world, server)
+	check(bridge.start(), "Go server process starts")
+	_bridge_deadline = Time.get_ticks_msec() + 60000.0
 	_bridge_phase = 1
 
 
@@ -189,10 +195,10 @@ func _process(_delta: float) -> bool:
 		return false
 	bridge.poll()
 	if _bridge_phase == 1 and not bridge.years().is_empty():
-		check(bridge.connected, "bridge handshake")
+		check(bridge.connected, "local TCP handshake")
 		check(bridge.has_system("states"), "bridge systems")
 		var f := bridge.frame(bridge.years()[0])
-		check(f != null and not f.owner.is_empty() and f.states.size() == 3, "bridge frame content")
+		check(f != null and not f.owner.is_empty() and not f.peoples.is_empty(), "native frame content")
 		check(bridge.can_advance(), "bridge can advance")
 		bridge.advance(25)
 		_bridge_phase = 2
@@ -211,6 +217,6 @@ func _process(_delta: float) -> bool:
 
 func finish() -> void:
 	if bridge != null:
-		bridge.close()
+		await bridge.shutdown()
 	print("%d checks, %d failures" % [checks, failures])
 	quit(1 if failures > 0 else 0)

@@ -60,7 +60,75 @@ var land_remap := PackedInt32Array()
 var land_cells := PackedInt32Array()
 
 
+static func load_bundle(path: String) -> WorldData:
+	var value: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if not value is Dictionary or value.get("schema", "") != "asabiya/geography-v1":
+		push_error("Manifiesto geográfico inválido: " + path)
+		return null
+	var manifest: Dictionary = value
+	if manifest.get("byteOrder", "") != "little-endian" or manifest.get("file", "") != "geography.bin":
+		push_error("Formato binario geográfico no compatible")
+		return null
+	var bytes := FileAccess.get_file_as_bytes(path.get_base_dir().path_join("geography.bin"))
+	if bytes.size() < 16 or bytes.size() != int(manifest.get("bytes", -1)):
+		return null
+	if bytes.slice(0, 7).get_string_from_ascii() != "ASABGEO" or bytes[7] != 0 or bytes.decode_u32(8) != 1 or bytes.decode_u32(12) != 0:
+		return null
+	var digest := HashingContext.new()
+	digest.start(HashingContext.HASH_SHA256)
+	digest.update(bytes)
+	if digest.finish().hex_encode() != str(manifest.get("sha256", "")):
+		push_error("La geografía no coincide con el SHA-256 del manifiesto")
+		return null
+	var w := WorldData.new()
+	var config: Dictionary = manifest.get("world", {})
+	w.width = int(config.get("width", 0)); w.height = int(config.get("height", 0))
+	w.detail = int(config.get("detail", 0)); w.world_seed = str(config.get("seed", ""))
+	if w.width < 24 or w.width > 400 or w.height < 16 or w.height > 200 or w.detail < 1 or w.detail > 4:
+		return null
+	var fine: Dictionary = manifest.get("fine") if manifest.get("fine") is Dictionary else {}
+	w.fine_width = int(fine.get("width", 0)); w.fine_height = int(fine.get("height", 0))
+	if not fine.is_empty() and (w.fine_width != w.width * w.detail or w.fine_height != w.height * w.detail):
+		return null
+	var metadata: Dictionary = config.duplicate()
+	metadata["digest"] = manifest.get("worldSHA256", "")
+	w.header = {"schema":"asabiya/geography-v1","world":metadata,"source":manifest.get("source", {}),
+		"manifest":manifest,"session":{"kind":"real","stage":"geografía del motor"}}
+	w.available = PackedStringArray(["geography","climate","ecology"])
+	var aliases := {"downstream":"down","flowAccumulation":"accumulation",
+		"farmingSuitability":"farming","herdingSuitability":"herding",
+		"fineElevation":"elevationFine","fineTemperature":"temperatureFine","finePrecipitation":"precipitationFine"}
+	var layers := {}
+	var next_offset := 16
+	for layer: Dictionary in manifest.get("layers", []):
+		var offset := int(layer.get("offset", -1)); var length := int(layer.get("bytes", -1))
+		var scalar: String = layer.get("type", "")
+		var size := 1 if scalar == "u8" else 4
+		var count := int(layer.get("count", 0)); var components := int(layer.get("components", 0))
+		if not scalar in ["u8","i32","f32"] or count < 0 or components < 1:
+			return null
+		if offset != next_offset or length != count * components * size or offset + length > bytes.size():
+			return null
+		var name: String = layer.get("name", "")
+		if layers.has(aliases.get(name, name)): return null
+		layers[aliases.get(name, name)] = bytes.slice(offset, offset + length)
+		next_offset = offset + length
+	if next_offset != bytes.size(): return null
+	var err := w._load_layers(layers)
+	if err != "":
+		push_error("Geografía inválida: " + err)
+		return null
+	w.source_path = path
+	w.header["world"]["landCells"] = w.land_cells.size()
+	var mass_count := 0
+	for mass: int in w.landmass: mass_count = maxi(mass_count, mass + 1)
+	w.header["world"]["landmasses"] = mass_count
+	return w
+
+
 static func load_file(path: String) -> WorldData:
+	if path.get_file() == "manifest.json":
+		return load_bundle(path)
 	var bytes := FileAccess.get_file_as_bytes(path)
 	if bytes.is_empty():
 		push_error("No se pudo leer el snapshot: %s (%s)" % [path, error_string(FileAccess.get_open_error())])
@@ -112,6 +180,10 @@ func _parse(bytes: PackedByteArray) -> String:
 		if off < 0 or off + n > data.size():
 			return "capa fuera de rango: %s" % l["name"]
 		layers[l["name"]] = data.slice(off, off + n)
+	return _load_layers(layers)
+
+
+func _load_layers(layers: Dictionary) -> String:
 	var n_cells := width * height
 	var get_u8 := func(name: String) -> PackedByteArray:
 		return layers.get(name, PackedByteArray())
@@ -141,7 +213,7 @@ func _parse(bytes: PackedByteArray) -> String:
 	forest0 = get_f32.call("forest0")
 	malaria = get_f32.call("malaria")
 	monsoon = get_f32.call("monsoonZone")
-	for arr in [land, biome, elevation, temperature, precipitation, landmass, down, river]:
+	for arr in [land, coast, biome, travel_cost, desert, nomad, elevation, temperature, precipitation, amplitude, roughness, area, landmass, down, accumulation, river, farming, herding, growing_season, forest0, malaria, monsoon]:
 		if arr.size() != n_cells:
 			return "capa por celda con tamaño incorrecto"
 	if fine_width > 0 and layers.has("elevationFine"):
@@ -149,13 +221,12 @@ func _parse(bytes: PackedByteArray) -> String:
 		elevation_fine = get_f32.call("elevationFine")
 		temperature_fine = get_f32.call("temperatureFine")
 		precipitation_fine = get_f32.call("precipitationFine")
-		if elevation_fine.size() != fine_width * fine_height:
+		if elevation_fine.size() != fine_width * fine_height or temperature_fine.size() != fine_width * fine_height or precipitation_fine.size() != fine_width * fine_height:
 			return "capa fina con tamaño incorrecto"
 	else:
 		_synthesise_fine()
 	_build_helpers()
 	return ""
-
 
 func _synthesise_fine() -> void:
 	# Coarse snapshot: repeat each cell value over a 4×4 block so the renderer

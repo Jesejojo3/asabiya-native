@@ -1,0 +1,29 @@
+ASABIYA NATIVE — WINDOWS x64
+
+Abre AsabiyaNative.exe. El cliente inicia el motor Go, obtiene el puerto local
+y genera el mundo y las sociedades automáticamente. No necesitas iniciar
+dos programas ni configurar puertos.
+
+La simulación comienza con pueblos fundadores: no hay Estados ni ciudades
+preinventados. Elige 1, 10, 100 o 1000 años junto al botón de avance.
+La cámara sigue disponible mientras Go calcula. Pausa termina el año aceptado.
+Usa Mundo > Ayuda para los controles originales de cámara y selección.
+
+Selecciona una provincia para ver geografía, sociedad y datos históricos.
+Mundo > Estadísticas permite consultar entidades, conflictos y censos.
+La crónica ofrece acontecimientos del motor. Los edificios decorativos y
+las representaciones de fortificación no añaden mecánicas nuevas.
+
+Crear otro mundo reinicia la sesión explícitamente. Cerrar la ventana solicita
+el cierre de Go; el cliente termina su proceso si éste no responde a tiempo.
+Si se pierde la conexión no se repite ningún avance incierto: reinicia la
+sesión desde Mundo > Generar mundo.
+
+Por defecto se genera Asabiya. Para Tierra, copia asabiya-earth.json sobre
+asabiya.json antes de abrir. El HTML de resources/ se conserva íntegro.
+También se puede iniciar con -- --world-source RUTA.json (documentación del repo).
+
+Se compiló/exportó esta entrega, pero NO se abrió el juego ni se ejecutaron
+las pruebas finales, por indicación del usuario. El testeo funcional, visual,
+de integración, reproducibilidad y rendimiento queda a su cargo.
+No se ha integrado nada en main.

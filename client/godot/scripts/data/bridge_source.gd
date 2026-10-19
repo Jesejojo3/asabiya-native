@@ -1,292 +1,393 @@
 class_name BridgeSource
 extends HistorySource
-## Live connection to the Go engine through a local child process speaking
-## JSON lines on stdin/stdout (protocol "asabiya-bridge/v1", proposed to the
-## engine team in docs/client/API_REQUESTS.md). The client sends commands and
-## renders whatever frames the engine returns; it never simulates anything.
-##
-## The process is optional: when no bridge executable is found the source
-## reports itself unavailable and the session stays geography-only.
+## One owned Go process and one local TCP protocol: asabiya/local-v1.
+## Networking, JSON decoding, and frame construction run on a worker thread.
+## Scene nodes and callbacks are touched only by poll() on the graphics thread.
 
-const PROTOCOL := "asabiya-bridge/v1"
-const EXE_WIN := "asabiya-bridge.exe"
-const EXE_UNIX := "asabiya-bridge"
+signal world_ready(value: WorldData)
+
+const PROTOCOL := "asabiya/local-v1"
+const EXE_WIN := "asabiya-server.exe"
+const MAX_FRAMES := 24
+const MAX_RESPONSE_BYTES := 256 * 1024 * 1024
 
 var world: WorldData
 var exe := ""
-var prefix_args := PackedStringArray()   # e.g. a script path when exe is an interpreter
 var available := false
 var connected := false
 var busy := false
 var last_error := ""
-var engine_info := {}
+var engine_info := {"canAdvance": true}
+var world_config := {"seed":"Asabiya","width":400,"height":200,"detail":4,"landFraction":0.33}
+var source_config: Dictionary = {}
+var history_seed := "1"
+var tech_catalog: Array = []
+var era_names: Array = []
 
 var _pid := -1
-var _stdio: FileAccess
-var _stderr: FileAccess
+var _endpoint := ""
+var _directory := ""
 var _thread: Thread
 var _mutex := Mutex.new()
-var _lines: Array[String] = []
+var _stop := false
+var _outgoing: Array = []
+var _received: Array = []
+var _pending := {}
 var _next_id := 1
-var _pending := {}          # id -> Callable(response: Dictionary)
-var _frames := {}           # year -> HistoryFrame
+var _session := 0
+var _frames := {}
 var _years := PackedInt32Array()
-var _systems := PackedStringArray()
+var _remaining := 0
+var _since_publication := 0
+var _closing := false
+var _paused := false
 
-
-func _init(w: WorldData, executable := "") -> void:
+func _init(w: WorldData = null, executable := "") -> void:
 	world = w
 	exe = executable if executable != "" else find_executable()
 	available = exe != ""
-
+	if world != null:
+		var config: Dictionary = world.header.get("world", {})
+		world_config = {"seed":world.world_seed,"width":world.width,"height":world.height,
+			"detail":world.detail,"landFraction":float(config.get("landFraction", 0.33))}
+		source_config = world.header.get("source", {})
+		history_seed = str(world.header.get("session", {}).get("historySeed", "1"))
 
 static func find_executable() -> String:
-	var exe_dir := OS.get_executable_path().get_base_dir()
-	var names := [EXE_WIN] if OS.get_name() == "Windows" else [EXE_UNIX, EXE_WIN]
-	var dirs := [exe_dir, exe_dir.path_join("bin")]
+	var base := OS.get_executable_path().get_base_dir()
+	var dirs := [base, base.path_join("bin")]
 	if not OS.has_feature("template"):
 		dirs.append(ProjectSettings.globalize_path("res://").path_join("../../build/bin").simplify_path())
-	for d in dirs:
-		for n in names:
-			var p: String = d.path_join(n)
-			if FileAccess.file_exists(p):
-				return p
+		dirs.append(ProjectSettings.globalize_path("res://").path_join("../../bin").simplify_path())
+	for d: String in dirs:
+		var path := d.path_join(EXE_WIN)
+		if FileAccess.file_exists(path):
+			return path
 	return ""
 
-
 func kind() -> String:
-	return "bridge"
-
+	return "bridge" # UI provider category retained; wire protocol is TCP only.
 
 func label() -> String:
-	if connected:
-		return "Motor Go conectado"
-	return "Motor Go no disponible"
-
+	return "Motor Go conectado" if connected else "Motor Go desconectado"
 
 func systems() -> PackedStringArray:
-	return _systems
-
+	return PackedStringArray(["history","states","peoples","religions","population",
+		"technology","settlements","wars","routes","events","carrying","cellHistory"])
 
 func years() -> PackedInt32Array:
-	return _years
-
+	return _years.duplicate()
 
 func frame(year: int) -> HistoryFrame:
 	return _frames.get(year)
 
-
 func can_advance() -> bool:
-	return connected and not busy and bool(engine_info.get("canAdvance", false))
+	return connected and not busy and not _closing
 
-
-## Starts the engine process and opens the world matching the snapshot.
-func start(extra_args := PackedStringArray()) -> bool:
+func start(_extra_args := PackedStringArray()) -> bool:
 	if not available:
-		last_error = "No se encontró %s" % EXE_WIN
+		last_error = "No se encontró %s junto a Asabiya Native." % EXE_WIN
 		return false
-	var args := prefix_args.duplicate()
-	args.append("--stdio")
-	args.append_array(extra_args)
-	# blocking pipes: the reader thread waits on get_line(); the process itself
-	# always runs asynchronously
-	var r := OS.execute_with_pipe(exe, args, true)
-	if r.is_empty():
-		last_error = "No se pudo iniciar %s" % exe
+	busy = true
+	_directory = OS.get_user_data_dir().path_join("sessions").path_join("%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()])
+	if DirAccess.make_dir_recursive_absolute(_directory) != OK:
+		last_error = "No se pudo crear la carpeta local de la sesión."
 		return false
-	_pid = int(r["pid"])
-	_stdio = r["stdio"]
-	_stderr = r.get("stderr")
+	_endpoint = _directory.path_join("endpoint.json")
+	_pid = OS.create_process(exe, PackedStringArray(["--port","0","--endpoint-file",_endpoint,
+		"--log-file",_directory.path_join("engine.log"),"--parent-pid",str(OS.get_process_id())]), false)
+	if _pid <= 0:
+		last_error = "No se pudo iniciar el motor Go."
+		return false
 	_thread = Thread.new()
-	_thread.start(_reader)
-	request({"cmd": "hello", "protocol": PROTOCOL}, func(resp: Dictionary) -> void:
-		if not resp.get("ok", false):
-			last_error = str(resp.get("error", "handshake rechazado"))
-			status_changed.emit(last_error)
-			return
-		engine_info = resp
-		connected = true
-		request({"cmd": "open", "seed": world.world_seed, "historySeed": str(world.header.get("session", {}).get("historySeed", "1")), "worldDigest": world.header.get("world", {}).get("digest", "")}, _on_opened))
+	var err := _thread.start(_worker)
+	if err != OK:
+		last_error = "No se pudo iniciar la conexión local."
+		OS.kill(_pid)
+		return false
+	status_changed.emit("Iniciando el motor Go…")
 	return true
 
+func _on_connected(_response: Dictionary) -> void:
+	connected = true
+	var payload := {"world":world_config,"fine":true}
+	if not source_config.is_empty():
+		payload["source"] = source_config
+	request("create_world", payload, _on_created)
 
-func _on_opened(resp: Dictionary) -> void:
-	if not resp.get("ok", false):
-		last_error = str(resp.get("error", "no se pudo abrir el mundo"))
-		status_changed.emit(last_error)
+func _on_created(response: Dictionary) -> void:
+	var summary: Dictionary = response.get("data", {})
+	if world != null and str(summary.get("sha256", "")) != str(world.header.get("world", {}).get("digest", "")):
+		_fail("El mundo del archivo no coincide con el que generó Go. No se mezclará su historia.")
 		return
-	engine_info.merge(resp, true)
-	fetch_frame()
+	status_changed.emit("Preparando el relieve fino del mundo…")
+	request("get_catalog", {}, _on_catalog)
 
+func _on_catalog(response: Dictionary) -> void:
+	var data: Dictionary = response.get("data", {})
+	tech_catalog = data.get("technologies", [])
+	era_names = data.get("eras", [])
+	request("export_geography", {"directory":_directory.path_join("world")}, _on_geography)
 
-func fetch_frame() -> void:
-	busy = true
-	request({"cmd": "frame"}, func(resp: Dictionary) -> void:
+func _on_geography(response: Dictionary) -> void:
+	var loaded: WorldData = response.get("_world")
+	if loaded == null:
+		_fail("No se pudo abrir la geografía exportada por Go.")
+		return
+	world = loaded
+	world_ready.emit(world)
+	status_changed.emit("Inicializando las sociedades humanas…")
+	request("start_history", {"historySeed":history_seed,"view":"map"}, _on_frame)
+
+func _on_frame(response: Dictionary) -> void:
+	var publication: HistoryFrame = response.get("_frame")
+	if publication == null:
+		_fail("El motor devolvió un estado incompatible con la geografía o el calendario.")
+		return
+	if _remaining <= 0: busy = false
+	_store(publication)
+	if _remaining > 0 and not _closing:
+		_next_advance()
+	else:
 		busy = false
-		if resp.get("ok", false):
-			_store(resp.get("frame", {}))
-		else:
-			last_error = str(resp.get("error", "frame"))
-			status_changed.emit(last_error))
 
-
-func advance(years_n: int) -> void:
-	if not can_advance():
-		return
-	busy = true
-	status_changed.emit("Simulando %d años…" % years_n)
-	request({"cmd": "advance", "years": years_n}, func(resp: Dictionary) -> void:
-		busy = false
-		if resp.get("ok", false):
-			if resp.has("frame"):
-				_store(resp["frame"])
-			else:
-				fetch_frame()
-		else:
-			last_error = str(resp.get("error", "advance"))
-			status_changed.emit(last_error))
-
-
-func _store(fd: Dictionary) -> void:
-	var f := parse_frame(fd, world.cell_count())
-	if f == null:
-		return
-	_frames[f.year] = f
-	_systems = PackedStringArray(fd.get("systems", _systems))
+func _store(publication: HistoryFrame) -> void:
+	_frames[publication.year] = publication
 	var ys := PackedInt32Array(_frames.keys())
 	ys.sort()
+	while ys.size() > MAX_FRAMES:
+		_frames.erase(ys[0])
+		ys.remove_at(0)
 	_years = ys
 	frames_changed.emit()
-	status_changed.emit("Año %d recibido del motor" % f.year)
+	status_changed.emit("Año %d · datos históricos del motor Go" % publication.year)
 
+func fetch_frame() -> void:
+	if not connected: return
+	busy = true
+	request("get_state", {"view":"map"}, _on_frame)
 
-func request(msg: Dictionary, on_reply := Callable()) -> void:
-	if _stdio == null:
+func advance(count: int) -> void:
+	if not can_advance() or count < 1: return
+	busy = true
+	_remaining = clampi(count, 1, 10000)
+	_paused = false
+	_since_publication = 0
+	_next_advance()
+
+func _next_advance() -> void:
+	if _remaining <= 0:
+		fetch_frame()
 		return
-	var id := _next_id
+	if _remaining == 1 and _since_publication == 0:
+		_remaining = 0
+		request("advance", {"view":"map"}, _on_frame)
+		return
+	request("advance", {"publication":"status"}, func(response: Dictionary) -> void:
+		_remaining = maxi(0, _remaining - 1)
+		if _paused: return
+		_since_publication += 1
+		var data: Dictionary = response.get("data", {})
+		status_changed.emit("Año %d · quedan %d años del avance solicitado" % [int(data.get("year", 0)), _remaining])
+		if _remaining <= 0 or _since_publication >= 50:
+			_since_publication = 0
+			fetch_frame()
+		else:
+			_next_advance())
+
+func pause() -> void:
+	_remaining = 0 # One already accepted year finishes atomically.
+	_paused = true
+	if connected:
+		request("pause", {}, func(_response: Dictionary) -> void:
+			fetch_frame())
+
+func query_province(id: int, callback: Callable) -> void:
+	request("get_province", {"id":id}, callback)
+
+func query_entity(kind_name: String, id: int, callback: Callable) -> void:
+	request("get_entity", {"kind":kind_name,"id":id}, callback)
+
+func query_history(id: int, callback: Callable) -> void:
+	request("get_province_history", {"id":id}, callback)
+
+func request(op: String, payload: Dictionary = {}, callback := Callable()) -> void:
+	if _closing and op != "shutdown": return
+	var id := str(_next_id)
 	_next_id += 1
-	msg["id"] = id
-	if on_reply.is_valid():
-		_pending[id] = on_reply
-	_stdio.store_line(JSON.stringify(msg))
-	_stdio.flush()
-
-
-## Call every frame from the main thread.
-func poll() -> void:
-	if _stdio == null:
-		return
+	if callback.is_valid(): _pending[id] = callback
 	_mutex.lock()
-	var lines := _lines.duplicate()
-	_lines.clear()
+	_outgoing.append({"schema":PROTOCOL,"id":id,"op":op,"payload":payload})
 	_mutex.unlock()
-	for line in lines:
-		var resp = JSON.parse_string(line)
-		if typeof(resp) != TYPE_DICTIONARY:
+
+func poll() -> void:
+	_mutex.lock()
+	var replies: Array = _received
+	_received = []
+	_mutex.unlock()
+	for response: Dictionary in replies:
+		if response.has("_error"):
+			connected = false
+			_fail(str(response["_error"]))
 			continue
-		var id := int(resp.get("id", 0))
-		if _pending.has(id):
-			var cb: Callable = _pending[id]
-			_pending.erase(id)
-			cb.call(resp)
-		elif resp.has("event"):
-			status_changed.emit(str(resp.get("event")))
-	if _pid > 0 and not OS.is_process_running(_pid) and connected:
-		connected = false
-		last_error = "El proceso del motor terminó"
-		status_changed.emit(last_error)
+		if response.has("_connected"):
+			_on_connected(response)
+			continue
+		_session = int(response.get("session", _session))
+		var id := str(response.get("id", ""))
+		var callback: Callable = _pending.get(id, Callable())
+		_pending.erase(id)
+		if not response.get("ok", false):
+			var detail: Dictionary = response.get("error", {})
+			_fail(str(detail.get("message", "El motor rechazó la petición.")))
+			continue
+		if callback.is_valid(): callback.call(response)
 
+func _fail(message: String) -> void:
+	connected = false
+	busy = false
+	_remaining = 0
+	last_error = message
+	status_changed.emit(message)
 
-func _reader() -> void:
-	while _stdio != null and _stdio.is_open():
-		var line := _stdio.get_line()
-		if line == "" and _stdio.get_error() != OK:
+func _push(response: Dictionary) -> void:
+	_mutex.lock()
+	_received.append(response)
+	_mutex.unlock()
+
+func _stopped() -> bool:
+	_mutex.lock()
+	var value := _stop
+	_mutex.unlock()
+	return value
+
+func _worker() -> void:
+	var deadline := Time.get_ticks_msec() + 15000
+	while not FileAccess.file_exists(_endpoint) and not _stopped():
+		if not OS.is_process_running(_pid) or Time.get_ticks_msec() > deadline:
+			_push({"_error":"El motor no publicó su puerto local. Consulta engine.log en " + _directory})
+			return
+		OS.delay_msec(10)
+	if _stopped(): return
+	var endpoint_data: Variant = JSON.parse_string(FileAccess.get_file_as_string(_endpoint))
+	if not endpoint_data is Dictionary or endpoint_data.get("schema", "") != "asabiya/local-endpoint-v1" or endpoint_data.get("protocol", "") != PROTOCOL:
+		_push({"_error":"El motor publicó un protocolo local incompatible."})
+		return
+	var parts: PackedStringArray = str(endpoint_data.get("address", "")).split(":")
+	if parts.size() != 2 or parts[0] != "127.0.0.1":
+		_push({"_error":"El cliente sólo admite el servidor local 127.0.0.1."})
+		return
+	var peer := StreamPeerTCP.new()
+	if peer.connect_to_host("127.0.0.1", parts[1].to_int()) != OK:
+		_push({"_error":"No se pudo conectar con el motor local."})
+		return
+	var incoming := PackedByteArray()
+	var pending_bytes := PackedByteArray()
+	var sent := 0
+	var session := 0
+	var inflight: Dictionary = {}
+	var ready := false
+	var decoder := NativeFrameDecoder.new(world)
+	while not _stopped():
+		peer.poll()
+		var status := peer.get_status()
+		if status == StreamPeerTCP.STATUS_ERROR or status == StreamPeerTCP.STATUS_NONE:
+			_push({"_error":"Se perdió la conexión con Go. La vista recibida se conserva; crea una nueva sesión para reiniciar."})
 			break
-		if line.strip_edges() == "":
+		if status != StreamPeerTCP.STATUS_CONNECTED:
+			if Time.get_ticks_msec() > deadline:
+				_push({"_error":"Se agotó el tiempo para conectar con el motor."})
+				break
+			OS.delay_msec(2)
 			continue
-		_mutex.lock()
-		_lines.append(line)
-		_mutex.unlock()
+		if not ready:
+			ready = true
+			peer.set_no_delay(true)
+			_push({"_connected":true})
+		if pending_bytes.is_empty() and inflight.is_empty():
+			_mutex.lock()
+			if not _outgoing.is_empty(): inflight = _outgoing.pop_front()
+			_mutex.unlock()
+			if not inflight.is_empty():
+				inflight["session"] = session
+				pending_bytes = (JSON.stringify(inflight) + "\n").to_utf8_buffer()
+				sent = 0
+				deadline = Time.get_ticks_msec() + 180000
+		if not pending_bytes.is_empty():
+			var written: Array = peer.put_partial_data(pending_bytes.slice(sent))
+			if int(written[0]) != OK:
+				_push({"_error":"No se pudo enviar una petición al motor."})
+				break
+			sent += int(written[1])
+			if sent >= pending_bytes.size(): pending_bytes.clear()
+		var count := mini(peer.get_available_bytes(), 1048576)
+		if count > 0:
+			var chunk: Array = peer.get_partial_data(count)
+			if int(chunk[0]) != OK:
+				_push({"_error":"No se pudo recibir la respuesta del motor."})
+				break
+			var raw: PackedByteArray = chunk[1]
+			incoming.append_array(raw)
+			if incoming.size() > MAX_RESPONSE_BYTES:
+				_push({"_error":"La respuesta del motor supera el límite de memoria del cliente."})
+				break
+			# Requests are serialized: one complete NDJSON record per response.
+			if not incoming.is_empty() and incoming[incoming.size() - 1] == 10:
+				var value: Variant = JSON.parse_string(incoming.get_string_from_utf8())
+				incoming.clear()
+				if not value is Dictionary:
+					_push({"_error":"El motor envió JSON inválido."})
+					break
+				var response: Dictionary = value
+				if response.get("schema", "") != PROTOCOL or str(response.get("id", "")) != str(inflight.get("id", "")):
+					_push({"_error":"La respuesta no corresponde a la sesión o petición enviada."})
+					break
+				session = int(response.get("session", session))
+				var op: String = inflight.get("op", "")
+				if response.get("ok", false):
+					var data: Dictionary = response.get("data", {})
+					if op == "export_geography":
+						var loaded := WorldData.load_bundle(str(data.get("directory", "")).path_join("manifest.json"))
+						response["_world"] = loaded
+						decoder.world = loaded
+					elif op == "get_state" or op == "start_history" or (op == "advance" and data.get("schema", "") != "asabiya/advance-status-v1"):
+						response["_frame"] = decoder.consume(data, op == "advance")
+						response.erase("data") # Do not retain large raw provincial dictionaries.
+				_push(response)
+				inflight = {}
+		elif not inflight.is_empty() and Time.get_ticks_msec() > deadline:
+			_push({"_error":"El motor tardó demasiado. No se repetirá un avance cuyo resultado sea incierto."})
+			break
+		else:
+			OS.delay_msec(2)
+	peer.disconnect_from_host()
 
+func shutdown() -> void:
+	if _closing: return
+	_remaining = 0
+	if connected:
+		request("shutdown")
+	_closing = true
+	var deadline := Time.get_ticks_msec() + 3000
+	while _pid > 0 and OS.is_process_running(_pid) and Time.get_ticks_msec() < deadline:
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	close()
 
 func close() -> void:
-	if _stdio != null:
-		request({"cmd": "close"})
+	_mutex.lock()
+	_stop = true
+	_mutex.unlock()
 	if _pid > 0 and OS.is_process_running(_pid):
 		OS.kill(_pid)
-	if _stdio != null:
-		_stdio.close()
 	if _thread != null and _thread.is_started():
 		_thread.wait_to_finish()
-	_stdio = null
+	_thread = null
+	_pending.clear()
 	connected = false
-
-
-# ---------------------------------------------------------------- decoding
-
-static func _b64_i32(s: Variant) -> PackedInt32Array:
-	if typeof(s) != TYPE_STRING or s == "":
-		return PackedInt32Array()
-	var raw := Marshalls.base64_to_raw(s)
-	return raw.to_int32_array() if raw.size() % 4 == 0 else PackedInt32Array()
-
-
-static func _b64_f32(s: Variant) -> PackedFloat32Array:
-	if typeof(s) != TYPE_STRING or s == "":
-		return PackedFloat32Array()
-	var raw := Marshalls.base64_to_raw(s)
-	return raw.to_float32_array() if raw.size() % 4 == 0 else PackedFloat32Array()
-
-
-static func _rgb(v: Variant, fallback_id: int) -> Color:
-	if typeof(v) == TYPE_ARRAY and (v as Array).size() >= 3:
-		return Color8(int(v[0]), int(v[1]), int(v[2]))
-	return MapLayers.id_color(fallback_id)
-
-
-## Decodes a frame message. Per-cell arrays are base64 little-endian int32 /
-## float32 of exactly n_cells entries; a wrong size drops that layer.
-static func parse_frame(fd: Dictionary, n_cells: int) -> HistoryFrame:
-	if not fd.has("year"):
-		return null
-	var f := HistoryFrame.new()
-	f.year = int(fd["year"])
-	var cells: Dictionary = fd.get("cells", {})
-	var check_i := func(a: PackedInt32Array) -> PackedInt32Array:
-		return a if a.size() == n_cells else PackedInt32Array()
-	var check_f := func(a: PackedFloat32Array) -> PackedFloat32Array:
-		return a if a.size() == n_cells else PackedFloat32Array()
-	f.owner = check_i.call(_b64_i32(cells.get("owner")))
-	f.people = check_i.call(_b64_i32(cells.get("people")))
-	f.religion = check_i.call(_b64_i32(cells.get("religion")))
-	f.population = check_f.call(_b64_f32(cells.get("population")))
-	f.technology = check_f.call(_b64_f32(cells.get("technology")))
-	f.wealth = check_f.call(_b64_f32(cells.get("wealth")))
-	f.carrying = check_f.call(_b64_f32(cells.get("carrying")))
-	for s in fd.get("states", []):
-		var d: Dictionary = s
-		d["rgb"] = _rgb(d.get("rgb"), int(d["id"]))
-		f.states[int(d["id"])] = d
-	for p in fd.get("peoples", []):
-		var d2: Dictionary = p
-		d2["rgb"] = _rgb(d2.get("rgb"), int(d2["id"]))
-		f.peoples[int(d2["id"])] = d2
-	for r in fd.get("religions", []):
-		var d3: Dictionary = r
-		d3["rgb"] = _rgb(d3.get("rgb"), int(d3["id"]))
-		f.religions[int(d3["id"])] = d3
-	f.settlements = fd.get("settlements", [])
-	f.events = fd.get("events", [])
-	for wv in fd.get("wars", []):
-		var d4: Dictionary = wv
-		d4["front"] = PackedInt32Array(d4.get("front", []))
-		f.wars.append(d4)
-	for rt in fd.get("routes", []):
-		var d5: Dictionary = rt
-		d5["cells"] = PackedInt32Array(d5.get("cells", []))
-		f.routes.append(d5)
-	f.world_population = float(fd.get("worldPopulation", 0.0))
-	if f.world_population == 0.0 and not f.population.is_empty():
-		for v in f.population:
-			f.world_population += v
-	return f
+	busy = false
+	# Remove only our generated geography, never a user-provided snapshot.
+	var owned_root := OS.get_user_data_dir().path_join("sessions").simplify_path() + "/"
+	if _directory.simplify_path().begins_with(owned_root):
+		for name: String in ["geography.bin", "manifest.json"]:
+			DirAccess.remove_absolute(_directory.path_join("world").path_join(name))
+		DirAccess.remove_absolute(_directory.path_join("world"))

@@ -8,7 +8,13 @@ extends RefCounted
 
 var year := 0
 
-var owner := PackedInt32Array()       # state id per cell (-1 none)
+var world_digest := ""
+var state_digest := ""
+var entity_records: Dictionary = {}
+var stats: Array = []
+var regional: Dictionary = {}
+
+var owner := PackedInt32Array()       # state id per cell (0 none; people/religion use -1)
 var people := PackedInt32Array()      # people id per cell (-1 none)
 var religion := PackedInt32Array()    # religion id per cell (-1 none)
 var population := PackedFloat32Array()
@@ -43,9 +49,16 @@ func state_cells() -> Dictionary:
 	var out := {}
 	for i in owner.size():
 		var s := owner[i]
-		if s >= 0:
+		if s > 0:
 			out[s] = int(out.get(s, 0)) + 1
 	return out
+
+
+func state_count() -> int:
+	var count := 0
+	for record: Dictionary in states.values():
+		if record.get("kind", "state") == "state": count += 1
+	return count
 
 
 func settlement_by_id(id: int) -> Dictionary:

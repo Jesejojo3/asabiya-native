@@ -45,6 +45,7 @@ var status_label: Label
 var help_panel: PanelContainer
 var world_dialog: ConfirmationDialog
 var world_seed_edit: LineEdit
+var advance_years := 10
 var stats_panel: PanelContainer
 var stats_body: VBoxContainer
 var _search_targets: Array = []
@@ -134,7 +135,21 @@ func _build_top_bar() -> void:
 		_playing = not _playing
 		sim_buttons["play"].text = "⏸" if _playing else "▶"
 		play_toggled.emit(_playing))
-	sim_buttons["advance"].pressed.connect(func(): advance_requested.emit(10))
+	var advance_count := OptionButton.new()
+	for count in [1, 10, 100, 1000]: advance_count.add_item(str(count) + " años", count)
+	advance_count.select(1)
+	advance_count.item_selected.connect(func(index: int) -> void:
+		advance_years = advance_count.get_item_id(index)
+		sim_buttons["advance"].text = "+%d años" % advance_years)
+	sim.add_child(advance_count)
+	sim_buttons["advance"].pressed.connect(func(): advance_requested.emit(advance_years))
+	var pause_button := Button.new()
+	pause_button.text = "Pausar"
+	pause_button.tooltip_text = "Terminar el año actual y detener el avance solicitado"
+	pause_button.pressed.connect(func() -> void:
+		stop_playing()
+		play_toggled.emit(false))
+	sim.add_child(pause_button)
 	h.add_child(VSeparator.new())
 	var menu := MenuButton.new()
 	menu.text = "Mundo"
@@ -182,7 +197,7 @@ func _on_menu(id: int) -> void:
 		1: toggle_stats()
 		2: app.map_view.camera.reset_view()
 		3: help_panel.visible = not help_panel.visible
-		4: get_tree().quit()
+		4: app._request_close()
 
 
 func _step_frames(delta: int) -> void:
@@ -475,13 +490,14 @@ func refresh_timeline(source: HistorySource, year: int) -> void:
 		timeline_hint.visible = false
 	var can := source.can_advance()
 	sim_buttons["advance"].disabled = not can
-	sim_buttons["advance"].tooltip_text = "Pedir al motor Go que simule 10 años" if can else "El motor Go aún no expone el avance anual (AdvanceYear) a este cliente."
+	sim_buttons["advance"].tooltip_text = ("Pedir al motor Go que simule %d años" % advance_years) if can else "El motor está ocupado o desconectado."
 	for k in ["back", "prev", "play", "next"]:
 		sim_buttons[k].disabled = ys.size() < 2 and not can
 
 
 static func fmt_year(y: int) -> String:
-	return "%d a. C." % (-y) if y < 0 else "%d d. C." % y
+	# Same astronomical-year convention as v0.6 fy: year 0 is 1 BCE.
+	return "%d a. C." % (1 - y) if y <= 0 else "%d d. C." % y
 
 
 # ---------------------------------------------------------------- chronicle
@@ -533,18 +549,19 @@ func _fill_chronicle() -> void:
 	if _chronicle_events.is_empty():
 		chronicle_list.add_item("El motor no ha registrado acontecimientos en esta sesión.", null, false)
 		return
-	for k in range(_chronicle_events.size() - 1, -1, -1):
+	for k in range(_chronicle_events.size() - 1, maxi(-1, _chronicle_events.size() - 501), -1):
 		var e: Dictionary = _chronicle_events[k]
 		if f != "Todos" and str(e.get("kind", "otros")) != f:
 			continue
 		var idx := chronicle_list.add_item("%s — %s" % [fmt_year(int(e.get("year", 0))), str(e.get("text", ""))])
-		chronicle_list.set_item_metadata(idx, int(e.get("cell", -1)))
+		chronicle_list.set_item_metadata(idx, {"cell":int(e.get("cell", -1)),"event":int(e.get("id", -1))})
 
 
 func _on_chronicle_activated(i: int) -> void:
-	var c = chronicle_list.get_item_metadata(i)
-	if c != null and int(c) >= 0:
-		fly_to.emit(int(c))
+	var value: Variant = chronicle_list.get_item_metadata(i)
+	if value is Dictionary:
+		if int(value.get("cell", -1)) >= 0: fly_to.emit(int(value["cell"]))
+		if int(value.get("event", -1)) >= 0: entity_requested.emit("engine:event", int(value["event"]))
 
 
 # ---------------------------------------------------------------- search
@@ -707,8 +724,13 @@ func _build_stats() -> void:
 	add_child(stats_panel)
 	var v := VBoxContainer.new()
 	stats_panel.add_child(v)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(460, 480)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	v.add_child(scroll)
 	stats_body = VBoxContainer.new()
-	v.add_child(stats_body)
+	stats_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(stats_body)
 	var close := Button.new()
 	close.text = "Cerrar"
 	close.pressed.connect(func(): stats_panel.visible = false)
@@ -754,7 +776,26 @@ func _fill_stats() -> void:
 	if f == null:
 		stats_body.add_child(UiTheme.muted("No disponible todavía: el motor no ha enviado datos históricos.", 12))
 	else:
-		stats_body.add_child(UiTheme.muted("%s · población %s · %d Estados · %d pueblos · %d asentamientos" % [fmt_year(f.year), _fmt_int(f.world_population), f.states.size(), f.peoples.size(), f.settlements.size()], 12))
+		stats_body.add_child(UiTheme.muted("%s · población %s · %d Estados · %d pueblos · %d asentamientos" % [fmt_year(f.year), _fmt_int(f.world_population), f.state_count(), f.peoples.size(), f.settlements.size()], 12))
+
+		if not f.stats.is_empty():
+			var census: Dictionary = f.stats[f.stats.size() - 1]
+			stats_body.add_child(UiTheme.muted("Último censo: %s · era líder %d" % [fmt_year(int(census.get("year", f.year))), int(census.get("leadingEra", 0))], 12))
+		for group in [["war", "Guerras activas"], ["ruler", "Gobernantes"], ["religion", "Religiones"], ["route", "Rutas comerciales"]]:
+			stats_body.add_child(UiTheme.heading(group[1], 13))
+			var records: Dictionary = f.entity_records.get(group[0], {})
+			var shown := 0
+			for id: int in records:
+				var record: Dictionary = records[id]
+				if group[0] == "war" and not record.get("active", false): continue
+				if group[0] == "route" and not record.get("active", false): continue
+				var button := Button.new()
+				button.text = str(record.get("name", "%s #%d" % [group[0], id]))
+				var kind_name: String = group[0]
+				button.pressed.connect(func() -> void: entity_requested.emit("engine:" + kind_name, id))
+				stats_body.add_child(button)
+				shown += 1
+				if shown >= 20: break
 
 
 static func _fmt_int(v: float) -> String:
@@ -798,5 +839,5 @@ func set_frame_stats(frame: HistoryFrame, start_year: int) -> void:
 		return
 	top_year.text = fmt_year(frame.year)
 	top_stats["population"].text = _fmt_int(frame.world_population) if frame.world_population > 0.0 else "—"
-	top_stats["states"].text = str(frame.states.size()) if not frame.states.is_empty() else "—"
-	top_stats["peoples"].text = str(frame.peoples.size()) if not frame.peoples.is_empty() else "—"
+	top_stats["states"].text = str(frame.state_count())
+	top_stats["peoples"].text = str(frame.peoples.size())

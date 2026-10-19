@@ -151,7 +151,7 @@ static func build(id: String, w: WorldData, frame: HistoryFrame) -> Dictionary:
 					at_war[int(wv["b"])] = true
 				for i in w.land_cells:
 					var s := frame.owner[i]
-					if s >= 0:
+					if s > 0:
 						keys[i] = s
 						if at_war.has(s):
 							put.call(i, Color8(200, 50, 40), 0.45)
@@ -168,8 +168,8 @@ static func build(id: String, w: WorldData, frame: HistoryFrame) -> Dictionary:
 					var k := p
 					var c: Color = info.get("rgb", id_color(p))
 					if id == "cultures":
-						k = int(info.get("culture_group", info.get("family", p)))
-						c = id_color(k, 0.5, 0.8)
+						k = p
+						c = ramp(clampf(float(info.get("culture", 0.0)), 0.0, 1.0))
 					elif id == "languages":
 						k = int(info.get("family", p))
 						c = id_color(k * 7 + 3, 0.6, 0.78)
