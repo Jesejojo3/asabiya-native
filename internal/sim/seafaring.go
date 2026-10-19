@@ -17,7 +17,7 @@ func jsPairKey(a, b int) string {
 
 func (h *history) cropExchange(a, b CellID) {
 	w := h.world
-	if h.tech[TechFarm][a] < .5 || h.tech[TechFarm][b] < .5 || w.landmass[a] == w.landmass[b] || w.landmassSizes[w.landmass[a]] < 200 || w.landmassSizes[w.landmass[b]] < 200 {
+	if float64(h.tech[TechFarm][a]) < .5 || float64(h.tech[TechFarm][b]) < .5 || w.landmass[a] == w.landmass[b] || w.landmassSizes[w.landmass[a]] < 200 || w.landmassSizes[w.landmass[b]] < 200 {
 		return
 	}
 	key := jsPairKey(int(w.landmass[a]), int(w.landmass[b]))
@@ -68,10 +68,10 @@ func (h *history) seaHop() {
 		angle := r.Float64() * 6.2832
 		dx, dy := math.Cos(angle), math.Sin(angle)*.8
 		reach := 2 + int(math.Floor(sailing*28)) + int(r.Float64()*3)
-		if h.tech[TechNavigation][i] > .5 {
+		if float64(h.tech[TechNavigation][i]) > .5 {
 			reach += 14
 		}
-		if h.tech[TechOcean][i] > .5 {
+		if float64(h.tech[TechOcean][i]) > .5 {
 			reach += 70
 		}
 		x, y := float64(int(i)%w.config.Width)+.5, float64(int(i)/w.config.Width)+.5
@@ -120,7 +120,7 @@ func (h *history) seaHop() {
 			for k := range h.tech {
 				h.tech[k][target] = float32(math.Max(float64(h.tech[k][target]), float64(h.tech[k][i])*.5))
 			}
-			if h.tech[TechOcean][i] > .5 && w.landmass[target] != w.landmass[i] {
+			if float64(h.tech[TechOcean][i]) > .5 && w.landmass[target] != w.landmass[i] {
 				h.virginSoil(target, i)
 				h.cropExchange(i, target)
 				h.mixIn(target, int(h.eth[i]), .05)

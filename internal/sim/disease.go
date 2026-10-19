@@ -93,7 +93,7 @@ func (h *history) disease() {
 				spreadTo(j)
 			}
 		}
-		if w.coast[i] && h.tech[TechSail][i] > .5 {
+		if w.coast[i] && float64(h.tech[TechSail][i]) > .5 {
 			for q := w.seaOffsets[i]; q < w.seaOffsets[i+1]; q++ {
 				j := w.seaTargets[q]
 				if h.pop[j] < 1 || h.infection[j] != 0 || float64(h.immunity[j]) > .95 || h.outbreakAt[j] == int32(o.ID) {

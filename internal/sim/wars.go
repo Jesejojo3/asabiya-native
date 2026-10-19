@@ -143,7 +143,7 @@ func (h *history) attack(o *Polity, i, j CellID, sea bool) {
 		chance := .005
 		if o.Kind == "horde" {
 			chance = .15
-		} else if h.dd(i) < .45*o.Reach || h.fort[i] > .3 {
+		} else if h.dd(i) < .45*o.Reach || float64(h.fort[i]) > .3 {
 			chance = .05
 		}
 		if !sea && r.Float64() < chance && (o.Kind != "horde" || w.nomad[j] || w.desert[j]) {
@@ -167,7 +167,7 @@ func (h *history) attack(o *Polity, i, j CellID, sea bool) {
 	if w.tsetse[j] && !w.tsetse[o.Capital] {
 		defense *= 1.5
 	}
-	if w.desert[j] && float64(w.river[j]) < .3 && o.Kind != "horde" && h.tech[TechCamel][i] < .5 {
+	if w.desert[j] && float64(w.river[j]) < .3 && o.Kind != "horde" && float64(h.tech[TechCamel][i]) < .5 {
 		defense *= 1.5
 	}
 	offset, circ := 0., 1.
@@ -188,13 +188,13 @@ func (h *history) attack(o *Polity, i, j CellID, sea bool) {
 		family = h.peoples[o.Core].Family
 	}
 	unity := 1.
-	if h.uni[j] > .25 && int(h.uniFamily[j]) == family && o.Cells >= 12 {
+	if float64(h.uni[j]) > .25 && int(h.uniFamily[j]) == family && o.Cells >= 12 {
 		unity = 1 + .5*float64(h.uni[j])
-	} else if d != nil && h.uni[j] > .25 && h.peoples[d.Core].Family != int(h.uniFamily[j]) {
+	} else if d != nil && float64(h.uni[j]) > .25 && h.peoples[d.Core].Family != int(h.uniFamily[j]) {
 		unity = 1 + .3*float64(h.uni[j])
 	}
 	tropical := 1.
-	if w.tropical[j] > .5 && w.tropical[o.Capital] < .3 {
+	if float64(w.tropical[j]) > .5 && float64(w.tropical[o.Capital]) < .3 {
 		tropical = .45
 	}
 	related := chance
@@ -282,7 +282,7 @@ func (h *history) raid(o *Polity, i, j CellID) {
 }
 func (h *history) decisive(o, d *Polity, war *War) {
 	kin := h.peoples[d.Core].Family == h.peoples[o.Core].Family
-	identity := h.uni[d.Capital] > .3 && int(h.uniFamily[d.Capital]) == h.peoples[o.Core].Family
+	identity := float64(h.uni[d.Capital]) > .3 && int(h.uniFamily[d.Capital]) == h.peoples[o.Core].Family
 	annex := float64(d.Cells) <= .35*float64(o.Cells) || (kin || identity) && h.r.Float64() < .7 || h.r.Float64() < .35
 	n, old := d.Cells, d.Full
 	if annex {
@@ -351,10 +351,10 @@ func (h *history) distBFS() {
 				if direction < 2 {
 					cost *= float64(w.cosLat[i])
 				}
-				if h.tech[TechRoads][j] > .5 {
+				if float64(h.tech[TechRoads][j]) > .5 {
 					cost *= .6
 				}
-				if w.desert[j] && (h.tech[TechCamel][j] > .5 || horde) {
+				if w.desert[j] && (float64(h.tech[TechCamel][j]) > .5 || horde) {
 					cost *= .5
 				}
 				if horde && w.nomad[j] {
@@ -367,10 +367,10 @@ func (h *history) distBFS() {
 					pending++
 				}
 			}
-			if w.coast[i] && h.tech[TechSail][i] > .5 {
+			if w.coast[i] && float64(h.tech[TechSail][i]) > .5 {
 				for q := w.seaOffsets[i]; q < w.seaOffsets[i+1]; q++ {
 					j, dl := w.seaTargets[q], int(w.seaDistances[q])
-					if dl > 3 && h.tech[TechNavigation][i] < .5 {
+					if dl > 3 && float64(h.tech[TechNavigation][i]) < .5 {
 						continue
 					}
 					if h.pol[j] != p {

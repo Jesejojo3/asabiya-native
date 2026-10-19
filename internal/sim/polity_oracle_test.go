@@ -58,6 +58,7 @@ func TestOriginalPolityFoundationsContract(t *testing.T) {
 		o := h.polities[id]
 		cells := h.polCells(id)
 		o.Cells = len(cells)
+		o.CensusReady = true
 		o.Pop = float64(len(cells)) * 20000
 		o.K = float64(len(cells)) * 18000
 		o.S = .75

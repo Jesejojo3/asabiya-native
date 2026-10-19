@@ -112,7 +112,7 @@ func (h *history) cityPass() {
 			}
 			continue
 		}
-		if h.pop[i] < 120000 || h.tech[TechFarm][i] < .5 || p == 0 {
+		if h.pop[i] < 120000 || float64(h.tech[TechFarm][i]) < .5 || p == 0 {
 			continue
 		}
 		o := h.polities[p]

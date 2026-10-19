@@ -43,5 +43,9 @@ export async function annualOracle(){
     ${links}
     WD.cosLat=Float32Array.from(WD.lat,x=>Math.max(0.2,Math.cos(x)));
   }`);
+  evaluate(`{const w=WD;w.cosLon=new Float32Array(N);w.sinLon=new Float32Array(N);w.nT=new Float32Array(N);w.nM=new Float32Array(N);w.nN=new Float32Array(N);w.nD=new Float32Array(N);
+    for(let i=0;i<N;i++){const lon=((i%W+0.5)/W*360-180)*Math.PI/180;w.cosLon[i]=Math.cos(lon);w.sinLon[i]=Math.sin(lon)}
+    for(const i of w.landIdx){w.nT[i]=w.T[i]/8;w.nM[i]=2*clamp(Math.log(Math.max(1,w.Pr[i])/150)/Math.log(20),0,1);w.nN[i]=w.nomad[i]?1.2:w.desert[i]?0.8:0;w.nD[i]=0.8*w.mal[i]+(w.tsetse[i]?0.5:0)}
+  }`);
   return {evaluate,input,runtime};
 }

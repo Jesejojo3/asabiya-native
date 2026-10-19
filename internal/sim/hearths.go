@@ -121,13 +121,13 @@ func (h *history) hearthCheck() {
 				ok := false
 				switch f.Kind {
 				case "copper":
-					ok = h.tech[TechFarm][i] > .5 && float64(w.roughness[i]) > .2
+					ok = float64(h.tech[TechFarm][i]) > .5 && float64(w.roughness[i]) > .2
 				case "horse":
 					ok = float64(w.herdSuitability[i]) > .45 && float64(w.farmSuitability[i]) < .35 && float64(h.tech[TechHerd][i]) > .2
 				case "camel":
 					ok = float64(h.tech[TechHerd][i]) > .3 && (w.desert[i] || w.precipitation[i] < 350)
 				case "ard":
-					ok = float64(h.tech[TechFarm][i]) > .8 && h.tech[TechHerd][i] > .5 && !w.tsetse[i] && w.precipitation[i] < 900
+					ok = float64(h.tech[TechFarm][i]) > .8 && float64(h.tech[TechHerd][i]) > .5 && !w.tsetse[i] && w.precipitation[i] < 900
 				default:
 					ok = w.coast[i] && h.pop[i] > 200
 				}

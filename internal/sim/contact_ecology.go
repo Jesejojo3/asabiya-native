@@ -79,7 +79,7 @@ func (h *history) poolPass() {
 			contact := math.Min(1, math.Sqrt(float64(h.pop[i])*float64(h.pop[j]))/20000+float64(h.caravan[i]))
 			maximum = math.Max(maximum, float64(h.plaguePool[j])*(.9+.08*contact))
 		}
-		if w.coast[i] && h.tech[TechSail][i] > .5 {
+		if w.coast[i] && float64(h.tech[TechSail][i]) > .5 {
 			for q := w.seaOffsets[i]; q < w.seaOffsets[i+1]; q++ {
 				j := w.seaTargets[q]
 				if h.pop[j] >= 1 {
@@ -97,7 +97,7 @@ func (h *history) poolPass() {
 	if r.Float64() < .04*h.rules.get("disease") {
 		for attempt := 0; attempt < 60; attempt++ {
 			c := w.landList[int(r.Float64()*float64(len(w.landList)))]
-			if h.tech[TechHerd][c] < .6 || float64(w.herdSuitability[c]) < .3 || h.pop[c] < 100 {
+			if float64(h.tech[TechHerd][c]) < .6 || float64(w.herdSuitability[c]) < .3 || h.pop[c] < 100 {
 				continue
 			}
 			n := 0
@@ -109,7 +109,7 @@ func (h *history) poolPass() {
 				}
 				for dx := -9; dx <= 9; dx++ {
 					j := CellID(yy*w.config.Width + (cx+dx+w.config.Width)%w.config.Width)
-					if w.land[j] && h.tech[TechHerd][j] > .3 && dx*dx+dy*dy <= 81 {
+					if w.land[j] && float64(h.tech[TechHerd][j]) > .3 && dx*dx+dy*dy <= 81 {
 						h.rp[j] = float32(math.Max(float64(h.rp[j]), .65))
 						n++
 					}
@@ -144,7 +144,7 @@ func (h *history) caravanPass() {
 		if arid(i) || h.pol[i] == 0 || float64(h.pop[i])/float64(w.area[i]) < 1.5 {
 			continue
 		}
-		if h.tech[TechCamel][i] < .5 && h.tech[TechWindCart][i] < .5 {
+		if float64(h.tech[TechCamel][i]) < .5 && float64(h.tech[TechWindCart][i]) < .5 {
 			continue
 		}
 		ok := false

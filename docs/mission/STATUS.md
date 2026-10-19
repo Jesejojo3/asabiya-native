@@ -7,7 +7,7 @@ El usuario autorizó completar autónomamente todas las etapas, sin auditorías 
 - Prerrequisito cerrado: EraShare copiado profundamente y opciones de reglas incluidas en Digest; regresiones antes/después, tests/vet, builds, reproducción y CI Windows nativa/legado pasan. HTML y golden intactos.
 - Etapa A: weather, hearthCheck, growth, migrate, seaHop, techStep y disease portados. Contratos controlados contra JavaScript verifican posición RNG, identidades y orden de infecciones, epidemias, sumas y muestras de arrays. No equivalen a una historia anual completa. No hay avance anual público parcial.
 - B en curso: mezcla cultural, fundación/censo/cismas religiosos, ciudades, pools epidemiológicos, salida territorial y caravanas portados; contrato original controlado cubre 22 religiones y creación/caducidad de rutas desérticas. Regiones y cultura cortesana dependen todavía de los estados. newRuler/figuras se incorporaron como dependencias reales de profetas y reformadores.
-- C en curso: newPolity, gobernantes/figuras, sucesión, civilWar, collapse, fiscalidad/statecraft y cultura cortesana portados; politicsG anual y agregaciones todavía pendientes. Contrato controlado verifica ocho puntos (incluye creación de rebeldes) y posición RNG exacta.
+- C portado: newPolity, gobernantes/figuras, sucesión, civilWar, collapse, fiscalidad/statecraft, cultura cortesana y politicsG completo, con censo, fronteras y mantenimiento territorial. Contrato político controlado de seis años verifica censo, fase de gobernantes, RNG exacto, provincias y entidades, incluyendo los rebeldes visitados el mismo año. Falta la integración anual integral y la historia emergente larga.
 - D en curso: combate, conquista decisiva, saqueo, declaración/paz, diplomacia, distancia territorial, presión migratoria, movimiento/dispersión/asentamiento de migraciones y éxodo de hordas portados. Contrato controlado cubre combate, guerra civil, paz, una migración y diplomacia; falta integrarlos en el calendario y demostrar historia emergente larga.
 - E pendiente: ocho presagios y siete cataclismos.
 - F pendiente: calendario completo, año atómico, consultas/headless/ventana y simulaciones largas.
@@ -16,6 +16,12 @@ El usuario autorizó completar autónomamente todas las etapas, sin auditorías 
 Guardar/reanudar partida completa es una ampliación nativa aún no implementada. El historial visual original no la sustituye.
 
 `Digest()` continúa siendo la proyección congelada `native/history-init-v1`; no debe presentarse como hash de todo el nuevo estado anual. Antes de exponer años se añadirá un contrato de estado completo versionado, conservando explícitamente los golden de inicialización.
+
+## Semántica comprobada durante la integración política
+
+- Las lecturas de arrays float32 se promueven a float64 también al comparar umbrales. Por ejemplo, float32(0.7) es menor que el literal JS 0.7; comparar directamente en Go redondearía ambos al mismo float32, permitiría inventar moneda y consumiría otro sorteo. El contrato político detectó esa diferencia; se corrigió el código, no el valor de referencia.
+- `newPolity` no define `o.integ` ni `o.coastN`. Los rebeldes visitados antes de su primer censo pueden propagar NaN a presión y cultura; el efecto se confirmó ejecutando el original. Se conserva explícitamente mediante disponibilidad del censo y NaN, sin confundirlo con las matrices provinciales de integración. Las vistas JSON deben emitir null para números no disponibles/no finitos. No normalizar cultura a cero silenciosamente; una corrección futura requerirá reglas versionadas.
+- Región/forma imperial, vigilancias de pérdida de escritura y estadísticas políticas están portadas para mundos procedurales; las encuestas y regiones terrestres siguen pendientes de la rama Tierra. Su validación integrada sigue pendiente.
 
 ## Dirección vigente: Go + Godot 4
 

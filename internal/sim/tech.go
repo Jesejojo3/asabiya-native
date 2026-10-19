@@ -53,7 +53,7 @@ func init() {
 
 // eraOf is v0.6 lines 801–809: the technological era of a province.
 func (h *history) eraOf(i int) int {
-	v := func(k int) bool { return h.tech[k][i] > .5 }
+	v := func(k int) bool { return float64(h.tech[k][i]) > .5 }
 	b := func(x bool) int {
 		if x {
 			return 1

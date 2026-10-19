@@ -40,6 +40,8 @@ type ChronicleEntry struct {
 
 // StatsEntry is recordStats (v0.6 1902–1909) for the periods ported so far.
 type StatsEntry struct {
+	Biggest       string    `json:"biggest,omitempty"`
+	BiggestCells  int       `json:"biggestCells,omitempty"`
 	Year          int       `json:"year"`
 	Population    float64   `json:"population"`
 	Polities      int       `json:"polities"`
@@ -319,8 +321,30 @@ func (h *history) recordStats() {
 	for k, v := range eraPop {
 		share[k] = v / div
 	}
-	// No polities exist before the political systems are ported.
-	h.stats = append(h.stats, StatsEntry{Year: h.year, Population: tp, LivingPeoples: living, LeadingEra: lead,
+	np, nh := 0, 0
+	var biggest *Polity
+	for _, id := range h.alive {
+		o := h.polities[id]
+		if o.Cells >= 2 {
+			if o.Kind == "horde" {
+				nh++
+			} else {
+				np++
+			}
+		}
+		if biggest == nil || o.Cells > biggest.Cells {
+			biggest = o
+		}
+		if o.Cells >= 3 {
+			o.Hist = append(o.Hist, h.year, o.Cells)
+		}
+	}
+	name, bc := "", 0
+	if biggest != nil {
+		name = biggest.Full
+		bc = biggest.Cells
+	}
+	h.stats = append(h.stats, StatsEntry{Year: h.year, Population: tp, Polities: np, Hordes: nh, Biggest: name, BiggestCells: bc, LivingPeoples: living, LeadingEra: lead,
 		TempAnomaly: h.gT + h.epochTemp(), Orbital: h.orbM, EraShare: share})
 }
 

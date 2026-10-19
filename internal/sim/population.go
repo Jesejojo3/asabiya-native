@@ -142,7 +142,7 @@ func (h *history) migrate() {
 			}
 		} else if h.eth[j] != h.eth[i] {
 			h.mixIn(j, int(h.eth[i]), moved/(population+moved)*.6)
-			if h.eth2[j] == h.eth[i] && h.mix[j] > .5 {
+			if h.eth2[j] == h.eth[i] && float64(h.mix[j]) > .5 {
 				old := h.eth[j]
 				h.eth[j] = h.eth2[j]
 				h.eth2[j] = old

@@ -89,7 +89,7 @@ func (h *history) civilWar(o *Polity, breakup bool) {
 			if c == o.Capital {
 				continue
 			}
-			if k >= len(top) || (h.integ[c] > .8 && r.Float64() < .7) {
+			if k >= len(top) || (float64(h.integ[c]) > .8 && r.Float64() < .7) {
 				h.lab[c] = int32(o.ID)
 				q = append(q, c)
 			}
@@ -322,6 +322,9 @@ func (h *history) statecraft(o *Polity, c CellID, year int) {
 	}
 	need := clamp((o.Press-.8)*2+warNeed+.5*math.Max(0, o.Burden-.8)-.3*math.Max(0, 1-o.Press), -1, 1)
 	energy := clamp(-.8+.6*t(TechArd)+.5*t(TechIron)+.4*t(TechHorse)+.3*(float64(o.CoastN)/math.Max(1, float64(o.Cells)))+.4*float64(h.world.river[c])+.3*t(TechCamel)+.3*t(TechWheel), -1, 1)
+	if !o.CensusReady {
+		energy = math.NaN()
+	} // JS coastN is absent until census
 	o.Fac = &[2]float64{need, energy}
 }
 

@@ -78,6 +78,9 @@ func (h *history) newPolity(c CellID, from *Polity, opt polityOptions) int {
 	}
 	o := &Polity{ID: id, Base: base, Core: e, Capital: c, Born: h.year, Dynasty: dyn, Generation: 1, Kind: kind, E: .02, S: .5, Press: .5, Cells: 1, Pop: float64(h.pop[c]), K: 1, MaxCells: 1, Alive: true, FamineYear: -1e9, Reach: h.rules.get("reach"), Gate: 1, AggressionMultiplier: 1, Tier: "Chiefdom", Religion: int(h.religion[c]), Culture: .2, ConquestDynasty: opt.ConquestDynasty, Restores: opt.Restores, RGB: rgb}
 	o.Origin = PolityOrigin{Type: "emerged", People: e}
+	// A rebel visited live before its first census has JS o.integ undefined.
+	// Preserve its NaN comparisons; transport must encode unavailable as null.
+	o.Integration = math.NaN()
 	if from != nil {
 		o.From = from.ID
 		o.Origin = PolityOrigin{Type: "rebellion", From: from.ID}
@@ -168,7 +171,7 @@ func (h *history) isWaste(i CellID, horde bool) bool {
 	if float64(h.pop[i])/float64(w.area[i]) < .25 && float64(w.farmSuitability[i]) < .12 {
 		return true
 	}
-	if float64(h.tech[TechFarm][i])*float64(w.farmSuitability[i]) >= .12 || h.caravan[i] >= .3 || h.city[i] >= 0 {
+	if float64(h.tech[TechFarm][i])*float64(w.farmSuitability[i]) >= .12 || float64(h.caravan[i]) >= .3 || h.city[i] >= 0 {
 		return false
 	}
 	desert := 0.

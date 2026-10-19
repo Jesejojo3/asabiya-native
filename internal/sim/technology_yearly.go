@@ -156,7 +156,7 @@ func (h *history) techStep(start, end float64) {
 						rate *= .1 + float64(w.heavySoil[i])
 					case f == TechXCrops:
 						factor := .2
-						if h.tech[TechFarm][i] > .5 {
+						if float64(h.tech[TechFarm][i]) > .5 {
 							factor = 1
 						}
 						rate *= .3 * factor
@@ -196,7 +196,7 @@ func (h *history) techStep(start, end float64) {
 			}
 			a[i] = float32(t)
 		}
-		if h.firstDiscoveries[TechIrrigation] == nil || h.tech[TechIrrigation][i] < .5 {
+		if h.firstDiscoveries[TechIrrigation] == nil || float64(h.tech[TechIrrigation][i]) < .5 {
 			if float64(h.tech[TechFarm][i]) > .8 && float64(w.river[i]) > .25 && w.precipitation[i] < 1000 && float64(h.pop[i])/float64(w.area[i]) > 4 && r.Float64() < .0008*h.rules.get("invent") {
 				h.seedTech(TechIrrigation, i, 1, 1)
 				h.firstTech(TechIrrigation, i, polity)

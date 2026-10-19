@@ -3,6 +3,9 @@ package sim
 // Entity records are owned by history. ID relationships are indices/sentinels,
 // never object addresses. Fields grow with the systems that consume them.
 type Polity struct {
+	CensusReady                                                                               bool
+	Trade                                                                                     float64
+	MaxProvince                                                                               CellID
 	RGB                                                                                       [3]uint8
 	Base, Dynasty, PeakName                                                                   string
 	Born, Died, Generation, Cells, MaxCells, Conquests, From, LastBy, Crises                  int
