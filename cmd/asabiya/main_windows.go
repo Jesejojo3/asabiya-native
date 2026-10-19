@@ -20,7 +20,7 @@ func run() error {
 	if o.Output != "" || o.Cell != "" {
 		return fmt.Errorf("--out and --cell are headless options; use asabiya-headless")
 	}
-	w, err := sim.GenerateWorld(o.World)
+	w, surface, err := sim.GenerateWorldWithSurface(o.World)
 	if err != nil {
 		return err
 	}
@@ -28,14 +28,14 @@ func run() error {
 		return err
 	}
 	if o.PNG != "" {
-		if err := terrain.WritePNG(o.PNG, w); err != nil {
+		if err := terrain.WriteSurfacePNG(o.PNG, surface); err != nil {
 			return err
 		}
 	}
 	ebiten.SetWindowSize(1200, 600)
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetWindowTitle(fmt.Sprintf("Asabiya Native | %s | terrain + climate preview | Esc: close", o.World.Seed))
-	return ebiten.RunGame(view.New(w))
+	return ebiten.RunGame(view.New(w, surface))
 }
 
 func main() {

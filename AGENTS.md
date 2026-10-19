@@ -1,6 +1,6 @@
 # Asabiya Native — alcance y preservación
 
-- Estado actual: Fase 0 integrada y Fase 1 autorizada expresamente por el usuario. Primer bloque en rama nueva; no integrar la PR de Fase 1 sin su aprobación. Ver docs/phase-1/README.md.
+- Estado actual: Bloque 1 integrado en main 7fb42f9e. Bloque 2 autorizado: drenaje, geografía, ecología y capas finas, en rama/PR nuevas, sin merge automático. Ver docs/phase-1/BLOCK2.md. No newHistory ni población/estados en este bloque.
 - No editar, reformatear ni normalizar `reference/v0.6/Asabiya History Engine (Copy).html`. Ejecutar `node tools/verify-reference.mjs` al trabajar con la referencia.
 - No escribir directamente en `main`, integrar PR ni crear `legacy-v0.6` sin la aprobación solicitada. La política de tag está en `docs/phase-0/README.md`.
 - Consultar `docs/phase-0/SOURCE_AUDIT.md` antes de portar: prioridades mapa, pueblos, estados, guerras, presagios; conservar dependencias causales de clima, tecnología y ecología.

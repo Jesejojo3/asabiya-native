@@ -50,9 +50,28 @@ func TestGenerateQueryAndExport(t *testing.T) {
 	}
 }
 
+func TestFinePNGExport(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "fine.png")
+	if err := run([]string{"--width", "48", "--height", "24", "--png", path, "--high-res"}, &bytes.Buffer{}, &bytes.Buffer{}); err != nil {
+		t.Fatal(err)
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	config, err := png.DecodeConfig(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if config.Width != 192 || config.Height != 96 {
+		t.Fatal("fine PNG is not the detail grid")
+	}
+}
+
 func TestInvalidInput(t *testing.T) {
 	for _, args := range [][]string{
-		{"--unknown"}, {"unexpected"}, {"--width", "-1"}, {"--land", "NaN"},
+		{"--unknown"}, {"unexpected"}, {"--width", "-1"}, {"--land", "NaN"}, {"--high-res"},
 		{"--width", "48", "--height", "24", "--cell", "-1,0"},
 		{"--width", "48", "--height", "24", "--cell", "1"},
 	} {

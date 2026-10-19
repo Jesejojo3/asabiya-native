@@ -1,7 +1,7 @@
 # internal/sim
 
-Primer bloque implementado: mundo procedural, clima inicial, agregación, vecinos, costas y masas de tierra. World es inmutable; sus consultas devuelven valores sin acceso a los arrays privados. Simulation conserva mundo, semilla histórica, año inicial y RNG independiente; la sesión aún está sin población y no tiene AdvanceYear.
+Bloques 1–2: mundo procedural, clima, agregación, geometría esférica, vecinos/costas/masas, drenaje, aptitud ecológica, viajes, enlaces marítimos, interpolación 40×20 y prepEco. World es inmutable y las consultas devuelven valores/copias. Surface opcional conserva el detalle visual fuera de World, sin dependencias de render. Simulation sigue sin población y no tiene AdvanceYear.
 
-Pendiente: drenaje/ríos, aptitud ecológica, enlaces marítimos, recursos Tierra/importados, newHistory, tecnología y calendario anual. No sustituir capacidad de carga por constantes al incorporarlos. Go math y versión native/world-v1, sin exigir igualdad V8.
+Pendiente: recursos Tierra/importados y ajuste Köppen, nombres/lenguas, newHistory, población, capacidad de carga, tecnología y calendario anual. La malla meteorológica aquí es geometría/índices/pesos, no inicialización aleatoria AG ni weather anual. No sustituir capacidad de carga por constantes. Go math, native/world-v2; proyección congelada v1 para conservar el golden anterior.
 
 Diseño: [arquitectura](../../docs/phase-0/ARCHITECTURE.md).

@@ -1,5 +1,7 @@
 # Fase 1 — primer bloque nativo
 
+**Documento histórico del Bloque 1**, integrado en `7fb42f9eab9304b7bcd6811a379780ea6ca4723b`. Estado posterior: [Bloque 2](BLOCK2.md). Las limitaciones y propuestas siguientes corresponden al momento de aquella entrega.
+
 Entrega para revisión, **sin autorización de merge**. Rama `phase-1/native-world`, creada desde el merge de Fase 0 `2bbefb70959bc0648dbf29b08b17e814ff287625`. Este documento actualiza el estado de implementación; los documentos de Fase 0 siguen como historial de diseño/auditoría.
 
 ## Paso previo completado

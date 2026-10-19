@@ -28,6 +28,11 @@ jobs:
       - run: go mod verify
       - run: go vet ./...
       - run: go test -count=1 ./...
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: '.node-version'
+      - name: Verify small original heap/geography contract
+        run: node tools/check-geography-oracle.mjs
       - name: Build both executables without a C toolchain
         shell: pwsh
         run: |

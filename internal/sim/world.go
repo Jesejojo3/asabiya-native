@@ -10,7 +10,7 @@ import (
 	"unicode/utf8"
 )
 
-const WorldVersion = "native/world-v1"
+const WorldVersion = "native/world-v2"
 
 type CellID int32
 
@@ -56,23 +56,43 @@ type World struct {
 	landmass                                                                    []int32
 	landmassSizes                                                               []int
 	landCells, coastCells                                                       int
+	x3, y3, z3, cosLon, sinLon, cosLat                                          []float32
+	filled, accumulation, river                                                 []float32
+	down, drainageOrder                                                         []CellID
+	farmSuitability, herdSuitability, growingSeason, leach, tropical            []float32
+	biome                                                                       []Biome
+	nomad, tsetse, desert                                                       []bool
+	travelCost                                                                  []uint8
+	monsoonZone                                                                 []float32
+	weatherIndices                                                              [][4]int32
+	weatherFractions                                                            [][2]float32
+	seaOffsets                                                                  []int32
+	seaTargets                                                                  []CellID
+	seaDistances                                                                []uint8
+	forest, heavySoil, malaria, oncho, circumscription                          []float32
+	nicheTemperature, nicheMoisture, nicheLifestyle, nicheDisease               []float32
+	ecoReady                                                                    bool
 }
 
 type Cell struct {
-	ID                CellID    `json:"id"`
-	X                 int       `json:"x"`
-	Y                 int       `json:"y"`
-	Land              bool      `json:"land"`
-	Coast             bool      `json:"coast"`
-	Elevation         float32   `json:"elevationMeters"`
-	Temperature       float32   `json:"temperatureC"`
-	Precipitation     float32   `json:"precipitationMM"`
-	SeasonalAmplitude float32   `json:"seasonalAmplitudeC"`
-	Roughness         float32   `json:"roughness"`
-	Latitude          float32   `json:"latitudeRadians"`
-	Area              float32   `json:"areaKM2"`
-	Neighbors         [4]CellID `json:"neighbors"`
-	Landmass          int32     `json:"landmass"`
+	ID                CellID               `json:"id"`
+	X                 int                  `json:"x"`
+	Y                 int                  `json:"y"`
+	Land              bool                 `json:"land"`
+	Coast             bool                 `json:"coast"`
+	Elevation         float32              `json:"elevationMeters"`
+	Temperature       float32              `json:"temperatureC"`
+	Precipitation     float32              `json:"precipitationMM"`
+	SeasonalAmplitude float32              `json:"seasonalAmplitudeC"`
+	Roughness         float32              `json:"roughness"`
+	Latitude          float32              `json:"latitudeRadians"`
+	Area              float32              `json:"areaKM2"`
+	Neighbors         [4]CellID            `json:"neighbors"`
+	Landmass          int32                `json:"landmass"`
+	Geometry          Geometry             `json:"geometry"`
+	Drainage          Drainage             `json:"drainage"`
+	Ecology           Ecology              `json:"ecology"`
+	Weather           WeatherInterpolation `json:"weather"`
 }
 
 func (w *World) Config() WorldConfig       { return w.config }
@@ -86,21 +106,33 @@ func (w *World) Cell(id CellID) (Cell, bool) {
 	return Cell{ID: id, X: i % w.config.Width, Y: i / w.config.Width, Land: w.land[i], Coast: w.coast[i],
 		Elevation: w.elevation[i], Temperature: w.temperature[i], Precipitation: w.precipitation[i],
 		SeasonalAmplitude: w.amplitude[i], Roughness: w.roughness[i], Latitude: w.latitude[i], Area: w.area[i],
-		Neighbors: w.neighbors[i], Landmass: w.landmass[i]}, true
+		Neighbors: w.neighbors[i], Landmass: w.landmass[i], Geometry: w.geometry(i),
+		Drainage: w.drainage(i), Ecology: w.ecology(i),
+		Weather: WeatherInterpolation{Indices: w.weatherIndices[i], Fractions: w.weatherFractions[i]}}, true
 }
 
-// GenerateWorld ports the procedural branch through climate, aggregation,
-// geography and landmasses (v0.6 lines 522–582). Drainage/ecology/sea links,
-// imported maps, Earth assets and climate fitting are not implemented yet.
+// GenerateWorld builds the procedural geography and prepEco without retaining
+// fine visual layers. Earth/imported maps and climate fitting remain out of scope.
 func GenerateWorld(c WorldConfig) (*World, error) {
+	w, _, err := generateWorld(c, false)
+	return w, err
+}
+
+// GenerateWorldWithSurface retains already-computed fine layers in a separate
+// immutable data object. It does not regenerate or consume additional RNG.
+func GenerateWorldWithSurface(c WorldConfig) (*World, *Surface, error) {
+	return generateWorld(c, true)
+}
+
+func generateWorld(c WorldConfig, retainSurface bool) (*World, *Surface, error) {
 	if err := c.validate(); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	r := rng.New(rng.WorldSeed(c.Seed))
 	hw, hh := c.Width*c.Detail, c.Height*c.Detail
 	e, err := generateElevation(hw, hh, c.LandFraction, r)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	t, p, a := generateClimate(e, hw, hh)
 	n := c.Width * c.Height
@@ -148,7 +180,18 @@ func GenerateWorld(c WorldConfig) (*World, error) {
 		}
 	}
 	w.indexLand()
-	return w, nil
+	w.prepareGeometry()
+	w.prepareDrainage()
+	w.prepareSuitability()
+	w.prepareTravel()
+	w.prepareWeatherGrid()
+	w.prepareSeaLinks()
+	w.prepareEcology()
+	var surface *Surface
+	if retainSurface {
+		surface = &Surface{width: hw, height: hh, elevation: e, temperature: t, precipitation: p, amplitude: a}
+	}
+	return w, surface, nil
 }
 
 func generateElevation(hw, hh int, landFraction float64, r *rng.Mulberry32) ([]float32, error) {
