@@ -37,4 +37,4 @@ Para iniciar Fase 1 se necesita aprobar alcance, contrato de determinismo, estra
 
 Informe completo recibido del usuario; matriz de los 17 hallazgos en [AUDIT_FINDINGS.md](AUDIT_FINDINGS.md). Contrato numérico: [NUMERIC_COMPATIBILITY.md](NUMERIC_COMPATIBILITY.md). Comandos/perfiles: [COMMANDS_AND_PROFILES.md](COMMANDS_AND_PROFILES.md). [IDs, eventos y guardado](EVENTS_AND_SAVE.md), [semántica de colecciones](COLLECTION_SEMANTICS.md), [calendario](SYSTEM_CALENDAR.md), [ADR](ARCHITECTURAL_DECISIONS.md), [pruebas correctivas](CORRECTION_VALIDATION.md).
 
-No iniciar Fase 1 ni integrar hasta segunda aprobación de Claude y autorización explícita del usuario. La puerta técnica de matemáticas sigue pendiente; esta entrega no contiene mecánicas Go.
+La segunda revisión estática de Claude terminó APROBADA CON CONDICIONES y el usuario fijó el alcance personal Windows x64: math de Go en native, sin puerta jsmath ni paridad V8 exacta obligatoria. Integración/tag/Fase 1 siguen pendientes de autorización explícita del usuario; aún no existen mecánicas Go.
