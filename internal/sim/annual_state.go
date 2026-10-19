@@ -3,6 +3,19 @@ package sim
 // Annual state is added together with its causal systems. It is not a second
 // simulation and does not expose a partial AdvanceYear API.
 type annualState struct {
+	alive                         []int // owning collection: politics visits append-created rebels live
+	fallen                        []*Polity
+	darkWatch                     []DarkWatch
+	wars                          []*War
+	activeWars                    []int
+	dist                          []uint16
+	taken                         []int32
+	fort, integ, uni              []float32
+	uniFamily                     []int32
+	landmassPopulation            []int32
+	islandNames                   map[int32]string
+	islandBy                      map[int32]int
+	shapes                        []int
 	cities                        []*City
 	figures                       []*Figure
 	rulers                        []*Ruler
@@ -65,6 +78,18 @@ func (h *history) prepareAnnualState() {
 	h.bfsMark = make([]int32, n)
 	h.bfsDistance = make([]int16, n)
 	h.exit = make([]float32, n)
+	h.dist = make([]uint16, n)
+	for i := range h.dist {
+		h.dist[i] = 65535
+	}
+	h.taken = newInt32(n, -1e9)
+	h.fort = make([]float32, n)
+	h.integ = make([]float32, n)
+	h.uni = make([]float32, n)
+	h.uniFamily = newInt32(n, -1)
+	h.landmassPopulation = make([]int32, len(h.world.landmassSizes))
+	h.islandNames = make(map[int32]string)
+	h.islandBy = make(map[int32]int)
 	h.annualReady = true
 }
 

@@ -3,18 +3,75 @@ package sim
 // Entity records are owned by history. ID relationships are indices/sentinels,
 // never object addresses. Fields grow with the systems that consume them.
 type Polity struct {
-	Tier                                             string
-	CityPopulation, MaxProvincePopulation            float64
-	Ruler                                            *Ruler
-	Rulers                                           []RulerRecord
-	NameUse                                          map[string]int
-	ID                                               int
-	Kind, Full                                       string
-	Capital                                          CellID
-	Core                                             int
-	Alive                                            bool
-	Burden, Inequality, Shock, PlagueDeaths, Culture float64
-	Religion                                         int
+	RGB                                                                                       [3]uint8
+	Base, Dynasty, PeakName                                                                   string
+	Born, Died, Generation, Cells, MaxCells, Conquests, From, LastBy, Crises                  int
+	Over, Tributaries, OverYear, Era, Raided, Invaded                                         int
+	E, S, Press, MD, ADM, NomF, Pop, K, MaxPop                                                float64
+	Wet, P5, Reach, Gate, AggressionMultiplier, Psi                                           float64
+	FamineYear, LowYear, CoastN, FarmN, FortN, LandmassN, WasteN, PloughN, HeavyN             int
+	Tax, Integration, Mandate, Complexity, Treasury, WarCost, PT, PF, PQ, P10, Specialization float64
+	ComplexitySet                                                                             bool
+	Niche                                                                                     *[4]float64
+	ForeignShare, ForeignPopulation                                                           float64
+	Fac                                                                                       *[2]float64
+	LX, LY, Loot                                                                              float64
+	FK, FE, Island, ConquestDynasty, Departed, WallLogged                                     bool
+	SettledYear, AssimilationTime, Restores, RestoredBy                                       int
+	Hist, Allies, WarsF, Kids, Successors                                                     []int
+	Sample                                                                                    []CellID
+	Enemies, Truce, NB                                                                        orderedMap[int, int]
+	Origin                                                                                    PolityOrigin
+	FounderR                                                                                  *Ruler
+	Why                                                                                       []Factor
+	GoldStart                                                                                 int
+	Works                                                                                     []Work
+	Golds                                                                                     [][2]int
+	CultureWhy                                                                                [6]float64
+	Shape                                                                                     *RealmShape
+	ShapeN                                                                                    int
+	InShapes                                                                                  bool
+	Tier                                                                                      string
+	CityPopulation, MaxProvincePopulation                                                     float64
+	Ruler                                                                                     *Ruler
+	Rulers                                                                                    []RulerRecord
+	NameUse                                                                                   map[string]int
+	ID                                                                                        int
+	Kind, Full                                                                                string
+	Capital                                                                                   CellID
+	Core                                                                                      int
+	Alive                                                                                     bool
+	Burden, Inequality, Shock, PlagueDeaths, Culture                                          float64
+	Religion                                                                                  int
+}
+
+type PolityOrigin struct {
+	Type                             string
+	From, People, Migration, Settled int
+	Why                              string
+}
+type Factor struct {
+	Key   string
+	Value float64
+}
+type Work struct {
+	Year   int
+	Name   string
+	Figure int
+}
+type RealmShape struct{ EW, NS, N int }
+type DarkWatch struct {
+	Year, Polity int
+	Cells        []CellID
+}
+type War struct {
+	ID                                 int
+	Name                               string
+	Attackers, Defenders               []int
+	Start, End, GainA, GainD, LastGain int
+	Civil, Holy, Notable               bool
+	ASet                               orderedSet[int]
+	Why, Outcome                       string
 }
 
 type Religion struct {

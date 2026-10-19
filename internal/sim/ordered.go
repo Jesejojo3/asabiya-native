@@ -41,6 +41,12 @@ func (m *orderedMap[K, V]) Delete(k K) {
 	}
 }
 func (m *orderedMap[K, V]) Len() int { return len(m.lookup) }
+func (m *orderedMap[K, V]) Clear() {
+	for _, e := range m.entries {
+		e.alive = false
+	}
+	clear(m.lookup)
+}
 func (m *orderedMap[K, V]) Each(f func(K, V)) {
 	for i := 0; i < len(m.entries); i++ {
 		e := m.entries[i]

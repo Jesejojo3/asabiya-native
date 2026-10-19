@@ -332,7 +332,7 @@ func (h *history) langAt(c CellID) *Language {
 	return h.peoples[e].Language
 }
 
-// placeName is v0.6 line 2094: a city name (no cities yet), a place-word in the
+// placeName is v0.6 line 2094: a city name, a place-word in the
 // local tongue from a derived per-province RNG, or a coordinate description.
 func (h *history) placeName(k CellID) string {
 	w := h.world
@@ -340,7 +340,7 @@ func (h *history) placeName(k CellID) string {
 		return "the world"
 	}
 	if h.city[k] >= 0 {
-		panic("cities are not ported yet")
+		return h.cities[h.city[k]].Name
 	}
 	if h.eth[k] >= 0 {
 		return placeWord(h.langAt(k), rng.New(placeNameSeed(h.seed, w.config.Seed, k)))

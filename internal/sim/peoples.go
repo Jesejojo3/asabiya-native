@@ -55,6 +55,26 @@ func jsRound(x float64) float64 {
 	return f
 }
 
+func (h *history) ethDistance(a, b int) float64 {
+	if a == b {
+		return 0
+	}
+	if a < 0 || b < 0 {
+		return 1
+	}
+	av, bv := h.peoples[a].Culture, h.peoples[b].Culture
+	distance := 0.
+	for k := 0; k < 6; k++ {
+		delta := float64(av[k]) - float64(bv[k])
+		distance += delta * delta
+	}
+	distance = math.Sqrt(distance/6) * 1.6
+	if h.peoples[a].Family != h.peoples[b].Family {
+		distance += .35
+	}
+	return math.Min(1, distance)
+}
+
 // hsl is v0.6 line 390, used for the people's map colour.
 func hsl(h, s, l float64) [3]uint8 {
 	h = math.Mod(math.Mod(h, 360)+360, 360) / 360

@@ -41,6 +41,7 @@ jobs:
           node tools/check-weather-hearth-oracle.mjs
           node tools/check-demography-oracle.mjs
           node tools/check-society-oracle.mjs
+          node tools/check-polity-oracle.mjs
       - name: Build both executables without a C toolchain
         shell: pwsh
         run: |
