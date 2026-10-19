@@ -18,3 +18,5 @@ node tools/reference-smoke.mjs
 ```
 
 No integrar ni etiquetar legacy-v0.6 hasta aprobación e integración de la referencia. No iniciar Fase 1 automáticamente.
+
+Correcciones de primera auditoría: [matriz de hallazgos](docs/phase-0/AUDIT_FINDINGS.md) y [validación correctiva](docs/phase-0/CORRECTION_VALIDATION.md). Pendientes segunda revisión de Claude y autorización del usuario; sin merge, tag ni Fase 1.

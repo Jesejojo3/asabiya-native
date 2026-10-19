@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "environment": {
+    "node": "24.19.0",
+    "v8": "13.6.233.17-node.51",
+    "platform": "win32",
+    "arch": "x64",
+    "endianness": "LE",
+    "icu": "78.3",
+    "unicode": "17.0"
+  },
+  "protectedFiles": [
+    {
+      "path": ".gitattributes",
+      "sha": "7f8db93c427a7e7358d33afe01b284ef260b8e15",
+      "unchanged": true
+    },
+    {
+      "path": "tools/reference-smoke.mjs",
+      "sha": "ed24d7f4bfc287d9eba3f7b2f25c0d9d6123c1df",
+      "unchanged": true
+    },
+    {
+      "path": "tools/verify-reference.mjs",
+      "sha": "7be1db0b0d975b2394874cc6ec9bfe551a5e307d",
+      "unchanged": true
+    },
+    {
+      "path": "docs/phase-0/evidence/reference-smoke.windows-node24.json",
+      "sha": "6cae42861cb8ad88bc78e65fe5132132a6bdae1a",
+      "unchanged": true
+    },
+    {
+      "path": "docs/phase-0/evidence/source-inventory.json",
+      "sha": "d15afd5d232e21da2b1be872ccf3c8db2ab9b28f",
+      "unchanged": true
+    },
+    {
+      "path": "reference/v0.6/SHA256SUMS",
+      "sha": "48bd503dbf421cc01f5098901e3299eee47d8d4f",
+      "unchanged": true
+    },
+    {
+      "path": "reference/v0.6/manifest.json",
+      "sha": "12edce1a25af5354bd68b4bf8c8d188fbce31705",
+      "unchanged": true
+    }
+  ],
+  "sourceByteComparisonAgainstDownloads": true,
+  "originalGoldenComparison": "passed, both scenarios/all historical digests and continuation",
+  "rngTransparency": "passed, world/history compared against uncounted execution",
+  "rngAtMinus8997": {
+    "seed": 3245295878,
+    "calls": 46912,
+    "state": 544991558
+  },
+  "exactStateV2": "passed: property order, signed zero, Map order, aliases/cycles, sparse arrays",
+  "quickMathVectors": 27869,
+  "extendedMathVectors": 2601245,
+  "mathGoComparison": "NOT RUN: no Go/jsmath implementation in Phase 0",
+  "remoteCorrectiveCI": "check PR run for final commit; not inferred from YAML",
+  "lateFixture": {
+    "generation": "passed, one full local process; independent repeat pending",
+    "stateDigest": "eb6326feccc32ae93d7d7f5c8c2e312dae9a7e998006b8b491405850d55f5ade",
+    "position": {
+      "seed": 3245295878,
+      "calls": 99869912,
+      "state": 592143294
+    },
+    "firstState": -3837,
+    "firstWar": -3619,
+    "final": {
+      "year": -3500,
+      "states": 8,
+      "wars": 5,
+      "peoples": 1098
+    }
+  }
+}

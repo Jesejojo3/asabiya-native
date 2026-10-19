@@ -20,12 +20,12 @@
 | R01 Alta | Float32 en arrays + float64 en fórmulas, RNG compartido, sort y Map/Set | Vectores numéricos y RNG, traza de primer desacuerdo; no aceptar sólo agregados. |
 | R02 Alta | Clima/tecnología/ecología afectan las cinco prioridades | Conservar llamadas y capas; fixtures cruzados con capacidad de carga, fiscalidad y alcance militar. |
 | R03 Alta | Smoke inicial no forma estados ni guerras | Cero estados/guerras al final de ambos escenarios; conseguir fixtures tardíos deterministas antes de portar esos sistemas. No presentar este smoke como cobertura militar. |
-| R04 Alta | Snapshots de mapa no sirven para restaurar simulación y RNG es clausura | Diseñar checkpoint completo y compatibilidad de alias/Map/Set/RNG, con replay. |
+| R04 Alta | Snapshots de mapa no restauran estado completo; Mulberry32 sí es reconstruible con semilla/contador | Fórmula y transparencia probadas por adaptador externo; diseño Save/Restore v1 con IDs y orden en EVENTS_AND_SAVE.md. Persistencia completa pendiente de implementación. |
 | R05 Media | Tiempo de UI y años parciales pueden mezclar comandos | Mantener frontera `finishYear` y orden de intervenciones; probar velocidades y render distintos. |
 | R06 Media | Recursos terrestres embebidos y fuentes externas | Preservar bytes y procedencia local. Verificar licencias/atribuciones de elevación, Köppen, fuentes y código antes de distribuir binarios o extraer assets. No se adjudica una licencia no comprobada. |
 | R07 Media | Importación de heightmaps vía Canvas depende del navegador | Fixture de píxeles decodificados y hash; definir interpolación exacta antes de prometer equivalencia de importación. |
 | R08 Media | Versión/runtime/plataforma pueden cambiar trascendentales | Registrar entorno del oráculo y comparar por etapa; declarar alcance de determinismo multiplataforma tras medir. |
-| R09 Media | Años negativos hacen que algunas cadencias no disparen antes de CE | Conservar semántica del resto; documentar como comportamiento heredado hasta decisión separada. |
+| R09 Media | poolPass y caravanPass no disparan antes de CE por %10===5 y %20===7 | Conservar en v06-compat; alternativa native/calendar-v2 requiere decisión/fixtures separados. Ver SYSTEM_CALENDAR.md. |
 | R10 Media | Renombrar `metal`/`admin` por claves TECH podría romper alias | Mantener índices y referencias de almacenamiento; inventariar los 32 canales. |
 | R11 Media | Compartir sólo semilla omite reglas y recursos | Replay completo con configuración, hashes y comandos. |
 | R12 Media | Crecimiento de arrays de eventos/entidades y snapshots a largo plazo | Pruebas de milenios, memoria y centinelas; mantener políticas originales de poda. |
@@ -38,4 +38,4 @@
 - Resolver cómo obtener checkpoints tardíos del oráculo sin alterar el original.
 - Conservar el commit dedicado mediante merge; tras integración aprobada, autorizar por separado el tag sobre ese commit.
 
-No hay hallazgos de Claude incorporados ni aprobación de Fase 1 a la fecha de esta entrega.
+Primera auditoría íntegra recibida por el usuario e incorporada en AUDIT_FINDINGS.md. Correcciones pendientes de segunda aprobación de Claude y autorización expresa del usuario. No hay aprobación de Fase 1. ADR y límites numéricos corregidos en ARCHITECTURAL_DECISIONS.md y NUMERIC_COMPATIBILITY.md.

@@ -1,4 +1,6 @@
-# Evidencia y límites de validación
+# Evidencia y límites de validación — primera entrega
+
+Este documento conserva el registro de la entrega auditada. Correcciones y pruebas posteriores: [CORRECTION_VALIDATION.md](CORRECTION_VALIDATION.md). Los valores de referencia aquí citados no se reemplazan.
 
 Comprobaciones realizadas localmente el 18 de octubre de 2026, Windows x64, Node v24.19.0, endianidad LE. El resultado íntegro de caracterización se conserva en `evidence/reference-smoke.windows-node24.json`. Los scripts no tienen dependencias npm.
 

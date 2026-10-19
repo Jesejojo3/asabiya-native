@@ -32,3 +32,9 @@ El original nunca se reformatea, normaliza, minifica ni modifica para instrument
 La Fase 0 termina con una PR para revisión. No integrar ni crear `legacy-v0.6` durante esta tarea. Para preservar el commit dedicado, se propone integrar mediante merge que conserve sus commits; evitar squash sin una decisión explícita sobre la procedencia. Sólo después de la aprobación e integración, verificar que el commit de importación sea ancestro de `main` y, con autorización, etiquetar ese commit como `legacy-v0.6`. El tag identifica la referencia original, no una versión Go terminada.
 
 Para iniciar Fase 1 se necesita aprobar alcance, contrato de determinismo, estrategia de equivalencia y prioridades; registrar también los hallazgos de la auditoría independiente. Nada aquí autoriza su inicio automático.
+
+## Correcciones tras primera auditoría
+
+Informe completo recibido del usuario; matriz de los 17 hallazgos en [AUDIT_FINDINGS.md](AUDIT_FINDINGS.md). Contrato numérico: [NUMERIC_COMPATIBILITY.md](NUMERIC_COMPATIBILITY.md). Comandos/perfiles: [COMMANDS_AND_PROFILES.md](COMMANDS_AND_PROFILES.md). [IDs, eventos y guardado](EVENTS_AND_SAVE.md), [semántica de colecciones](COLLECTION_SEMANTICS.md), [calendario](SYSTEM_CALENDAR.md), [ADR](ARCHITECTURAL_DECISIONS.md), [pruebas correctivas](CORRECTION_VALIDATION.md).
+
+No iniciar Fase 1 ni integrar hasta segunda aprobación de Claude y autorización explícita del usuario. La puerta técnica de matemáticas sigue pendiente; esta entrega no contiene mecánicas Go.

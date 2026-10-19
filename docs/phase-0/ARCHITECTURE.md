@@ -1,6 +1,6 @@
 # Arquitectura propuesta: Go + Ebitengine
 
-Estado: diseño de Fase 0 pendiente de aprobación; sin código de mecánicas ni dependencias Go instaladas. Se elige una separación por responsabilidades que permita ejecutar y probar la simulación sin ventana, GPU ni Ebitengine.
+Estado: diseño corregido tras primera auditoría, pendiente de segunda aprobación de Claude y autorización humana; sin código de mecánicas ni dependencias Go instaladas. El contrato numérico corregido está en [NUMERIC_COMPATIBILITY.md](NUMERIC_COMPATIBILITY.md). Se mantienen perfiles permanentes `v06-compat` y `native`, sin modificar el HTML.
 
 ```text
 cmd/asabiya (composición)                 cmd/asabiya-headless (replay / medición)
@@ -9,7 +9,9 @@ internal/presentation/ebiten --> internal/app --> internal/sim
           |                       |                   |
           +--> snapshots de vista |              world / state / systems
                                   +--> internal/rules, internal/replay
-internal/sim --> internal/rules + internal/rng
+internal/sim --> internal/rules + internal/rng + internal/jsmath
+internal/app --> internal/save + internal/history + internal/replay
+internal/presentation/ebiten --> internal/narrative
 ```
 
 Las flechas indican dependencias. `internal/sim`, `internal/rules` e `internal/rng` nunca importan presentación, Ebitengine, reloj real, archivos de configuración ni controles de ventana. El acceso al disco y la validación del documento externo quedan en la composición/carga; el núcleo recibe datos ya validados.
@@ -19,11 +21,11 @@ Las flechas indican dependencias. `internal/sim`, `internal/rules` e `internal/r
 | Operación conceptual | Contrato |
 |---|---|
 | `NewWorld(WorldSpec, Rules)` | Mundo generado, Tierra o importado con hash de recursos, parámetros y semilla explícitos; devuelve error de validación antes de iniciar. |
-| `NewSimulation(World, Rules, HistorySeed)` | Estado y RNG propios de una instancia. No globales compartidos; índices y centinelas compatibles con el legado. |
-| `AdvanceYear()` | Una transición anual completa con el orden de `stepG`. No depende de FPS ni reloj; se puede pausar internamente sin publicar estado parcial. |
-| `ApplyCommand(Command)` | Orden secuenciada por año y posición dentro de su frontera. Para presagios, completar el año en curso, validar y aplicar como `finishYear`→`castOmen`. Errores no consumen RNG salvo evidencia contraria del legado. |
-| `View()` / eventos | Proyección inmutable o copia; cámara, overlays, texto y hover no alteran la simulación. Eventos con año, IDs, tipo, causas y referencias; conservar los registros narrativos del legado. |
-| `Save/Restore` futuro | Estado completo, versión de esquema/reglas, mundo, historial de comandos y estado RNG; distinto del historial comprimido del mapa. Pendiente de diseño y aprobación. |
+| `NewSimulation(World, Rules, HistorySeed)` | Estado y RNG propios; Rules es la configuración efectiva inicial, modificable sólo por comandos versionados en fronteras. |
+| `AdvanceYear()` | Una transición completa y atómica, sin comandos, guardados ni publicación a mitad del año; orden de stepG sin reintroducir sus yield como máquina de estados. |
+| `ApplyCommand(Command)` | Presagios, cambios de reglas, defaults y sandbox en frontera completa; orden/rechazos y reglas efectivas en replay. Diferencia intencional frente a UI heredada documentada en COMMANDS_AND_PROFILES.md. |
+| `View()` / eventos | Vistas inmutables y eventos estructurados con IDs; narrativa en capa separada. Nombres generados siguen siendo datos comparables. Contrato exacto en EVENTS_AND_SAVE.md. |
+| `Save/Restore` propuesto | Esquema mínimo v1 de contenedor, arrays LE, IDs, orden, reglas, RNG semilla/contador, cola y eventos; módulos save/history/replay separados. Sin implementación. |
 
 El nombre y la firma Go exactos se definirán en Fase 1 después de revisar las necesidades del oráculo JS. No se publican interfaces ficticias que simulen un port funcional.
 
@@ -35,8 +37,12 @@ El nombre y la firma Go exactos se definirán en Fase 1 después de revisar las 
 | `cmd/asabiya-headless/` | Ejecución reproducible sin render, exportación y benchmarks. |
 | `internal/sim/` | Mundo, estado, sistemas y secuencia anual; estructura por arrays tipados equivalente a la original antes de optimizar. |
 | `internal/rng/` | Hash de semillas UTF-16 y Mulberry32 con compatibilidad JS. |
+| `internal/jsmath/` | Backend matemático Go puro equivalente al V8 fijado, pendiente de prueba técnica y validación; no usar math de Go como sustituto supuesto. |
 | `internal/rules/` | Definiciones validadas, IDs estables y valores por defecto versionados. |
 | `internal/replay/` | Semillas, configuración completa, recursos y comandos ordenados. |
+| `internal/save/` | Contenedor versionado de partida completa y validación de restauración. |
+| `internal/history/` | Historial visual comprimido del mapa, separado de guardados reanudables. |
+| `internal/narrative/` | Plantillas/localización, formato numérico de texto y presentación de eventos; sin RNG histórico. |
 | `internal/app/` | Pausa/velocidad, frontera de comandos, coordinación entre vista y núcleo. |
 | `internal/presentation/ebiten/` | `Update`, `Draw`, `Layout`, cámara, mapa y paneles. |
 | `data/` | Futuras reglas externas con esquema y hash; no duplicar hoy las tablas originales. |
@@ -44,7 +50,7 @@ El nombre y la firma Go exactos se definirán en Fase 1 después de revisar las 
 | `benchmarks/` | Escenarios y metodología; mediciones futuras. |
 | `tools/` | Verificación de referencia y caracterización del JS original. |
 
-Cada carpeta reservada contiene un README de alcance, sin implementación. `go.mod`, versión de Go y versión exacta de Ebitengine se fijarán al aprobar Fase 1 y comprobar el entorno Windows; no se afirma una compilación nativa en esta fase.
+Cada carpeta reservada contiene un README de alcance, sin implementación. Un paquete sim al principio, archivos por sistema según [SYSTEM_CALENDAR.md](SYSTEM_CALENDAR.md); no convertir cada sistema en paquete independiente prematuramente. `go.mod`, Go y Ebitengine se fijarán al aprobar la prueba técnica y comprobar Windows. No hay compilación nativa validada.
 
 ## Reglas dirigidas por datos
 
@@ -54,7 +60,9 @@ El catálogo no convierte fórmulas causales en scripts arbitrarios. Primero ext
 
 ## Integración de render
 
-Ebitengine define `Update`, `Draw` y `Layout`; la documentación oficial separa actualización por ticks de dibujo por frames. Propuesta: `Update` procesa entradas y un presupuesto de trabajo determinista; `Draw` sólo consume una vista completa publicada. La velocidad decide cuántos años se solicitan, no el tamaño de una transición anual. Si se reproduce el generador por fragmentos, conservar su orden y aceptar comandos en fronteras definidas. Evitar concurrencia de la simulación inicialmente; si se añade después, un único propietario del estado y entrega de snapshots inmutables.
+Ebitengine define `Update`, `Draw` y `Layout`. La unidad causal será un año atómico. Evaluar dos adaptadores: ejecución secuencial acotada por años completos en Update, o goroutine propietaria que recibe comandos y publica vistas inmutables. El primero simplifica pruebas pero puede bloquear UI con años largos; el segundo evita esa espera a costa de cola, ciclo de vida, memoria y pruebas de carrera. No imponer concurrencia por anticipado ni dividir el año en una máquina de estados. La elección se hará con la prueba técnica de latencia y race detector propuesta en ADR-0002. Draw nunca consume ni modifica el estado vivo.
+
+UI: candidato inicial [ebitenui](https://github.com/ebitenui/ebitenui), comparado con una implementación inmediata mínima en una prueba futura de 4–8 horas: textura del mapa, crónica enlazada larga, scroll/selección, 40 sliders de reglas y texto con acentos. Medir legibilidad/latencia/memoria en Windows amd64, ventanas/DPI y coste de traducir enlaces/plantillas. Revisar licencia y fijar versiones al elegir. Esta entrega no instala UI ni promete fechas de producto; ver ADR-0002.
 
 La resolución 400×200 del mundo no crece con la ventana. Escalar cámara y texturas, envolviendo longitud como el original. Los modos prioritarios son mapa/terreno, pueblos y estados; guerras y presagios se representan con eventos y selección de provincia. El algoritmo causal completo sigue existiendo aunque falte una vista secundaria.
 

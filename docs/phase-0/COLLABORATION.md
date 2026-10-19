@@ -6,7 +6,7 @@
 - **Auditor independiente previsto: Claude Opus 5.5 / Claude Code.** Recibe el repositorio y la PR por intervención del usuario, trabaja desde el commit exacto, reproduce pruebas, inspecciona causalidad y busca regresiones. La disponibilidad del modelo y su acceso se verifican en su propia sesión.
 - **Responsable humano del proyecto.** Entrega los paquetes entre herramientas, decide alcance y resuelve desacuerdos; aprueba integración, tag y avance de fase.
 
-No existe comunicación automática entre Codex y Claude en este protocolo. No se ha enviado contenido a Claude ni se afirma que haya auditado esta PR. Compartir un repositorio no equivale a una auditoría completada.
+No existe comunicación automática entre Codex y Claude en este protocolo. El usuario entregó íntegro el primer informe, con veredicto APROBADA CON CORRECCIONES sobre HEAD 3e5f18351421eef1a855a24b30352cf7c42deda8. Esa revisión no aprueba los commits correctivos aún inexistentes entonces. El usuario entregará manualmente el paquete de segunda revisión.
 
 ## Flujo por rama y PR
 
@@ -32,3 +32,5 @@ Formato del dictamen: SHA revisado; resumen; hallazgos enumerados; comandos repr
 ## Puerta entre Fase 0 y Fase 1
 
 Al completar Fase 0 detener implementación. No crear `legacy-v0.6` hasta integrar la importación con aprobación; no adelantar el esqueleto ejecutable Go, UI o mecánicas. El siguiente alcance debe aprobarse expresamente. Si no hay conexión a la fuente o al repositorio, solicitarla y no reconstruir contenido supuesto.
+
+Segunda puerta obligatoria: las correcciones van en la misma rama y PR #1, conservando commits previos. No integrar ni iniciar Fase 1 hasta una segunda aprobación de Claude y autorización explícita del usuario. No crear legacy-v0.6 durante esta corrección.
