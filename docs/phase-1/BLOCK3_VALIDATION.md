@@ -1,5 +1,11 @@
 # Validación — Bloque 3
 
+## Correcciones de revisión de GPT-6
+
+- Summary copia también cada slice EraShare de Stats: modificar una consulta no alcanza el historial ni otra consulta. Prueba específica con dos registros y dos vistas independientes.
+- Digest distingue las cuatro combinaciones de ShuffleNames/Sandbox aun manteniendo el resto del estado idéntico. False/false conserva la codificación implícita v1; las opciones activas añaden un trailer etiquetado `rules/options-v1` y dos bits. Así se corrige la identidad de reglas sin cambiar los golden predeterminados ni consumir RNG.
+- Ambas pruebas fallan sobre el HEAD anterior y pasan con las correcciones. No se modifican HTML, golden ni mecánicas de inicialización. La continuación del núcleo completo se desarrolla en otra rama dependiente, después de verificar estas correcciones y su CI; no forma parte de esta PR.
+
 ## Contratos contra el HTML original (Node 24.19.0 / V8 13.6.233.17 fijados)
 
 | Contrato | Qué se compara | Resultado en Go |

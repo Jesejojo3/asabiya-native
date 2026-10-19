@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"math"
+	"slices"
 )
 
 const HistoryDigestVersion = "native/history-init-v1"
@@ -36,6 +37,9 @@ func (s *Simulation) Summary() HistorySummary {
 		FoundingStocks: len(h.seeds), Peoples: len(h.peoples), TemperatureAnomaly: h.gT + h.epochTemp(), OrbitalMonsoon: h.orbM,
 		Hearths: append([]Hearth(nil), h.hearths...), Chronicle: append([]ChronicleEntry(nil), h.chronicle...),
 		Stats: append([]StatsEntry(nil), h.stats...), SHA256: s.Digest()}
+	for i := range sum.Stats {
+		sum.Stats[i].EraShare = slices.Clone(h.stats[i].EraShare)
+	}
 	if h.epoch != nil {
 		e := *h.epoch
 		sum.Epoch = &e
@@ -220,6 +224,20 @@ func (s *Simulation) Digest() string {
 		writeString(d, c.Kind)
 		writeString(d, c.Text)
 		writeU64(d, uint64(int64(c.Cell)))
+	}
+	// False/false is the implicit v1 encoding, preserving the existing default
+	// golden. Nondefault options append a versioned trailer with distinct bits;
+	// both options affect identity even before they affect any historical data.
+	var options uint32
+	if h.rules.ShuffleNames {
+		options |= 1
+	}
+	if h.rules.Sandbox {
+		options |= 2
+	}
+	if options != 0 {
+		writeString(d, "rules/options-v1")
+		writeU32(d, options)
 	}
 	return hex.EncodeToString(d.Sum(nil))
 }
