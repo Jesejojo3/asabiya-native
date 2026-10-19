@@ -30,17 +30,21 @@ Primera ejecución correctiva de Windows (run 39194292609): el verificador detec
 
 ## Pendiente y fuera de las afirmaciones de esta entrega
 
-- Implementar y comparar `internal/jsmath` contra cada vector; validar licencias exactas y la ruta JIT/builtin, linter AST y FMA del código Go real.
-- Ejecutar binarios Go en CPUs/OS objetivo; ARM64, big-endian y distintas capacidades FMA no están validados por Codex.
+- Para el perfil native **no es obligatorio implementar `internal/jsmath` ni comparar cada salida con V8**. Verificar reproducibilidad y estabilidad con `math` de Go en el entorno Windows x64 real al existir el motor. Jsmath y análisis exacto V8 sólo si surge una necesidad demostrada.
+- Ejecutar el futuro binario Go en el equipo objetivo Windows x64; todavía no hay compilación/validación de Go. Linux, ARM64 y big-endian quedan fuera de alcance. GOAMD64=v1 no garantiza identidad entre CPUs con distintas capacidades FMA.
 - Repetición independiente del fixture tardío y todas las guerras/los ocho presagios/causas estructuradas de largo plazo.
 - Diseño de proyección de eventos por sistema y su comparador Go; mantener visibles los campos narrativos excluidos.
 - Implementar/validar guardar/restaurar, UI, concurrencia elegida y benchmarks Go; no existen mecánicas Go en esta fase.
-- Segunda aprobación de Claude y autorización explícita del usuario antes de integrar o iniciar Fase 1. Tag legacy-v0.6 no creado.
+- Segunda auditoría estática de Claude concluida: APROBADA CON CONDICIONES documentales; el usuario fijó el alcance Windows x64 y retiró jsmath obligatorio. Merge/tag e inicio de Fase 1 requieren autorización del usuario por separado. Tag legacy-v0.6 no creado.
 
 ## Discrepancia matemática remota conservada
 
 En run 39194565396, Windows aprobó las comprobaciones (resultado final verificable en la PR); Linux aprobó referencia, golden original, RNG, codificador e inventario, y falló en diagnose-pow con 3/2 273 diferencias de un ULP frente a Windows. La ejecución anterior también falló en el SHA de pow (c7b803… frente a 73330a…). Se guardan vectores concretos, hash y enlaces de job en evidence/math-pow.platform-mismatch.node24.json. El origen preciso no está demostrado.
 
-El fallo numérico no se resuelve cambiando datos esperados ni excluyendo Linux del workflow. Se mantiene la señal roja para la segunda revisión; no se presenta la CI completa como aprobada ni hay validación matemática multiplataforma. El contrato/perfil debe aprobar un oráculo canónico y la prueba jsmath antes de portar mecánicas. La reproducción independiente del fixture tardío sigue pendiente; no depende de ocultar esta diferencia.
+La diferencia matemática observada **no se resuelve ni oculta**: se conservan el diagnóstico estricto, los datos esperados y los resultados históricos. Por decisión posterior del usuario, Windows x64 es la única plataforma obligatoria; Linux permanece como diagnóstico opcional (`continue-on-error`) y su fallo no bloqueará el workflow. No hay validación matemática multiplataforma, pero tampoco es requisito. Jsmath ya no bloquea la migración nativa. La reproducción independiente del fixture tardío sigue pendiente; no depende de ocultar esta diferencia.
 
-El workflow extenso manual usa Windows 2022, coherente con el origen de sus corpus, para poder verificar esa baseline y después la historia tardía. La matriz rápida mantiene Linux y la comparación estricta fallida; mover la prueba extensa no elimina ni relaja ese control. Seleccionar de forma definitiva el oráculo numérico de producto sigue siendo una decisión pendiente de revisión.
+El workflow extenso manual usa Windows 2022, coherente con el origen de sus corpus, para poder verificar esa baseline y después la historia tardía. La matriz rápida mantiene Linux y la comparación estricta fallida; mover la prueba extensa no elimina ni relaja ese control. El oráculo JavaScript original sigue fijado para el legado. El producto native se implementará con math de Go para Windows x64 y se comprobará su propia reproducibilidad, sin equivalencia bit a bit obligatoria con V8.
+
+## Decisión posterior a la segunda auditoría — alcance Windows x64
+
+Esta sección actualiza el criterio de aceptación, **sin reinterpretar ni borrar los resultados históricos anteriores**. La segunda auditoría estática de Claude concluyó APROBADA CON CONDICIONES y recomendó actualizar los documentos; el usuario decidió priorizar el motor nativo personal Windows x64 y postergar equivalencia numérica exacta Go/V8. Por tanto, la CI de Windows es obligatoria y la de Linux es informativa con aserciones intactas, mientras que el uso de `math` Go en native es aceptable. Este cambio documental no se confunde con un resultado de pruebas Go, que aún no existen.
