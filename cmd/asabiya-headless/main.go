@@ -26,8 +26,10 @@ type report struct {
 	Schema      string               `json:"schema"`
 	Environment environment          `json:"environment"`
 	World       sim.WorldSummary     `json:"world"`
+	BaseWorld   sim.BaseWorldSummary `json:"baseWorld"`
 	Simulation  sim.SimulationStatus `json:"simulation"`
 	Cell        *sim.Cell            `json:"cell,omitempty"`
+	SeaLinks    []sim.SeaLink        `json:"seaLinks,omitempty"`
 }
 
 func run(args []string, stdout, stderr io.Writer) error {
@@ -35,7 +37,16 @@ func run(args []string, stdout, stderr io.Writer) error {
 	if err != nil {
 		return err
 	}
-	w, err := sim.GenerateWorld(o.World)
+	if o.HighResolution && o.PNG == "" {
+		return fmt.Errorf("--high-res requires --png in headless")
+	}
+	var w *sim.World
+	var surface *sim.Surface
+	if o.HighResolution {
+		w, surface, err = sim.GenerateWorldWithSurface(o.World)
+	} else {
+		w, err = sim.GenerateWorld(o.World)
+	}
 	if err != nil {
 		return err
 	}
@@ -48,7 +59,13 @@ func run(args []string, stdout, stderr io.Writer) error {
 		return err
 	}
 	if o.PNG != "" {
-		if err := terrain.WritePNG(o.PNG, w); err != nil {
+		var err error
+		if surface != nil {
+			err = terrain.WriteSurfacePNG(o.PNG, surface)
+		} else {
+			err = terrain.WritePNG(o.PNG, w)
+		}
+		if err != nil {
 			return err
 		}
 	}
@@ -60,7 +77,10 @@ func run(args []string, stdout, stderr io.Writer) error {
 			}
 		}
 	}
-	r := report{Schema: "asabiya/headless-v1", Environment: env, World: w.Summary(), Simulation: s.Status(), Cell: cell}
+	r := report{Schema: "asabiya/headless-v2", Environment: env, World: w.Summary(), BaseWorld: w.BaseSummary(), Simulation: s.Status(), Cell: cell}
+	if cell != nil {
+		r.SeaLinks, _ = w.SeaLinks(cell.ID)
+	}
 	data, err := json.MarshalIndent(r, "", "  ")
 	if err != nil {
 		return err

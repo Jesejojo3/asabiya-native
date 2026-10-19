@@ -1,0 +1,41 @@
+{
+  "version": "native/world-v2",
+  "config": {
+    "seed": "Asabiya",
+    "width": 400,
+    "height": 200,
+    "detail": 4,
+    "landFraction": 0.33
+  },
+  "cells": 80000,
+  "landCells": 26124,
+  "coastCells": 3073,
+  "landmasses": 61,
+  "minElevationMeters": -5654.023,
+  "maxElevationMeters": 6184.8516,
+  "generationRNG": {
+    "seed": 4037141429,
+    "calls": 215644
+  },
+  "sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+  "baseSHA256": "6f763794f922ed72f6ccfca992338ef5a731e20d0dff096c8c40ffbb385dcc22",
+  "riverCells": 3841,
+  "seaLinks": 29324,
+  "biomeCounts": [
+    53876,
+    8131,
+    2422,
+    2195,
+    4289,
+    689,
+    1619,
+    3542,
+    874,
+    2363
+  ],
+  "ecoReady": true,
+  "anomalyGrid": [
+    40,
+    20
+  ]
+}

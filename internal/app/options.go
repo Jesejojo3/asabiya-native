@@ -11,11 +11,12 @@ import (
 )
 
 type Options struct {
-	World       sim.WorldConfig
-	HistorySeed string
-	Cell        string
-	Output      string
-	PNG         string
+	World          sim.WorldConfig
+	HistorySeed    string
+	Cell           string
+	Output         string
+	PNG            string
+	HighResolution bool
 }
 
 func Parse(args []string, stderr io.Writer) (Options, error) {
@@ -31,6 +32,7 @@ func Parse(args []string, stderr io.Writer) (Options, error) {
 	f.StringVar(&o.Cell, "cell", "", "query cell x,y")
 	f.StringVar(&o.Output, "out", "", "write JSON report to this file (headless)")
 	f.StringVar(&o.PNG, "png", "", "write a terrain preview PNG")
+	f.BoolVar(&o.HighResolution, "high-res", false, "retain fine layers for PNG export (requires --png in headless)")
 	if err := f.Parse(args); err != nil {
 		return o, err
 	}

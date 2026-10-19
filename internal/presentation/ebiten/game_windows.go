@@ -10,9 +10,18 @@ import (
 	"math"
 )
 
-type Game struct{ texture *ebiten.Image }
+type Game struct {
+	texture *ebiten.Image
+	world   *sim.World
+	surface *sim.Surface // retained for future map inspection; immutable CPU data
+}
 
-func New(w *sim.World) *Game { return &Game{texture: ebiten.NewImageFromImage(terrain.Image(w))} }
+func New(w *sim.World, surface *sim.Surface) *Game {
+	if surface != nil {
+		return &Game{texture: ebiten.NewImageFromImage(terrain.SurfaceImage(surface)), world: w, surface: surface}
+	}
+	return &Game{texture: ebiten.NewImageFromImage(terrain.Image(w)), world: w}
+}
 func (g *Game) Update() error {
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) {
 		return ebiten.Termination

@@ -23,8 +23,14 @@ if ($first.environment.go -ne 'go1.27.2' -or $first.environment.os -ne 'windows'
     throw 'Unexpected target/toolchain; this golden is only for Windows amd64 Go 1.27.2 GOAMD64=v1'
 }
 $actualWorld = $first.world | ConvertTo-Json -Depth 8 -Compress
-$expectedWorld = $golden | ConvertTo-Json -Depth 8 -Compress
+$actualBase = $first.baseWorld | ConvertTo-Json -Depth 8 -Compress
+$expectedBase = $golden | ConvertTo-Json -Depth 8 -Compress
+if ($actualBase -cne $expectedBase) {
+    throw 'Frozen Block 1 golden mismatch: base terrain/climate/RNG changed'
+}
+$geographyGolden = Get-Content -Raw -LiteralPath (Join-Path $repository 'tests/native/world-v2.windows-go1.27.2.json') | ConvertFrom-Json
+$expectedWorld = $geographyGolden | ConvertTo-Json -Depth 8 -Compress
 if ($actualWorld -cne $expectedWorld) {
     throw 'Native golden mismatch: investigate CPU/toolchain/source changes; do not regenerate to hide divergence'
 }
-Write-Output "Native reproducibility and golden OK: $($first.world.sha256)"
+Write-Output "Native reproducibility, original v1 projection and geography v2 golden OK: $($first.world.sha256)"
