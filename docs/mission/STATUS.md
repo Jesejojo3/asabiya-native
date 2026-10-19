@@ -5,7 +5,7 @@ Rama de integración: `integration/v06-historical-core`, desde **d19e27ef56e4529
 El usuario autorizó completar autónomamente todas las etapas, sin auditorías externas intermedias. La revisión integral queda al final. No declarar terminado el núcleo por acabar una lista parcial.
 
 - Prerrequisito cerrado: EraShare copiado profundamente y opciones de reglas incluidas en Digest; regresiones antes/después, tests/vet, builds, reproducción y CI Windows nativa/legado pasan. HTML y golden intactos.
-- Etapa A en curso: weather y hearthCheck portados; contratos y resto de demografía/tecnología/enfermedad pendientes. No hay avance anual público parcial.
+- Etapa A: weather, hearthCheck, growth, migrate, seaHop, techStep y disease portados. Contratos controlados contra JavaScript verifican posición RNG, identidades y orden de infecciones, epidemias, sumas y muestras de arrays. No equivalen a una historia anual completa. No hay avance anual público parcial.
 - B pendiente: religión, mezcla cultural, ciudades/regiones y comercio/contactos.
 - C pendiente: estados, gobernantes, sucesión y crisis.
 - D pendiente: guerra, diplomacia y consecuencias demográficas.
@@ -14,3 +14,9 @@ El usuario autorizó completar autónomamente todas las etapas, sin auditorías 
 - G pendiente: inventario completo, Tierra/importación/clima ajustado y procedencia de recursos.
 
 Guardar/reanudar partida completa es una ampliación nativa aún no implementada. El historial visual original no la sustituye.
+
+## Dirección vigente: Go + Godot 4
+
+Go es la autoridad histórica; Godot 4 será el cliente final 3D, desarrollado independientemente por Claude. Ebitengine se conserva como visor provisional y no condicionará el núcleo. No modificar proyectos, escenas, recursos ni shaders de Claude. No hay comunicación automática con él.
+
+El entregable incluye un contrato versionado de consultas inmutables, exportación geográfica binaria con manifiesto JSON, estado histórico estructurado y ejemplos reales; después, un protocolo exclusivamente local con comandos y deltas publicados al terminar años completos. Contrato y productor Go serán responsabilidad de Codex; consumidor Godot, de Claude. Todavía no están implementados. La documentación de coordenadas debe preservar la costura longitudinal, los límites polares, IDs lógicos y la relación entre resolución lógica y fina, dejando las escalas visuales al cliente. No inventar edificios ni entidades inexistentes para completar vistas.

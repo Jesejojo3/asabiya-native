@@ -3,9 +3,26 @@ package sim
 // Annual state is added together with its causal systems. It is not a second
 // simulation and does not expose a partial AdvanceYear API.
 type annualState struct {
-	annualReady      bool
-	anom             []float32
-	firstDiscoveries [techCount]*Discovery
+	annualReady                   bool
+	anom                          []float32
+	firstDiscoveries              [techCount]*Discovery
+	pol                           []int32
+	cohesion                      []float32
+	religion                      []int32
+	mix                           []float32
+	mixTime                       []uint8
+	immunity, plaguePool, caravan []float32
+	infection                     []uint8
+	outbreakAt                    []int32
+	infections                    []CellID
+	outbreaks                     []*Outbreak
+	polities                      []*Polity
+	religions                     []*Religion
+	pressure                      orderedMap[int, *migrationPressure]
+	migrations                    []*Migration
+	activeMigrations              []int
+	contacts, cropPairs           orderedSet[string]
+	spotlights                    []Spotlight
 }
 
 type Discovery struct {
@@ -20,6 +37,18 @@ func (h *history) prepareAnnualState() {
 		return
 	}
 	h.anom = make([]float32, h.world.Len())
+	n := h.world.Len()
+	h.pol = make([]int32, n)
+	h.cohesion = newFloat32(n, .3)
+	h.religion = newInt32(n, -1)
+	h.mix = make([]float32, n)
+	h.mixTime = make([]uint8, n)
+	h.immunity = make([]float32, n)
+	h.plaguePool = make([]float32, n)
+	h.caravan = make([]float32, n)
+	h.infection = make([]uint8, n)
+	h.outbreakAt = newInt32(n, -1)
+	h.polities = []*Polity{nil}
 	h.annualReady = true
 }
 

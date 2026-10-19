@@ -11,27 +11,28 @@ import (
 // the history's peoples list, assigned in creation order and never reused.
 // Culture is stored as float32, like the original Float32Array.
 type People struct {
-	ID       int        `json:"id"`
-	Name     string     `json:"name"`
-	Language *Language  `json:"language"`
-	Culture  [6]float32 `json:"culture"`
-	Family   int        `json:"family"`
-	Parent   int        `json:"parent"`
-	Parent2  int        `json:"parent2"`
-	Depth    int        `json:"depth"`
-	Born     int        `json:"born"`
-	Hue      float64    `json:"hue"`
-	Sat      float64    `json:"sat"`
-	Lit      float64    `json:"lit"`
-	RGB      [3]uint8   `json:"rgb"`
-	Alive    bool       `json:"alive"`
-	Cells    int        `json:"cells"`
-	Pop      float64    `json:"population"`
-	Peak     float64    `json:"peak"`
-	Lon      float64    `json:"lonRadians"`
-	Lat      float64    `json:"latRadians"`
-	Kids     []int      `json:"children"`
-	Died     *int       `json:"died,omitempty"`
+	LastMigration int        `json:"lastMigration,omitempty"`
+	ID            int        `json:"id"`
+	Name          string     `json:"name"`
+	Language      *Language  `json:"language"`
+	Culture       [6]float32 `json:"culture"`
+	Family        int        `json:"family"`
+	Parent        int        `json:"parent"`
+	Parent2       int        `json:"parent2"`
+	Depth         int        `json:"depth"`
+	Born          int        `json:"born"`
+	Hue           float64    `json:"hue"`
+	Sat           float64    `json:"sat"`
+	Lit           float64    `json:"lit"`
+	RGB           [3]uint8   `json:"rgb"`
+	Alive         bool       `json:"alive"`
+	Cells         int        `json:"cells"`
+	Pop           float64    `json:"population"`
+	Peak          float64    `json:"peak"`
+	Lon           float64    `json:"lonRadians"`
+	Lat           float64    `json:"latRadians"`
+	Kids          []int      `json:"children"`
+	Died          *int       `json:"died,omitempty"`
 }
 
 // gauss is v0.6 line 386: Box–Muller with u=r()||1e-9. Two draws.

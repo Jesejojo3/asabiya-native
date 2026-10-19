@@ -36,5 +36,12 @@ export async function annualOracle(){
   const interpolation=core.slice(core.indexOf('  // weather interpolation'),core.indexOf('  // sea links'));
   assert.match(interpolation,/w\.wi=wi/);
   evaluate(`{const w=WD;${interpolation} WD.rough=new Float32Array(N).fill(0.4);}`);
+  // Rebuild original sea-link order without generation or additional draws.
+  const links=core.slice(core.indexOf('  // sea links:'),core.indexOf('  if(w.isEarth){',core.indexOf('  // sea links:')));
+  evaluate(`{const w=WD,{land,coast,nb,lm}=w,q=new Int32Array(N);
+    const n8=(i,fn)=>{const x=i%W,y=(i/W)|0;for(let dy=-1;dy<=1;dy++){const yy=y+dy;if(yy<0||yy>=H)continue;for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;fn(yy*W+(x+dx+W)%W)}}};
+    ${links}
+    WD.cosLat=Float32Array.from(WD.lat,x=>Math.max(0.2,Math.cos(x)));
+  }`);
   return {evaluate,input,runtime};
 }
