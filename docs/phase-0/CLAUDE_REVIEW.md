@@ -1,4 +1,6 @@
-# Segunda revisión independiente — correcciones de Fase 0
+# Segunda revisión independiente — paquete histórico de correcciones de Fase 0
+
+**Estado posterior:** esta solicitud de auditoría ya fue atendida por Claude (APROBADA CON CONDICIONES, revisión estática). El usuario definió después el producto como personal Windows x64 con math de Go en native y sin puerta jsmath; ver NUMERIC_COMPATIBILITY.md y ARCHITECTURAL_DECISIONS.md. Los párrafos siguientes se conservan como instrucciones históricas de aquella auditoría, **no son bloqueos vigentes**.
 
 Primera revisión recibida por el usuario: Claude Opus 5.5 / @Claudio, APROBADA CON CORRECCIONES, sobre HEAD `3e5f18351421eef1a855a24b30352cf7c42deda8`. Esta entrega atiende los 17 hallazgos en la misma rama `phase-0/legacy-baseline-architecture` y PR #1; conserva los commits anteriores. El usuario entregará manualmente el nuevo HEAD y este paquete. No existe comunicación automática entre herramientas.
 
