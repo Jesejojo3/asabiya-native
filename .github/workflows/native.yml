@@ -33,6 +33,11 @@ jobs:
           node-version-file: '.node-version'
       - name: Verify small original heap/geography contract
         run: node tools/check-geography-oracle.mjs
+      - name: Verify v0.6 history catalog, language and newHistory contracts
+        run: |
+          node tools/extract-history-catalog.mjs
+          node tools/check-language-oracle.mjs
+          node tools/check-history-oracle.mjs
       - name: Build both executables without a C toolchain
         shell: pwsh
         run: |

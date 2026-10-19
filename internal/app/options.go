@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/Jesejojo3/asabiya-native/internal/sim"
 	"io"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -17,10 +18,13 @@ type Options struct {
 	Output         string
 	PNG            string
 	HighResolution bool
+	Peoples        bool
+	Rules          sim.Rules
 }
 
 func Parse(args []string, stderr io.Writer) (Options, error) {
-	o := Options{World: sim.DefaultWorldConfig("Asabiya"), HistorySeed: "1"}
+	o := Options{World: sim.DefaultWorldConfig("Asabiya"), HistorySeed: "1", Rules: sim.DefaultRules()}
+	startYear, bands := o.Rules.Values["startYear"], o.Rules.Values["bands"]
 	f := flag.NewFlagSet("asabiya", flag.ContinueOnError)
 	f.SetOutput(stderr)
 	f.StringVar(&o.World.Seed, "seed", o.World.Seed, "world seed (UTF-8)")
@@ -33,11 +37,21 @@ func Parse(args []string, stderr io.Writer) (Options, error) {
 	f.StringVar(&o.Output, "out", "", "write JSON report to this file (headless)")
 	f.StringVar(&o.PNG, "png", "", "write a terrain preview PNG")
 	f.BoolVar(&o.HighResolution, "high-res", false, "retain fine layers for PNG export (requires --png in headless)")
+	f.BoolVar(&o.Peoples, "peoples", false, "include every people, language and lineage in the report (headless)")
+	f.Float64Var(&startYear, "start-year", startYear, "history start year, -12000..-4000 in steps of 500 (rule startYear)")
+	f.Float64Var(&bands, "bands", bands, "founding peoples, 3..24 (rule bands)")
 	if err := f.Parse(args); err != nil {
 		return o, err
 	}
 	if f.NArg() != 0 {
 		return o, fmt.Errorf("unexpected arguments: %s", strings.Join(f.Args(), " "))
+	}
+	o.Rules.Values["startYear"], o.Rules.Values["bands"] = startYear, bands
+	if err := o.Rules.Validate(); err != nil {
+		return o, err
+	}
+	if math.Mod(startYear, 500) != 0 {
+		return o, fmt.Errorf("start year must be a multiple of 500, as the original slider")
 	}
 	return o, nil
 }

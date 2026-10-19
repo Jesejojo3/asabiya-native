@@ -28,8 +28,17 @@ type report struct {
 	World       sim.WorldSummary     `json:"world"`
 	BaseWorld   sim.BaseWorldSummary `json:"baseWorld"`
 	Simulation  sim.SimulationStatus `json:"simulation"`
+	History     historyReport        `json:"history"`
+	Peoples     []sim.PeopleView     `json:"peoples,omitempty"`
 	Cell        *sim.Cell            `json:"cell,omitempty"`
+	CellHistory *sim.CellHistory     `json:"cellHistory,omitempty"`
 	SeaLinks    []sim.SeaLink        `json:"seaLinks,omitempty"`
+}
+
+// historyReport is the initialized history (summary, hearths, chronicle,
+// statistics and its native digest); --peoples adds every people.
+type historyReport struct {
+	sim.HistorySummary
 }
 
 func run(args []string, stdout, stderr io.Writer) error {
@@ -50,7 +59,7 @@ func run(args []string, stdout, stderr io.Writer) error {
 	if err != nil {
 		return err
 	}
-	s, err := sim.NewSimulation(w, o.HistorySeed)
+	s, err := sim.NewSimulationWithRules(w, o.HistorySeed, o.Rules)
 	if err != nil {
 		return err
 	}
@@ -77,9 +86,15 @@ func run(args []string, stdout, stderr io.Writer) error {
 			}
 		}
 	}
-	r := report{Schema: "asabiya/headless-v2", Environment: env, World: w.Summary(), BaseWorld: w.BaseSummary(), Simulation: s.Status(), Cell: cell}
+	r := report{Schema: "asabiya/headless-v3", Environment: env, World: w.Summary(), BaseWorld: w.BaseSummary(), Simulation: s.Status(),
+		History: historyReport{s.Summary()}, Cell: cell}
+	if o.Peoples {
+		r.Peoples = s.Peoples()
+	}
 	if cell != nil {
 		r.SeaLinks, _ = w.SeaLinks(cell.ID)
+		ch, _ := s.Cell(cell.ID)
+		r.CellHistory = &ch
 	}
 	data, err := json.MarshalIndent(r, "", "  ")
 	if err != nil {

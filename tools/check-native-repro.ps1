@@ -33,4 +33,17 @@ $expectedWorld = $geographyGolden | ConvertTo-Json -Depth 8 -Compress
 if ($actualWorld -cne $expectedWorld) {
     throw 'Native golden mismatch: investigate CPU/toolchain/source changes; do not regenerate to hide divergence'
 }
-Write-Output "Native reproducibility, original v1 projection and geography v2 golden OK: $($first.world.sha256)"
+# Block 3: initialized history (newHistory). Compare the stable projection; the
+# SHA-256 covers every state array, people, hearth and chronicle entry.
+$historyGolden = Get-Content -Raw -LiteralPath (Join-Path $repository 'tests/native/history-v1.windows-go1.27.2.json') | ConvertFrom-Json
+$h = $first.history
+$actualHistory = [ordered]@{
+    version = $h.version; rulesVersion = $h.rulesVersion; historySeed = $first.simulation.historySeed; startYear = $h.startYear; year = $h.year
+    foundingStocks = $h.foundingStocks; peoples = $h.peoples; livingPeoples = $h.livingPeoples; families = $h.families
+    peopledCells = $h.peopledCells; landmassesSettled = $h.landmassesSettled; historyRNG = $first.simulation.historyRNG; sha256 = $h.sha256
+} | ConvertTo-Json -Depth 8 -Compress
+$expectedHistory = $historyGolden | ConvertTo-Json -Depth 8 -Compress
+if ($actualHistory -cne $expectedHistory) {
+    throw "Native history golden mismatch: investigate before regenerating. Actual: $actualHistory"
+}
+Write-Output "Native reproducibility, v1 projection, geography v2 and history v1 goldens OK: $($first.world.sha256) / $($h.sha256)"

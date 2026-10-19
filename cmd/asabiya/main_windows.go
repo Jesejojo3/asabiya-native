@@ -24,7 +24,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	if _, err := sim.NewSimulation(w, o.HistorySeed); err != nil {
+	if _, err := sim.NewSimulationWithRules(w, o.HistorySeed, o.Rules); err != nil {
 		return err
 	}
 	if o.PNG != "" {

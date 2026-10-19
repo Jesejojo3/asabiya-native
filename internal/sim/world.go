@@ -72,6 +72,7 @@ type World struct {
 	forest, heavySoil, malaria, oncho, circumscription                          []float32
 	nicheTemperature, nicheMoisture, nicheLifestyle, nicheDisease               []float32
 	ecoReady                                                                    bool
+	landList, coastList                                                         []CellID
 }
 
 type Cell struct {
@@ -275,4 +276,20 @@ func (w *World) indexLand() {
 		}
 		w.landmassSizes = append(w.landmassSizes, len(q))
 	}
+	// landIdx/coastIdx of v0.6: row-major lists. Historical systems iterate
+	// them and sample them with RNG, so their order is part of the contract.
+	w.landList = make([]CellID, 0, w.landCells)
+	w.coastList = make([]CellID, 0, w.coastCells)
+	for i := range w.land {
+		if w.land[i] {
+			w.landList = append(w.landList, CellID(i))
+			if w.coast[i] {
+				w.coastList = append(w.coastList, CellID(i))
+			}
+		}
+	}
 }
+
+// LandCells and CoastCells return copies of the row-major land/coast lists.
+func (w *World) LandCells() []CellID  { return append([]CellID(nil), w.landList...) }
+func (w *World) CoastCells() []CellID { return append([]CellID(nil), w.coastList...) }

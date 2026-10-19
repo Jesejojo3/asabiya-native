@@ -1,0 +1,18 @@
+{
+  "version": "native/history-init-v1",
+  "rulesVersion": "native/rules-v06-v1",
+  "historySeed": "1",
+  "startYear": -9000,
+  "year": -9000,
+  "foundingStocks": 10,
+  "peoples": 95,
+  "livingPeoples": 95,
+  "families": 10,
+  "peopledCells": 16797,
+  "landmassesSettled": 23,
+  "historyRNG": {
+    "seed": 58464154,
+    "calls": 12631
+  },
+  "sha256": "3a1a781aeb7dacf2be1c7bee6024c52338e6b60df699d61baec7d06787a260b4"
+}

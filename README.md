@@ -2,9 +2,9 @@
 
 Port incremental de Asabiya History Engine v0.6 a Go + Ebitengine, para uso personal en **Windows x64**.
 
-Estado: Bloque 1 integrado en `7fb42f9eab9304b7bcd6811a379780ea6ca4723b`. Tag `legacy-v0.6` conservado en `fe58bdb2ccf4db83857b02d16fa1852b54836824`. **Fase 1, Bloque 2 para revisión; no integrar automáticamente.** [Issue #3](https://github.com/Jesejojo3/asabiya-native/issues/3).
+Estado: Bloques 1–2 integrados (último merge `714d06c3a9d3ce9d69dbb184161a99b2c78e82f1`). Tag `legacy-v0.6` conservado en `fe58bdb2ccf4db83857b02d16fa1852b54836824`. **Fase 1, Bloque 3 para revisión; no integrar automáticamente.** [Issue #5](https://github.com/Jesejojo3/asabiya-native/issues/5).
 
-Ya genera terreno y clima procedural, drenaje/ríos, geometría esférica, biomas, aptitud agrícola/pastoral, costes de viaje, enlaces marítimos y ecología inicial. Exporta JSON/PNG, consulta celdas y ofrece un viewport fino en Ebitengine. La sesión sigue **sin población**: no avanza años ni crea pueblos, estados o guerras. [Alcance y decisiones del Bloque 2](docs/phase-1/BLOCK2.md); [historial del Bloque 1](docs/phase-1/README.md).
+Ya genera terreno y clima procedural, drenaje/ríos, geometría esférica, biomas, aptitud agrícola/pastoral, costes de viaje, enlaces marítimos y ecología inicial. Exporta JSON/PNG, consulta celdas y ofrece un viewport fino en Ebitengine. Bloque 3: lenguas y nombres, `newHistory`, pueblos fundadores, población inicial y capacidad de carga (`asabiya-headless --peoples`). Todavía no avanza años ni crea estados o guerras. [Bloque 3](docs/phase-1/BLOCK3.md); [Bloque 2](docs/phase-1/BLOCK2.md); [Bloque 1](docs/phase-1/README.md).
 
 ## Compilar y ejecutar
 
