@@ -1,0 +1,145 @@
+{
+  "finalSHA256": "8cd0f17592a37b229bbe1fc9f406c44d88bb872b513af5a57734e687d7da8f44",
+  "finalYear": -8997,
+  "schema": "asabiya/replay-v1",
+  "engine": "native/v06-core-v1",
+  "profile": "native",
+  "world": {
+    "seed": "Godot-fixture",
+    "width": 24,
+    "height": 16,
+    "detail": 4,
+    "landFraction": 0.33
+  },
+  "worldSHA256": "8e1866bf472132f274b4ce0acacca0f9ccfcc3391e1ae1926bda36a2321725bc",
+  "historySeed": "1",
+  "initialRules": {
+    "version": "native/rules-v06-v1",
+    "values": {
+      "allyRate": 1,
+      "asabD": 0.006,
+      "asabR": 0.1,
+      "assim": 1,
+      "bands": 10,
+      "cataclysms": 1,
+      "circ": 1,
+      "climPersist": 0.8,
+      "climVar": 1,
+      "crisis": 1,
+      "degrade": 1,
+      "disease": 1,
+      "eco": 1,
+      "epochs": 1,
+      "faith": 1,
+      "floor": 1,
+      "formRate": 1,
+      "fortify": 1,
+      "growth": 0.012,
+      "hearths": 4,
+      "invent": 1,
+      "landFrac": 0.33,
+      "leaderFlair": 0.03,
+      "leaderInfl": 0.6,
+      "migration": 1,
+      "mixing": 1,
+      "nomad": 1,
+      "raid": 1,
+      "reach": 6,
+      "scaleExp": 0.8,
+      "seafaring": 1,
+      "splitDist": 10,
+      "startYear": -9000,
+      "techDiff": 1,
+      "techLoss": 1,
+      "terrain": 1,
+      "volcano": 1,
+      "wander": 1,
+      "warRate": 1,
+      "zeal": 1
+    },
+    "hearthMode": "historical",
+    "shuffleNames": false,
+    "sandbox": false
+  },
+  "initialSHA256": "a23ebdc54157e8336f7f921adbea3ba65d6416fd7a06674f3542ad41d2b06060",
+  "commands": [
+    {
+      "command": {
+        "schema": "asabiya/command-v1",
+        "profile": "native",
+        "sequence": 1,
+        "targetYear": -9000,
+        "kind": "advance_year"
+      },
+      "accepted": true,
+      "year": -8999,
+      "rngBefore": {
+        "seed": 3842126579,
+        "calls": 11557
+      },
+      "rngAfter": {
+        "seed": 3842126579,
+        "calls": 13301
+      }
+    },
+    {
+      "command": {
+        "schema": "asabiya/command-v1",
+        "profile": "native",
+        "sequence": 2,
+        "targetYear": -8999,
+        "kind": "advance_year"
+      },
+      "accepted": true,
+      "year": -8998,
+      "rngBefore": {
+        "seed": 3842126579,
+        "calls": 13301
+      },
+      "rngAfter": {
+        "seed": 3842126579,
+        "calls": 15043
+      }
+    },
+    {
+      "command": {
+        "schema": "asabiya/command-v1",
+        "profile": "native",
+        "sequence": 3,
+        "targetYear": -8998,
+        "kind": "advance_year"
+      },
+      "accepted": true,
+      "year": -8997,
+      "rngBefore": {
+        "seed": 3842126579,
+        "calls": 15043
+      },
+      "rngAfter": {
+        "seed": 3842126579,
+        "calls": 16794
+      }
+    },
+    {
+      "command": {
+        "schema": "asabiya/command-v1",
+        "profile": "native",
+        "sequence": 4,
+        "targetYear": -8997,
+        "kind": "set_sandbox",
+        "expectedRulesSHA256": "e43cd1483f6e5b2c8d617f5cba126bd6ae165e3edf9f92111022d2bdc33899d8",
+        "sandbox": true
+      },
+      "accepted": true,
+      "year": -8997,
+      "rngBefore": {
+        "seed": 3842126579,
+        "calls": 16794
+      },
+      "rngAfter": {
+        "seed": 3842126579,
+        "calls": 16794
+      }
+    }
+  ]
+}

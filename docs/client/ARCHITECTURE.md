@@ -1,3 +1,7 @@
+# Integración vigente
+
+El cliente 3D original se conserva. Su transporte y carga activa fueron adaptados al servidor TCP real por autorización final del usuario. [Arquitectura y contrato actual](../integration/README.md). La propuesta stdio que aparezca más abajo es histórica y no está activa.
+
 # Cliente 3D — arquitectura breve
 
 Godot **4.7.2-stable** (Forward+, GDScript, sin .NET). Windows x64. La simulación vive sólo en Go; el cliente representa datos.

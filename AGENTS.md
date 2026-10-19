@@ -1,3 +1,7 @@
+# Instrucción vigente de entrega
+
+El usuario asignó a Codex la integración del cliente Godot y el motor, y reservó todo el testeo para sí. No ejecutar pruebas, oráculos, simulaciones de comprobación ni CI sin una nueva instrucción. Se permite compilar/exportar para producir el paquete; no abrir el juego. Trabajar en integration/go-godot-windows, conservando los historiales y sin merge a main. La propiedad anterior del cliente se ha ampliado explícitamente por el usuario; se puede adaptar conservando el trabajo de Claude.
+
 # Asabiya Native — alcance y preservación
 
 - Estado actual: misión autónoma autorizada para completar todo el núcleo v0.6. Rama integration/v06-historical-core depende de PR #6 corregida en d19e27ef. Ver docs/mission/STATUS.md. No hacer merge en main; no esperar auditorías intermedias; no exponer AdvanceYear hasta integrar todo stepG.

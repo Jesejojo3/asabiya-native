@@ -1,0 +1,439 @@
+{
+  "schema": "asabiya/geography-v1",
+  "engine": "native/v06-core-v1",
+  "worldVersion": "native/world-v2",
+  "worldSHA256": "8e1866bf472132f274b4ce0acacca0f9ccfcc3391e1ae1926bda36a2321725bc",
+  "world": {
+    "seed": "Godot-fixture",
+    "width": 24,
+    "height": 16,
+    "detail": 4,
+    "landFraction": 0.33
+  },
+  "logical": {
+    "width": 24,
+    "height": 16
+  },
+  "fine": {
+    "width": 96,
+    "height": 64
+  },
+  "projection": "equirectangular cell centers",
+  "longitudeWrap": true,
+  "polarWrap": false,
+  "neighborOrder": [
+    "west",
+    "east",
+    "north",
+    "south"
+  ],
+  "provinceId": "y * logical.width + x",
+  "fineProvinceId": "floor(fineY / detail) * logical.width + floor(fineX / detail)",
+  "file": "geography.bin",
+  "byteOrder": "little-endian",
+  "bytes": 160123,
+  "sha256": "48ac8fba5db483306d3d83e0bfa8c7e0bd26479567fb6441e724555878db3d4b",
+  "layers": [
+    {
+      "name": "elevation",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 16,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "meters"
+    },
+    {
+      "name": "temperature",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 1552,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "celsius"
+    },
+    {
+      "name": "precipitation",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 3088,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "millimeters/year"
+    },
+    {
+      "name": "seasonalAmplitude",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 4624,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "celsius"
+    },
+    {
+      "name": "roughness",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 6160,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "fraction"
+    },
+    {
+      "name": "latitude",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 7696,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "radians"
+    },
+    {
+      "name": "longitude",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 9232,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "radians"
+    },
+    {
+      "name": "area",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 10768,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "square kilometers"
+    },
+    {
+      "name": "land",
+      "type": "u8",
+      "components": 1,
+      "count": 384,
+      "offset": 12304,
+      "bytes": 384,
+      "grid": "logical"
+    },
+    {
+      "name": "coast",
+      "type": "u8",
+      "components": 1,
+      "count": 384,
+      "offset": 12688,
+      "bytes": 384,
+      "grid": "logical"
+    },
+    {
+      "name": "biome",
+      "type": "u8",
+      "components": 1,
+      "count": 384,
+      "offset": 13072,
+      "bytes": 384,
+      "grid": "logical"
+    },
+    {
+      "name": "landmass",
+      "type": "i32",
+      "components": 1,
+      "count": 384,
+      "offset": 13456,
+      "bytes": 1536,
+      "grid": "logical"
+    },
+    {
+      "name": "neighbors",
+      "type": "i32",
+      "components": 4,
+      "count": 384,
+      "offset": 14992,
+      "bytes": 6144,
+      "grid": "logical",
+      "units": "province ID"
+    },
+    {
+      "name": "downstream",
+      "type": "i32",
+      "components": 1,
+      "count": 384,
+      "offset": 21136,
+      "bytes": 1536,
+      "grid": "logical"
+    },
+    {
+      "name": "filledElevation",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 22672,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "meters"
+    },
+    {
+      "name": "flowAccumulation",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 24208,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "legacy flow proxy"
+    },
+    {
+      "name": "river",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 25744,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "legacy river strength"
+    },
+    {
+      "name": "farmingSuitability",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 27280,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "fraction"
+    },
+    {
+      "name": "herdingSuitability",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 28816,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "fraction"
+    },
+    {
+      "name": "growingSeason",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 30352,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "months"
+    },
+    {
+      "name": "leaching",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 31888,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "fraction"
+    },
+    {
+      "name": "tropical",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 33424,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "fraction"
+    },
+    {
+      "name": "forest0",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 34960,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "fraction"
+    },
+    {
+      "name": "heavySoil",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 36496,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "fraction"
+    },
+    {
+      "name": "malaria",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 38032,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "fraction"
+    },
+    {
+      "name": "onchocerciasis",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 39568,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "fraction"
+    },
+    {
+      "name": "circumscription",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 41104,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "fraction"
+    },
+    {
+      "name": "monsoonZone",
+      "type": "f32",
+      "components": 1,
+      "count": 384,
+      "offset": 42640,
+      "bytes": 1536,
+      "grid": "logical",
+      "units": "fraction"
+    },
+    {
+      "name": "travelCost",
+      "type": "u8",
+      "components": 1,
+      "count": 384,
+      "offset": 44176,
+      "bytes": 384,
+      "grid": "logical"
+    },
+    {
+      "name": "nomad",
+      "type": "u8",
+      "components": 1,
+      "count": 384,
+      "offset": 44560,
+      "bytes": 384,
+      "grid": "logical"
+    },
+    {
+      "name": "tsetse",
+      "type": "u8",
+      "components": 1,
+      "count": 384,
+      "offset": 44944,
+      "bytes": 384,
+      "grid": "logical"
+    },
+    {
+      "name": "desert",
+      "type": "u8",
+      "components": 1,
+      "count": 384,
+      "offset": 45328,
+      "bytes": 384,
+      "grid": "logical"
+    },
+    {
+      "name": "niche",
+      "type": "f32",
+      "components": 4,
+      "count": 384,
+      "offset": 45712,
+      "bytes": 6144,
+      "grid": "logical",
+      "units": "legacy niche coordinates"
+    },
+    {
+      "name": "sphereXYZ",
+      "type": "f32",
+      "components": 3,
+      "count": 384,
+      "offset": 51856,
+      "bytes": 4608,
+      "grid": "logical",
+      "units": "unit sphere"
+    },
+    {
+      "name": "seaOffsets",
+      "type": "i32",
+      "components": 1,
+      "count": 385,
+      "offset": 56464,
+      "bytes": 1540,
+      "grid": "connectivity",
+      "units": "CSR offsets"
+    },
+    {
+      "name": "seaTargets",
+      "type": "i32",
+      "components": 1,
+      "count": 763,
+      "offset": 58004,
+      "bytes": 3052,
+      "grid": "connectivity",
+      "units": "province ID"
+    },
+    {
+      "name": "seaDistances",
+      "type": "u8",
+      "components": 1,
+      "count": 763,
+      "offset": 61056,
+      "bytes": 763,
+      "grid": "connectivity",
+      "units": "legacy sea steps"
+    },
+    {
+      "name": "fineElevation",
+      "type": "f32",
+      "components": 1,
+      "count": 6144,
+      "offset": 61819,
+      "bytes": 24576,
+      "grid": "fine",
+      "units": "meters"
+    },
+    {
+      "name": "fineTemperature",
+      "type": "f32",
+      "components": 1,
+      "count": 6144,
+      "offset": 86395,
+      "bytes": 24576,
+      "grid": "fine",
+      "units": "celsius"
+    },
+    {
+      "name": "finePrecipitation",
+      "type": "f32",
+      "components": 1,
+      "count": 6144,
+      "offset": 110971,
+      "bytes": 24576,
+      "grid": "fine",
+      "units": "millimeters/year"
+    },
+    {
+      "name": "fineSeasonalAmplitude",
+      "type": "f32",
+      "components": 1,
+      "count": 6144,
+      "offset": 135547,
+      "bytes": 24576,
+      "grid": "fine",
+      "units": "celsius"
+    }
+  ]
+}

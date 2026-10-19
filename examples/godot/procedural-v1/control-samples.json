@@ -1,0 +1,294 @@
+[
+  {
+    "id": 0,
+    "x": 0,
+    "y": 0,
+    "land": false,
+    "coast": false,
+    "elevationMeters": -1722.0957,
+    "temperatureC": -19.005848,
+    "precipitationMM": 131.57281,
+    "seasonalAmplitudeC": 17.371515,
+    "roughness": 0,
+    "latitudeRadians": 1.4726216,
+    "areaKM2": 204626.17,
+    "neighbors": [
+      23,
+      1,
+      -1,
+      24
+    ],
+    "landmass": -1,
+    "geometry": {
+      "x3": -0.09717859,
+      "y3": -0.0127938045,
+      "z3": 0.9951847,
+      "cosLon": -0.9914449,
+      "sinLon": -0.13052619,
+      "cosLat": 0.2,
+      "cxA": 0,
+      "cyA": 0
+    },
+    "drainage": {
+      "down": -1,
+      "filledElevationMeters": 0,
+      "accumulation": 0,
+      "river": 0
+    },
+    "ecology": {
+      "biome": 0,
+      "sF": 0,
+      "sH": 0,
+      "nomad": false,
+      "growingSeasonMonths": 0,
+      "leach": 0,
+      "tropical": 0,
+      "travelCost": 0,
+      "tsetse": false,
+      "monsoonZone": 0,
+      "desert": false,
+      "forest0": 0,
+      "heavySoil": 0,
+      "malaria": 0,
+      "onchocerciasis": 0,
+      "circumscription": 0,
+      "niche": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "weather": {
+      "indices": [
+        0,
+        1,
+        40,
+        41
+      ],
+      "fractions": [
+        0.33333334,
+        0.125
+      ]
+    }
+  },
+  {
+    "id": 23,
+    "x": 23,
+    "y": 0,
+    "land": false,
+    "coast": false,
+    "elevationMeters": -1366.873,
+    "temperatureC": -19.043602,
+    "precipitationMM": 135.56459,
+    "seasonalAmplitudeC": 16.125889,
+    "roughness": 0,
+    "latitudeRadians": 1.4726216,
+    "areaKM2": 204626.17,
+    "neighbors": [
+      22,
+      0,
+      -1,
+      47
+    ],
+    "landmass": -1,
+    "geometry": {
+      "x3": -0.09717859,
+      "y3": 0.0127938045,
+      "z3": 0.9951847,
+      "cosLon": -0.9914449,
+      "sinLon": 0.13052619,
+      "cosLat": 0.2,
+      "cxA": 23,
+      "cyA": 0
+    },
+    "drainage": {
+      "down": -1,
+      "filledElevationMeters": 0,
+      "accumulation": 0,
+      "river": 0
+    },
+    "ecology": {
+      "biome": 0,
+      "sF": 0,
+      "sH": 0,
+      "nomad": false,
+      "growingSeasonMonths": 0,
+      "leach": 0,
+      "tropical": 0,
+      "travelCost": 0,
+      "tsetse": false,
+      "monsoonZone": 0,
+      "desert": false,
+      "forest0": 0,
+      "heavySoil": 0,
+      "malaria": 0,
+      "onchocerciasis": 0,
+      "circumscription": 0,
+      "niche": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "weather": {
+      "indices": [
+        38,
+        39,
+        78,
+        79
+      ],
+      "fractions": [
+        0.6666667,
+        0.125
+      ]
+    }
+  },
+  {
+    "id": 192,
+    "x": 0,
+    "y": 8,
+    "land": false,
+    "coast": false,
+    "elevationMeters": -2248.403,
+    "temperatureC": 26.921432,
+    "precipitationMM": 2278.3213,
+    "seasonalAmplitudeC": 2.957133,
+    "roughness": 0,
+    "latitudeRadians": -0.09817477,
+    "areaKM2": 2077604.4,
+    "neighbors": [
+      215,
+      193,
+      168,
+      216
+    ],
+    "landmass": -1,
+    "geometry": {
+      "x3": -0.9866708,
+      "y3": -0.12989767,
+      "z3": -0.09801714,
+      "cosLon": -0.9914449,
+      "sinLon": -0.13052619,
+      "cosLat": 0.9951847,
+      "cxA": 0,
+      "cyA": 8
+    },
+    "drainage": {
+      "down": -1,
+      "filledElevationMeters": 0,
+      "accumulation": 0,
+      "river": 0
+    },
+    "ecology": {
+      "biome": 0,
+      "sF": 0,
+      "sH": 0,
+      "nomad": false,
+      "growingSeasonMonths": 0,
+      "leach": 0,
+      "tropical": 0,
+      "travelCost": 0,
+      "tsetse": false,
+      "monsoonZone": 0,
+      "desert": false,
+      "forest0": 0,
+      "heavySoil": 0,
+      "malaria": 0,
+      "onchocerciasis": 0,
+      "circumscription": 0,
+      "niche": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "weather": {
+      "indices": [
+        400,
+        401,
+        440,
+        441
+      ],
+      "fractions": [
+        0.33333334,
+        0.125
+      ]
+    }
+  },
+  {
+    "id": 383,
+    "x": 23,
+    "y": 15,
+    "land": false,
+    "coast": false,
+    "elevationMeters": -5086.5283,
+    "temperatureC": -18.997904,
+    "precipitationMM": 131.81569,
+    "seasonalAmplitudeC": 14.247851,
+    "roughness": 0,
+    "latitudeRadians": -1.4726216,
+    "areaKM2": 204626.17,
+    "neighbors": [
+      382,
+      360,
+      359,
+      -1
+    ],
+    "landmass": -1,
+    "geometry": {
+      "x3": -0.09717859,
+      "y3": 0.0127938045,
+      "z3": -0.9951847,
+      "cosLon": -0.9914449,
+      "sinLon": 0.13052619,
+      "cosLat": 0.2,
+      "cxA": 23,
+      "cyA": 15
+    },
+    "drainage": {
+      "down": -1,
+      "filledElevationMeters": 0,
+      "accumulation": 0,
+      "river": 0
+    },
+    "ecology": {
+      "biome": 0,
+      "sF": 0,
+      "sH": 0,
+      "nomad": false,
+      "growingSeasonMonths": 0,
+      "leach": 0,
+      "tropical": 0,
+      "travelCost": 0,
+      "tsetse": false,
+      "monsoonZone": 0,
+      "desert": false,
+      "forest0": 0,
+      "heavySoil": 0,
+      "malaria": 0,
+      "onchocerciasis": 0,
+      "circumscription": 0,
+      "niche": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "weather": {
+      "indices": [
+        758,
+        759,
+        798,
+        799
+      ],
+      "fractions": [
+        0.6666667,
+        0.875
+      ]
+    }
+  }
+]

@@ -1,3 +1,7 @@
+# Actualización de integración
+
+La instrucción final del usuario reasigna a Codex la adaptación del cliente Godot de Claude. El cliente usa ahora asabiya/local-v1 y geography-v1; ver [contrato activo](../integration/README.md) y [decisiones](../integration/DECISIONS.md). El testeo final queda al usuario. Las secciones históricas que asignan el cliente sólo a Claude o dejan fixtures/protocolo pendientes describen el estado anterior. Se añaden get_catalog, export_geography, endpoint-file/parent-pid, vistas opcionales map-state/map-delta, era provincial, metadatos de fuente y datos regionales de Tierra.
+
 # Contrato Go/Godot — v1
 
 Responsables: Codex mantiene `internal/sim`, `internal/interop`, el productor y este contrato; Claude mantiene el consumidor Godot. Ningún cambio del contrato modifica escenas, shaders, recursos o código de Claude. La entrega es mediante archivos/PR, sin comunicación automática entre agentes. Ebitengine queda como visor provisional independiente. La autoridad de fechas, población, RNG y entidades es Go.
