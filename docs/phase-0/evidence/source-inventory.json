@@ -1,0 +1,1305 @@
+{
+  "sourceSha256": "988ce360e70d2d034a3898f60b9a4c38d40b0ab56dd7a147329740f15fa8e9e9",
+  "method": "Evaluación del bloque core original sin DOM; copia documental de tablas, no reglas activas",
+  "dimensions": {
+    "W": 400,
+    "H": 200,
+    "N": 80000,
+    "SC": 4,
+    "HW": 1600,
+    "HH": 800
+  },
+  "parameters": [
+    [
+      "World",
+      "landFrac",
+      "Land share",
+      0.2,
+      0.5,
+      0.01,
+      0.33,
+      "Share of the surface above sea level (generated worlds).",
+      1
+    ],
+    [
+      "World",
+      "bands",
+      "Founding peoples",
+      3,
+      24,
+      1,
+      10,
+      "Unrelated language families at the start (generated worlds).",
+      1
+    ],
+    [
+      "World",
+      "hearths",
+      "Farming hearths",
+      1,
+      8,
+      1,
+      4,
+      "Places where crops are first domesticated (random hearths).",
+      1
+    ],
+    [
+      "World",
+      "startYear",
+      "Start year",
+      -12000,
+      -4000,
+      500,
+      -9000,
+      "Year the simulation begins.",
+      1
+    ],
+    [
+      "Climate",
+      "climVar",
+      "Weather variability",
+      0,
+      2,
+      0.05,
+      1,
+      "Size of year-to-year rainfall swings."
+    ],
+    [
+      "Climate",
+      "climPersist",
+      "Wet and dry runs",
+      0,
+      0.95,
+      0.01,
+      0.8,
+      "How long a wet or dry spell tends to last."
+    ],
+    [
+      "Climate",
+      "volcano",
+      "Volcanic winters",
+      0,
+      3,
+      0.1,
+      1,
+      "How often eruptions cool the world for a few years."
+    ],
+    [
+      "People",
+      "growth",
+      "Growth rate",
+      0.004,
+      0.03,
+      0.001,
+      0.012,
+      "Yearly growth while below carrying capacity."
+    ],
+    [
+      "People",
+      "migration",
+      "Migration",
+      0,
+      3,
+      0.05,
+      1,
+      "How readily people move toward emptier land."
+    ],
+    [
+      "People",
+      "seafaring",
+      "Seafaring",
+      0,
+      3,
+      0.05,
+      1,
+      "How often coastal peoples cross open water."
+    ],
+    [
+      "People",
+      "splitDist",
+      "Split radius",
+      4,
+      24,
+      1,
+      10,
+      "How far (in cells) a people spreads before it splits."
+    ],
+    [
+      "People",
+      "assim",
+      "Assimilation",
+      0,
+      3,
+      0.05,
+      1,
+      "How fast states absorb minority peoples."
+    ],
+    [
+      "People",
+      "mixing",
+      "Mixing into new peoples",
+      0,
+      3,
+      0.05,
+      1,
+      "How readily long-mingled peoples merge into a new one."
+    ],
+    [
+      "People",
+      "wander",
+      "Great migrations",
+      0,
+      3,
+      0.05,
+      1,
+      "How readily displaced peoples and hordes set off across the map."
+    ],
+    [
+      "States",
+      "formRate",
+      "State formation",
+      0,
+      3,
+      0.05,
+      1,
+      "How often dense farming or herding peoples form chiefdoms."
+    ],
+    [
+      "States",
+      "warRate",
+      "War frequency",
+      0,
+      3,
+      0.05,
+      1,
+      "How often states declare war and press their attacks."
+    ],
+    [
+      "States",
+      "asabR",
+      "Frontier cohesion",
+      0.01,
+      0.3,
+      0.005,
+      0.1,
+      "Asabiya gained on frontiers with alien peoples or faiths."
+    ],
+    [
+      "States",
+      "asabD",
+      "Interior decay",
+      0.001,
+      0.05,
+      0.001,
+      0.006,
+      "Asabiya lost in safe interiors."
+    ],
+    [
+      "States",
+      "reach",
+      "Administrative reach",
+      2,
+      20,
+      0.5,
+      6,
+      "Cells from the capital at which power falls to 37%, before technology."
+    ],
+    [
+      "States",
+      "crisis",
+      "Instability sensitivity",
+      0,
+      3,
+      0.05,
+      1,
+      "How easily structural pressure turns into civil war."
+    ],
+    [
+      "States",
+      "allyRate",
+      "Alliances",
+      0,
+      3,
+      0.05,
+      1,
+      "How readily states with shared interests ally."
+    ],
+    [
+      "States",
+      "terrain",
+      "Terrain friction",
+      0,
+      3,
+      0.05,
+      1,
+      "How much deserts, mountains and forests slow armies and administration."
+    ],
+    [
+      "States",
+      "floor",
+      "Population floor",
+      0.2,
+      3,
+      0.05,
+      1,
+      "Scales the population a chiefdom, kingdom or empire needs to exist. States that fall below their floor demote or dissolve."
+    ],
+    [
+      "States",
+      "circ",
+      "Circumscription",
+      0,
+      2,
+      0.05,
+      1,
+      "How much hemmed-in land (Carneiro) and the lack of an exit option favour state formation and taxation."
+    ],
+    [
+      "States",
+      "eco",
+      "Ecological reach",
+      0,
+      3,
+      0.05,
+      1,
+      "How much harder it is to conquer, tax and hold lands unlike the state's home climate and way of life. Higher favours empires that follow one climate belt, river or coast."
+    ],
+    [
+      "States",
+      "scaleExp",
+      "Returns to scale",
+      0.6,
+      1,
+      0.01,
+      0.8,
+      "How strongly a bigger tax base turns into military reach. Higher favours large empires."
+    ],
+    [
+      "States",
+      "fortify",
+      "Fortification",
+      0,
+      3,
+      0.05,
+      1,
+      "How readily cohesive, wealthy states fortify threatened frontiers."
+    ],
+    [
+      "Nomads",
+      "nomad",
+      "Nomad confederations",
+      0,
+      3,
+      0.05,
+      1,
+      "How readily herders unite into confederations under strong leaders."
+    ],
+    [
+      "Nomads",
+      "raid",
+      "Raiding",
+      0,
+      3,
+      0.05,
+      1,
+      "How often nomads raid settled neighbours."
+    ],
+    [
+      "Leaders",
+      "leaderInfl",
+      "Leader influence",
+      0,
+      1,
+      0.01,
+      0.6,
+      "How much a ruler’s traits matter."
+    ],
+    [
+      "Leaders",
+      "leaderFlair",
+      "Exceptional rulers",
+      0,
+      0.15,
+      0.005,
+      0.03,
+      "Chance that a ruler has one extreme trait."
+    ],
+    [
+      "Ideas & faith",
+      "invent",
+      "Invention",
+      0,
+      3,
+      0.05,
+      1,
+      "How often states make new discoveries."
+    ],
+    [
+      "Ideas & faith",
+      "techDiff",
+      "Idea diffusion",
+      0,
+      3,
+      0.05,
+      1,
+      "How fast techniques spread between neighbours."
+    ],
+    [
+      "Ideas & faith",
+      "techLoss",
+      "Skill loss in isolation",
+      0,
+      3,
+      0.05,
+      1,
+      "Small, cut-off groups forget techniques."
+    ],
+    [
+      "Ideas & faith",
+      "faith",
+      "Prophets and schisms",
+      0,
+      3,
+      0.05,
+      1,
+      "How often new religions and schisms arise."
+    ],
+    [
+      "Ideas & faith",
+      "zeal",
+      "Holy wars",
+      0,
+      3,
+      0.05,
+      1,
+      "How readily pious rulers fight over faith and holy sites."
+    ],
+    [
+      "Climate",
+      "epochs",
+      "Climate epochs",
+      0,
+      3,
+      0.05,
+      1,
+      "How often centuries-long cold, warm or dry epochs occur."
+    ],
+    [
+      "Ideas & faith",
+      "disease",
+      "Epidemics",
+      0,
+      3,
+      0.05,
+      1,
+      "How often crowd diseases break out."
+    ],
+    [
+      "Ideas & faith",
+      "degrade",
+      "Soil exhaustion",
+      0,
+      3,
+      0.05,
+      1,
+      "How fast overworked farmland loses fertility."
+    ],
+    [
+      "Cataclysms",
+      "cataclysms",
+      "Cataclysms",
+      0,
+      3,
+      0.05,
+      1,
+      "How often the catastrophe of the age strikes on its own: great floods, eruptions, the unravelling of palace economies, long winters, earthquakes and the rare starfall. Any of them can throw a region, or the world, back an era."
+    ]
+  ],
+  "climateParameters": [
+    [
+      "tEq",
+      "Equator temperature (°C)",
+      22,
+      32,
+      0.5,
+      29
+    ],
+    [
+      "tGrad",
+      "Equator-to-pole drop (°C)",
+      30,
+      60,
+      1,
+      47
+    ],
+    [
+      "lapse",
+      "Cooling with height (°C/km)",
+      4,
+      9,
+      0.1,
+      6
+    ],
+    [
+      "rainBelt",
+      "Tropical rain belt (mm)",
+      600,
+      4000,
+      50,
+      3150
+    ],
+    [
+      "midlat",
+      "Mid-latitude storm belt (mm)",
+      200,
+      2000,
+      25,
+      1400
+    ],
+    [
+      "subDry",
+      "Subtropical dry belt (mm)",
+      0,
+      800,
+      10,
+      590
+    ],
+    [
+      "dry",
+      "Interior drying rate",
+      0.002,
+      0.06,
+      0.001,
+      0.038
+    ],
+    [
+      "floor",
+      "Interior moisture floor",
+      0,
+      0.95,
+      0.01,
+      0.75
+    ],
+    [
+      "orog",
+      "Mountain rainfall",
+      0,
+      5000,
+      100,
+      2400
+    ],
+    [
+      "recycle",
+      "Rainforest moisture recycling",
+      0,
+      1,
+      0.01,
+      0.9
+    ],
+    [
+      "monsoon",
+      "Monsoon reach",
+      0,
+      1.2,
+      0.01,
+      0.62
+    ],
+    [
+      "monsoonP",
+      "Monsoon rainfall (mm)",
+      0,
+      2500,
+      50,
+      575
+    ],
+    [
+      "maritime",
+      "West-coast ocean warmth (°C)",
+      0,
+      8,
+      0.25,
+      5.5
+    ],
+    [
+      "contKm",
+      "Continentality distance (km)",
+      300,
+      3000,
+      50,
+      650
+    ],
+    [
+      "seas",
+      "Maritime seasonal swing",
+      0.05,
+      0.4,
+      0.01,
+      0.165
+    ],
+    [
+      "contSeas",
+      "Continental seasonal swing",
+      0,
+      1,
+      0.01,
+      0.55
+    ]
+  ],
+  "additionalDefaults": {
+    "hearthMode": "historical",
+    "fitClimate": true,
+    "shuffleNames": false,
+    "sandbox": false
+  },
+  "technology": [
+    {
+      "k": "farm",
+      "n": "Farming",
+      "era": 1,
+      "pos": [
+        0.6,
+        -0.6
+      ]
+    },
+    {
+      "k": "herd",
+      "n": "Herding",
+      "era": 1,
+      "pos": [
+        0.2,
+        -0.5
+      ]
+    },
+    {
+      "k": "irrig",
+      "n": "Irrigation",
+      "era": 1,
+      "pre": [
+        0
+      ],
+      "pos": [
+        0.7,
+        0.2
+      ]
+    },
+    {
+      "k": "copper",
+      "n": "Bronze",
+      "era": 2,
+      "pre": [
+        0
+      ],
+      "pos": [
+        0.1,
+        0.5
+      ]
+    },
+    {
+      "k": "horse",
+      "n": "Horse riding",
+      "era": 2,
+      "pre": [
+        1
+      ],
+      "pos": [
+        -0.2,
+        0.4
+      ]
+    },
+    {
+      "k": "sail",
+      "n": "Seafaring",
+      "era": 1,
+      "pos": [
+        0.3,
+        0.1
+      ]
+    },
+    {
+      "k": "writing",
+      "n": "Writing",
+      "era": 2,
+      "pre": [
+        0,
+        3
+      ],
+      "em": {
+        "b": 0.0002,
+        "pop": 1500000,
+        "cells": 4
+      },
+      "pos": [
+        -0.4,
+        0
+      ]
+    },
+    {
+      "k": "wheel",
+      "n": "Wheel and chariot",
+      "era": 2,
+      "pre": [
+        3
+      ],
+      "em": {
+        "b": 0.0002,
+        "pop": 1000000
+      },
+      "pos": [
+        0,
+        0.5
+      ]
+    },
+    {
+      "k": "iron",
+      "n": "Ironworking",
+      "era": 3,
+      "pre": [
+        3,
+        7,
+        6
+      ],
+      "em": {
+        "b": 0.00008333333333333333,
+        "pop": 3000000
+      },
+      "pos": [
+        0.3,
+        0.7
+      ]
+    },
+    {
+      "k": "coin",
+      "n": "Coinage",
+      "era": 4,
+      "pre": [
+        6,
+        8
+      ],
+      "em": {
+        "b": 0.0002777777777777778,
+        "pop": 4000000
+      },
+      "pos": [
+        -0.6,
+        0.2
+      ]
+    },
+    {
+      "k": "law",
+      "n": "Law codes",
+      "era": 4,
+      "pre": [
+        6
+      ],
+      "em": {
+        "b": 0.0003125,
+        "pop": 3000000,
+        "cells": 15
+      },
+      "pos": [
+        -0.5,
+        -0.1
+      ]
+    },
+    {
+      "k": "roads",
+      "n": "Roads",
+      "era": 4,
+      "pre": [
+        10,
+        8,
+        9
+      ],
+      "em": {
+        "b": 0.0003125,
+        "pop": 4000000,
+        "cells": 25
+      },
+      "pos": [
+        -0.4,
+        0.5
+      ]
+    },
+    {
+      "k": "nav",
+      "n": "Navigation",
+      "era": 4,
+      "pre": [
+        5,
+        6,
+        8
+      ],
+      "em": {
+        "b": 0.0002777777777777778,
+        "pop": 2000000,
+        "coast": 1
+      },
+      "pos": [
+        0,
+        0.4
+      ]
+    },
+    {
+      "k": "caval",
+      "n": "Heavy cavalry",
+      "era": 5,
+      "pre": [
+        4,
+        8,
+        10,
+        9
+      ],
+      "em": {
+        "b": 0.00017857142857142857,
+        "pop": 3000000,
+        "horse": 1
+      },
+      "pos": [
+        0.2,
+        0.8
+      ]
+    },
+    {
+      "k": "paper",
+      "n": "Paper",
+      "era": 5,
+      "pre": [
+        9,
+        10,
+        11
+      ],
+      "em": {
+        "b": 0.00017857142857142857,
+        "pop": 6000000
+      },
+      "pos": [
+        -0.6,
+        -0.1
+      ]
+    },
+    {
+      "k": "crops",
+      "n": "Crop rotation",
+      "era": 5,
+      "pre": [
+        8,
+        10,
+        11
+      ],
+      "em": {
+        "b": 0.00015625,
+        "pop": 4000000
+      },
+      "pos": [
+        0.7,
+        0.1
+      ]
+    },
+    {
+      "k": "gun",
+      "n": "Gunpowder",
+      "era": 6,
+      "pre": [
+        14,
+        13
+      ],
+      "em": {
+        "b": 0.000125,
+        "pop": 12000000
+      },
+      "pos": [
+        0.2,
+        0.9
+      ]
+    },
+    {
+      "k": "ocean",
+      "n": "Ocean navigation",
+      "era": 7,
+      "pre": [
+        12,
+        14,
+        15
+      ],
+      "em": {
+        "b": 0.00014285714285714287,
+        "pop": 5000000,
+        "coast": 1
+      },
+      "pos": [
+        -0.2,
+        0.8
+      ]
+    },
+    {
+      "k": "camel",
+      "n": "Camels",
+      "era": 2,
+      "pre": [
+        1
+      ],
+      "pos": [
+        0.3,
+        -0.3
+      ]
+    },
+    {
+      "k": "grain",
+      "n": "Grain crops",
+      "era": 1,
+      "pre": [
+        0
+      ],
+      "pos": [
+        0.5,
+        -0.5
+      ]
+    },
+    {
+      "k": "ard",
+      "n": "Scratch plough",
+      "era": 2,
+      "pre": [
+        0,
+        1
+      ],
+      "pos": [
+        0.5,
+        0.3
+      ]
+    },
+    {
+      "k": "plough",
+      "n": "Heavy plough",
+      "era": 5,
+      "pre": [
+        20,
+        8
+      ],
+      "em": {
+        "b": 0.0001923076923076923,
+        "pop": 1500000,
+        "press": 1,
+        "heavy": 1
+      },
+      "pos": [
+        0.6,
+        0.6
+      ]
+    },
+    {
+      "k": "manure",
+      "n": "Intensive manuring",
+      "era": 3,
+      "pre": [
+        0,
+        1
+      ],
+      "em": {
+        "b": 0.0003333333333333333,
+        "pop": 500000,
+        "press": 1
+      },
+      "pos": [
+        0.8,
+        -0.2
+      ]
+    },
+    {
+      "k": "xcrops",
+      "n": "Crops from across the ocean",
+      "era": 7,
+      "pre": [
+        0
+      ]
+    },
+    {
+      "k": "kitesig",
+      "n": "Kite signalling",
+      "era": 4,
+      "pre": [
+        6,
+        5
+      ],
+      "em": {
+        "b": 0.0000625,
+        "pop": 2000000
+      },
+      "pos": [
+        0.5,
+        -0.3
+      ],
+      "synth": 1,
+      "d": "Signal kites relay orders along frontiers: administrative reach +15%."
+    },
+    {
+      "k": "windcart",
+      "n": "Wind wagons",
+      "era": 5,
+      "pre": [
+        7,
+        12
+      ],
+      "em": {
+        "b": 0.0000625,
+        "pop": 2000000
+      },
+      "pos": [
+        -0.3,
+        0.9
+      ],
+      "synth": 1,
+      "d": "Sail-driven carts cross flat deserts and steppe: they open caravan routes like camels do."
+    },
+    {
+      "k": "fungal",
+      "n": "Forest fungal gardens",
+      "era": 3,
+      "pre": [
+        0,
+        22
+      ],
+      "em": {
+        "b": 0.00007142857142857143,
+        "pop": 300000,
+        "press": 1
+      },
+      "pos": [
+        0.9,
+        -0.8
+      ],
+      "synth": 1,
+      "d": "Cultivated fungi on forest litter: +40% food in forest and leached soils."
+    },
+    {
+      "k": "ledger",
+      "n": "Clockwork ledgers",
+      "era": 5,
+      "pre": [
+        14,
+        9
+      ],
+      "em": {
+        "b": 0.0000625,
+        "pop": 4000000
+      },
+      "pos": [
+        -0.7,
+        0.6
+      ],
+      "synth": 1,
+      "d": "Geared tallying engines for the treasury: +10% tax, slower-growing upkeep."
+    },
+    {
+      "k": "tidemill",
+      "n": "Tide mills",
+      "era": 4,
+      "pre": [
+        8,
+        12
+      ],
+      "em": {
+        "b": 0.00007142857142857143,
+        "pop": 1500000,
+        "coast": 1
+      },
+      "pos": [
+        0,
+        0.95
+      ],
+      "synth": 1,
+      "d": "Tidal water power for milling and forges: +15% food on coasts."
+    },
+    {
+      "k": "feverbark",
+      "n": "Fever-bark medicine",
+      "era": 4,
+      "pre": [
+        6,
+        15
+      ],
+      "em": {
+        "b": 0.00007142857142857143,
+        "pop": 2000000
+      },
+      "pos": [
+        0.6,
+        -0.4
+      ],
+      "synth": 1,
+      "d": "A bark remedy for marsh fevers: halves the malaria burden, plague deaths -20%."
+    },
+    {
+      "k": "saltflush",
+      "n": "Salt-flushing canals",
+      "era": 4,
+      "pre": [
+        2,
+        10
+      ],
+      "em": {
+        "b": 0.00008333333333333333,
+        "pop": 1000000,
+        "press": 1
+      },
+      "pos": [
+        0.7,
+        0.3
+      ],
+      "synth": 1,
+      "d": "Drainage that rinses salt from irrigated fields: reverses salinization."
+    },
+    {
+      "k": "pigeon",
+      "n": "Courier birds",
+      "era": 3,
+      "pre": [
+        6,
+        1
+      ],
+      "em": {
+        "b": 0.00007142857142857143,
+        "pop": 800000
+      },
+      "pos": [
+        -0.2,
+        -0.6
+      ],
+      "synth": 1,
+      "d": "Trained birds carry messages: reach +10% and faster spread of ideas."
+    }
+  ],
+  "eras": [
+    "Foraging",
+    "Neolithic",
+    "Bronze Age",
+    "Iron Age",
+    "Classical",
+    "Medieval",
+    "Gunpowder age",
+    "Age of Sail"
+  ],
+  "omens": {
+    "kindle": {
+      "name": "Kindle",
+      "cost": 1,
+      "km": 450,
+      "needs": "land",
+      "desc": "A comet stirs a people: local asabiya rises"
+    },
+    "discord": {
+      "name": "Discord",
+      "cost": 1,
+      "km": 900,
+      "needs": "realm",
+      "desc": "Rival claimants split a realm: its cohesion falls"
+    },
+    "bounty": {
+      "name": "Bounty",
+      "cost": 1,
+      "km": 450,
+      "needs": "land",
+      "desc": "A century of good harvests: the land feeds more people"
+    },
+    "drought": {
+      "name": "Drought",
+      "cost": 1,
+      "km": 600,
+      "needs": "land",
+      "desc": "Six decades of failed rains: hunger and flight"
+    },
+    "spark": {
+      "name": "Spark",
+      "cost": 2,
+      "km": 0,
+      "needs": "realm",
+      "desc": "A brilliant mind appears: the realm learns new techniques"
+    },
+    "prophet": {
+      "name": "Prophet",
+      "cost": 2,
+      "km": 0,
+      "needs": "people",
+      "desc": "A prophet begins to preach a new faith here"
+    },
+    "plague": {
+      "name": "Pestilence",
+      "cost": 2,
+      "km": 0,
+      "needs": "people",
+      "desc": "A new disease breaks out here"
+    },
+    "doom": {
+      "name": "Cataclysm",
+      "cost": 3,
+      "km": 0,
+      "needs": "land",
+      "desc": "Unleash the catastrophe of the age here"
+    }
+  },
+  "cataclysms": {
+    "deluge": {
+      "eras": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "w": 1,
+      "scope": "region",
+      "km": 1300,
+      "pop": 0.3,
+      "tech": 0.6,
+      "infra": 0.6,
+      "kmod": 0.7,
+      "kyrs": 30,
+      "s": 0.6,
+      "site": "lowland",
+      "kind": "Flood",
+      "title": "The Great Deluge",
+      "text": "the waters rise over {place}",
+      "why": "Rivers burst and the sea breaks in; fields, stores and villages are swept away."
+    },
+    "eruption": {
+      "eras": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "w": 0.6,
+      "scope": "region",
+      "km": 1000,
+      "pop": 0.25,
+      "tech": 0.5,
+      "infra": 0.5,
+      "kmod": 0.55,
+      "kyrs": 25,
+      "s": 0.7,
+      "site": "mountain",
+      "world": {
+        "kmod": 0.9,
+        "kyrs": 8
+      },
+      "kind": "Volcano",
+      "title": "The Eruption of {place}",
+      "text": "a mountain explodes at {place}",
+      "why": "Ash buries the land for hundreds of kilometres and the sky darkens across the world."
+    },
+    "unravel": {
+      "eras": [
+        2,
+        3,
+        4
+      ],
+      "w": 1.1,
+      "scope": "region",
+      "km": 2600,
+      "pop": 0.22,
+      "tech": 1,
+      "infra": 0.55,
+      "kmod": 0.8,
+      "kyrs": 40,
+      "s": 0.35,
+      "site": "leader",
+      "kind": "Systems collapse",
+      "title": "The Great Unravelling",
+      "text": "raiders, drought and famine break the palaces around {place}",
+      "why": "Trade collapses and writing is forgotten across a whole region."
+    },
+    "winter": {
+      "eras": [
+        3,
+        4,
+        5
+      ],
+      "w": 0.5,
+      "scope": "global",
+      "pop": 0.12,
+      "tech": 0.25,
+      "infra": 0.2,
+      "kmod": 0.72,
+      "kyrs": 15,
+      "s": 0.8,
+      "kind": "Volcanic winter",
+      "title": "The Year Without Summer",
+      "text": "the sun dims and harvests fail across the world",
+      "why": "A distant eruption veils the sky; famine and disorder follow."
+    },
+    "quake": {
+      "eras": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "w": 0.8,
+      "scope": "region",
+      "km": 650,
+      "pop": 0.35,
+      "tech": 0.5,
+      "infra": 0.85,
+      "kmod": 0.85,
+      "kyrs": 20,
+      "s": 0.7,
+      "site": "mountain",
+      "kind": "Earthquake",
+      "title": "The Great Earthquake of {place}",
+      "text": "the earth shakes {place} to rubble",
+      "why": "Cities fall and a great wave sweeps the coast."
+    },
+    "iceage": {
+      "eras": [
+        5,
+        6,
+        7
+      ],
+      "w": 0.5,
+      "scope": "global",
+      "pop": 0.1,
+      "tech": 0.25,
+      "infra": 0.2,
+      "kmod": 0.8,
+      "kyrs": 70,
+      "s": 0.7,
+      "kind": "Climate",
+      "title": "The Long Winter",
+      "text": "a long cold settles on the world",
+      "why": "Seventy years of short summers bring famine, revolts and wandering peoples."
+    },
+    "impact": {
+      "eras": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "w": 0.06,
+      "scope": "region",
+      "km": 2600,
+      "pop": 0.6,
+      "tech": 1.3,
+      "infra": 0.9,
+      "kmod": 0.5,
+      "kyrs": 30,
+      "s": 0.4,
+      "site": "any",
+      "world": {
+        "kmod": 0.65,
+        "kyrs": 20
+      },
+      "kind": "Asteroid",
+      "title": "The Starfall",
+      "text": "a rock from the sky strikes near {place}",
+      "why": "Fire, then years of dark skies across the whole world."
+    }
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "sourceSha256": "988ce360e70d2d034a3898f60b9a4c38d40b0ab56dd7a147329740f15fa8e9e9",
+  "runtime": {
+    "node": "v24.19.0",
+    "platform": "win32",
+    "arch": "x64",
+    "endianness": "LE"
+  },
+  "scriptsSyntaxChecked": 3,
+  "cases": [
+    {
+      "kind": "generated",
+      "worldSeed": "atlas-7",
+      "historySeed": "1",
+      "years": 54,
+      "drought": {
+        "target": 9828,
+        "castYear": -8997
+      },
+      "worldDigest": "cdeda999727f0fe49dacac903c6c09249d878ddbd1311a20ec936a0f739d273b",
+      "initialDigest": "35ad67e4342975c46f491a41bf39bd7becdc9c0cc63b155c3652aa513ee62b75",
+      "annualDigest": "20deef13efa4e2cfa1957b90d618b350f7c1b1ab38ac052d6095ffdaaa5c080e",
+      "afterCastDigest": "7bb7d194593b2d77296b0e417c32e357a29cbe03e2ca3dbf0417804aa6639292",
+      "finalDigest": "96265ebf344a20e76c20686cb1c3ae75b5ac3c7d981d6f2ff4d08b0deb5e85d0",
+      "nextRandom": [
+        0.43838320998474956,
+        0.8660132889635861,
+        0.9506169562228024,
+        0.3743293536826968,
+        0.23364663287065923,
+        0.43833626457490027,
+        0.32721063564531505,
+        0.36156402342021465
+      ],
+      "final": {
+        "year": -8946,
+        "peoples": 115,
+        "states": 0,
+        "wars": 0,
+        "omens": 1,
+        "followed": true
+      },
+      "elapsedMs": [
+        33558,
+        33469
+      ],
+      "repetitionsMatch": true
+    },
+    {
+      "kind": "earth",
+      "worldSeed": "Earth",
+      "historySeed": "1",
+      "years": 54,
+      "drought": {
+        "target": 5913,
+        "castYear": -8997
+      },
+      "worldDigest": "fd2cb8f448a78b0a3be40a87d302bd5ad9ff0caa9082d4c62cd7a6158712ac40",
+      "initialDigest": "b953288c8053294e46019e5a93889523e700d0f1d6866f1385b944b859f5024a",
+      "annualDigest": "269574da3b4c36d713e41e1ceead6c65a7bef960ed63f5ebf510a6e84022c51b",
+      "afterCastDigest": "f65ed532d71b5d38024c5559d6a8fdf93caf29f49618ae0d7f91c06c8d4dd040",
+      "finalDigest": "ae0e1dc30041ea0d37503d50ea911e3aad9200a28716e510527a3edbed812378",
+      "nextRandom": [
+        0.3594755914527923,
+        0.9437625207938254,
+        0.4146452243439853,
+        0.9410641582217067,
+        0.5050051677972078,
+        0.5719437994994223,
+        0.44765484519302845,
+        0.8415652271360159
+      ],
+      "final": {
+        "year": -8946,
+        "peoples": 125,
+        "states": 0,
+        "wars": 0,
+        "omens": 1,
+        "followed": true
+      },
+      "elapsedMs": [
+        10760,
+        10652
+      ],
+      "repetitionsMatch": true
+    }
+  ],
+  "limitations": [
+    "Sólo JavaScript original; no equivalencia Go/JS.",
+    "Dos escenarios iniciales de 54 años; no cubre guerras tardías ni todos los presagios.",
+    "Hashes binarios ligados a la endianidad registrada; RNG observado mediante continuación, sin serializar su clausura.",
+    "Tiempo de caracterización con generación y hashing; no constituye benchmark del motor."
+  ]
+}
