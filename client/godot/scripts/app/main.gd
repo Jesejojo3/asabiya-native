@@ -789,18 +789,18 @@ func _show_engine_entity(kind_name: String, id: int) -> void:
 			if int(item.get("id", -1)) == id:
 				value = item
 				break
-	var key := "%s:%d:%d" % [kind_name, id, current_year]
+	var query_key := "%s:%d:%d" % [kind_name, id, current_year]
 	if kind_name != "event" and source is BridgeSource and (source as BridgeSource).connected and not (source as BridgeSource).busy:
 		var ys := source.years()
-		if not ys.is_empty() and ys[ys.size() - 1] == current_year and _entity_query_key != key:
-			_entity_query_key = key
+		if not ys.is_empty() and ys[ys.size() - 1] == current_year and _entity_query_key != query_key:
+			_entity_query_key = query_key
 			var expected_year := current_year
 			(source as BridgeSource).query_entity(kind_name, id, func(response: Dictionary) -> void:
 				if selection != {"kind":"engine:" + kind_name,"id":id} or current_year != expected_year: return
 				if int(response.get("year", -999999)) != expected_year: return
-				_entity_details = {"key":key,"fields":response.get("data", {}).get("fields", {})}
+				_entity_details = {"key":query_key,"fields":response.get("data", {}).get("fields", {})}
 				_show_engine_entity(kind_name, id))
-	if _entity_details.get("key", "") == key: value = _entity_details.get("fields", {})
+	if _entity_details.get("key", "") == query_key: value = _entity_details.get("fields", {})
 	if value.is_empty():
 		hud.set_status("No hay datos de esa entidad en la publicación seleccionada.")
 		return
