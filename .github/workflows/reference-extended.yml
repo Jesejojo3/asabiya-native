@@ -1,0 +1,17 @@
+name: Legacy extended oracle checks
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  extended:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: '.node-version'
+      - run: node tools/verify-reference.mjs
+      - run: node tools/math-vectors.mjs --count 200000 --verify docs/phase-0/evidence/math-vectors.extended.node24.json
+      - run: node tools/reference-late.mjs --verify docs/phase-0/evidence/reference-late.earth-history1.node24.json

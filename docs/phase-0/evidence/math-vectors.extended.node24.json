@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "generator": "xorshift32/0x5a17c9e3, function-order v1, binary64 big-endian hex; NaN canonical",
+  "oracle": {
+    "schemaVersion": 1,
+    "node": "24.19.0",
+    "v8": "13.6.233.17-node.51",
+    "arch": "x64",
+    "endianness": "LE",
+    "referenceSha256": "988ce360e70d2d034a3898f60b9a4c38d40b0ab56dd7a147329740f15fa8e9e9"
+  },
+  "countPerFunction": 200000,
+  "summaries": [
+    {
+      "fn": "sin",
+      "vectors": 200015,
+      "sha256": "c22721c30088780b0af4bfc04de0832ab2651fda9b24243db81875c6f6db0304"
+    },
+    {
+      "fn": "cos",
+      "vectors": 200015,
+      "sha256": "2ed7de728b1091d2cc24cb67c9f5c6e281e6337b3189e79e652b5ad94b7b69b0"
+    },
+    {
+      "fn": "exp",
+      "vectors": 200015,
+      "sha256": "e37c70f43b8a9197a66e88518121198bc334799448b3975155ed1a84590a6e16"
+    },
+    {
+      "fn": "log",
+      "vectors": 200015,
+      "sha256": "bdc1ad466df4a0a5f173f0ef1a66664a6de6fed7dc90083280ba20dc614b78c5"
+    },
+    {
+      "fn": "log10",
+      "vectors": 200015,
+      "sha256": "0d36f7e1dd4f4c9d5dc1792faff79ec1647688434e334777eeea063678361d77"
+    },
+    {
+      "fn": "pow",
+      "vectors": 200225,
+      "sha256": "f502c2e0ab9c3254c7224972bae8a64428b17ac90e7d6990b4060b360cb9eec1"
+    },
+    {
+      "fn": "atan2",
+      "vectors": 200225,
+      "sha256": "8baa95ee3bc14f8ca615ac8506c12c9b0f7c7690458e64470b828c6bfec5c888"
+    },
+    {
+      "fn": "asin",
+      "vectors": 200015,
+      "sha256": "53afe2339db584e7e0cdee3543da2debf0b173443ec498e3d24057c84afaa5b3"
+    },
+    {
+      "fn": "acos",
+      "vectors": 200015,
+      "sha256": "7794f2d917b812e58e9287f7bc2ffa93160bace339345a08540ffbce9b9e25de"
+    },
+    {
+      "fn": "sqrt",
+      "vectors": 200015,
+      "sha256": "3e94bb5c3ed3a2028fc737791d07f47d514f236e307c5286685981517fc3b60f"
+    },
+    {
+      "fn": "hypot2",
+      "vectors": 200225,
+      "sha256": "b8201e30f6c4bc1b0c84da3c985f3db405a99c63c4c18f4de2cf3554106ce8cd"
+    },
+    {
+      "fn": "hypot3",
+      "vectors": 200225,
+      "sha256": "9fde109cf9fa35cad53c6975670a215dee90433eae639bcb2240f859ce85c5b0"
+    },
+    {
+      "fn": "hypot4",
+      "vectors": 200225,
+      "sha256": "7a7d11a0ee198876cba5a7edacaafb21f51b17d1f2e6f3ad30cec183596c29a2"
+    }
+  ],
+  "limitations": [
+    "Sólo V8 fijado; comparación con Go/jsmath pendiente.",
+    "Los vectores no demuestran equivalencia para todo binary64.",
+    "NaN se compara por clasificación; signo de cero y bits finitos/infinito son estrictos."
+  ]
+}

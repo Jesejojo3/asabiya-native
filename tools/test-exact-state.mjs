@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {encodeExactState as encode} from './lib/exact-state.mjs';
+assert.notEqual(encode({a:1,b:2}),encode({b:2,a:1}));
+assert.notEqual(encode(-0),encode(0));
+assert.notEqual(encode(new Map([[1,2],[3,4]])),encode(new Map([[3,4],[1,2]])));
+assert.notEqual(encode(new Float32Array([-0])),encode(new Float32Array([0])));
+const shared={};assert.notEqual(encode([shared,shared]),encode([{},{}]));
+const cycle={};cycle.self=cycle;assert.ok(encode(cycle).includes('"ref":0'));
+assert.notEqual(encode(Array(1)),encode([undefined]));
+assert.throws(()=>encode(()=>0),/RNG/);
+console.log(JSON.stringify({ok:true,objectOrder:true,signedZero:true,collectionOrder:true,aliases:true,cycles:true,sparseArrays:true}));

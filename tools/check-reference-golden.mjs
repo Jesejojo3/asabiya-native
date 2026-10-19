@@ -1,0 +1,15 @@
+import fs from 'node:fs/promises';
+import {spawnSync} from 'node:child_process';
+import assert from 'node:assert/strict';
+import {fileURLToPath} from 'node:url';
+import {requireOracleRuntime,root,runtime} from './lib/legacy-oracle.mjs';
+requireOracleRuntime();
+const expected=JSON.parse(await fs.readFile(new URL('docs/phase-0/evidence/reference-smoke.windows-node24.json',root),'utf8'));
+const result=spawnSync(process.execPath,[fileURLToPath(new URL('tools/reference-smoke.mjs',root))],{encoding:'utf8',timeout:240000,maxBuffer:16*1024*1024});
+assert.equal(result.status,0,result.stderr||String(result.error));
+const actual=JSON.parse(result.stdout);
+assert.equal(actual.sourceSha256,runtime.referenceSha256);
+const stable=c=>{const {elapsedMs,repetitionsMatch,...rest}=c;return rest};
+assert.deepEqual(actual.cases.map(stable),expected.cases.map(stable),'Divergencia contra los valores de referencia: investigar, no regenerar');
+assert.equal(actual.scriptsSyntaxChecked,expected.scriptsSyntaxChecked);
+console.log(JSON.stringify({ok:true,comparison:'immutable original evidence',runtime:actual.runtime,cases:actual.cases.map(c=>({kind:c.kind,finalDigest:c.finalDigest}))},null,2));

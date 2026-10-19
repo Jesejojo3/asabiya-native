@@ -1,17 +1,27 @@
-name: Legacy reference integrity
+name: Legacy reference golden checks
 on:
   push:
-    branches-ignore: [main]
+    branches: [main]
   pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
   reference:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, ref comprobado
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: '22'
+          node-version-file: '.node-version'
       - run: node tools/verify-reference.mjs
-      - run: node tools/reference-smoke.mjs
+      - run: node tools/check-reference-golden.mjs
+      - run: node tools/test-oracle-contracts.mjs
+      - run: node tools/test-exact-state.mjs
+      - run: node --expose-internals tools/check-iteration-inventory.cjs
+      - run: node tools/math-vectors.mjs --count 2048 --verify docs/phase-0/evidence/math-vectors.quick.node24.json
