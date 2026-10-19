@@ -1,6 +1,6 @@
 # Asabiya Native — alcance y preservación
 
-- Estado actual: Bloques 1–2 integrados (main 714d06c3). Bloque 3 (Issue #5): lenguas, newHistory, pueblos fundadores y población inicial, en rama/PR nuevas, sin merge automático. Ver docs/phase-1/BLOCK3.md. Sin estados, guerras ni AdvanceYear en este bloque.
+- Estado actual: misión autónoma autorizada para completar todo el núcleo v0.6. Rama integration/v06-historical-core depende de PR #6 corregida en d19e27ef. Ver docs/mission/STATUS.md. No hacer merge en main; no esperar auditorías intermedias; no exponer AdvanceYear hasta integrar todo stepG.
 - No editar, reformatear ni normalizar `reference/v0.6/Asabiya History Engine (Copy).html`. Ejecutar `node tools/verify-reference.mjs` al trabajar con la referencia.
 - No escribir directamente en `main`, integrar PR ni crear `legacy-v0.6` sin la aprobación solicitada. La política de tag está en `docs/phase-0/README.md`.
 - Consultar `docs/phase-0/SOURCE_AUDIT.md` antes de portar: prioridades mapa, pueblos, estados, guerras, presagios; conservar dependencias causales de clima, tecnología y ecología.

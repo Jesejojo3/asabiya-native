@@ -38,6 +38,7 @@ jobs:
           node tools/extract-history-catalog.mjs
           node tools/check-language-oracle.mjs
           node tools/check-history-oracle.mjs
+          node tools/check-weather-hearth-oracle.mjs
       - name: Build both executables without a C toolchain
         shell: pwsh
         run: |

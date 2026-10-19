@@ -18,10 +18,15 @@ const (
 // Hearth is a scheduled origin of a technique (v0.6 newHistory 903–913).
 // Non-farm hearths have no cell until hearthCheck places them.
 type Hearth struct {
-	Kind string `json:"kind"`
-	Cell CellID `json:"cell"`
-	Year int    `json:"year"`
-	Done bool   `json:"done"`
+	Kind     string  `json:"kind"`
+	Cell     CellID  `json:"cell"`
+	Year     int     `json:"year"`
+	Done     bool    `json:"done"`
+	Fixed    bool    `json:"fixed,omitempty"`
+	Crop     string  `json:"crop,omitempty"`
+	Animal   string  `json:"animal,omitempty"`
+	Grain    float64 `json:"grain,omitempty"`
+	GrainSet bool    `json:"grainSet,omitempty"`
 }
 
 // ChronicleEntry keeps the legacy English sentence. It is narrative, not the
@@ -50,6 +55,7 @@ type StatsEntry struct {
 // far. World stays immutable; every per-province array here belongs to one
 // simulation. Fields are added only together with the systems that use them.
 type history struct {
+	annualState
 	world *World
 	rules Rules
 	r     *rng.Mulberry32
