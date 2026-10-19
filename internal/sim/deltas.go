@@ -6,6 +6,7 @@ import (
 )
 
 type AnnualDelta struct {
+	Earth                *EarthHistory             `json:"earth,omitempty"`
 	RNG                  rng.Position              `json:"rng"`
 	Rules                Rules                     `json:"rules"`
 	Stats                []StatsEntry              `json:"stats"`
@@ -43,6 +44,7 @@ func (s *Simulation) AdvanceYearWithDelta() AnnualDelta {
 	from := h.year
 	s.applyCommandLocked(s.nextCommandLocked("advance_year"))
 	delta := AnnualDelta{Schema: "asabiya/annual-delta-v1", FromYear: from, Year: h.year, StateSHA256: s.stateDigestLocked(), RulesSHA256: s.rulesDigestLocked(), EntityUpserts: make(map[string][]EntityRecord), Favor: h.favor}
+	delta.Earth = h.earthView()
 	delta.RNG = h.r.Position()
 	delta.Rules = h.rules.clone()
 	delta.Stats = slices.Clone(h.stats)

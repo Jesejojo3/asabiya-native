@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/Jesejojo3/asabiya-native/internal/mapsource"
 	"github.com/Jesejojo3/asabiya-native/internal/sim"
 )
 
@@ -27,6 +28,7 @@ type ProtocolError struct {
 	Message string `json:"message"`
 }
 type Response struct {
+	Year    *int           `json:"year,omitempty"`
 	Schema  string         `json:"schema"`
 	ID      string         `json:"id"`
 	Session uint64         `json:"session"`
@@ -67,9 +69,12 @@ func (s *Session) Handle(req Request) Response {
 	switch req.Op {
 	case "create_world":
 		var payload struct {
-			World *sim.WorldConfig `json:"world"`
-			Fine  *bool            `json:"fine"`
+			World  *sim.WorldConfig `json:"world"`
+			Fine   *bool            `json:"fine"`
+			Source *sim.WorldSource `json:"source"`
 		}
+		defaultSource := sim.DefaultWorldSource()
+		payload.Source = &defaultSource
 		if err := decodePayload(req.Payload, &payload); err != nil {
 			return fail("invalid_arguments", err)
 		}
@@ -80,11 +85,11 @@ func (s *Session) Handle(req Request) Response {
 		var w *sim.World
 		var surface *sim.Surface
 		var err error
-		if payload.Fine == nil || *payload.Fine {
-			w, surface, err = sim.GenerateWorldWithSurface(config)
-		} else {
-			w, err = sim.GenerateWorld(config)
+		source := sim.DefaultWorldSource()
+		if payload.Source != nil {
+			source = *payload.Source
 		}
+		w, surface, err = mapsource.Generate(config, source, payload.Fine == nil || *payload.Fine)
 		if err != nil {
 			return fail("invalid_arguments", err)
 		}
@@ -101,9 +106,13 @@ func (s *Session) Handle(req Request) Response {
 		var payload struct {
 			HistorySeed string     `json:"historySeed"`
 			Rules       *sim.Rules `json:"rules"`
+			View        string     `json:"view"`
 		}
 		if err := decodePayload(req.Payload, &payload); err != nil {
 			return fail("invalid_arguments", err)
+		}
+		if payload.View != "" && payload.View != "map" {
+			return fail("invalid_arguments", fmt.Errorf("unknown state view"))
 		}
 		rules := sim.DefaultRules()
 		if payload.Rules != nil {
@@ -116,12 +125,39 @@ func (s *Session) Handle(req Request) Response {
 		s.simulation = history
 		s.generation++
 		response.Session = s.generation
-		response.Data = s.simulation.Snapshot()
+		if payload.View == "map" {
+			response.Data = projectState(s.simulation.Snapshot())
+		} else {
+			response.Data = s.simulation.Snapshot()
+		}
 	case "get_world":
 		if s.world == nil {
 			return fail("not_ready", fmt.Errorf("create_world first"))
 		}
 		response.Data = s.world.Summary()
+	case "get_catalog":
+		response.Data = map[string]any{"schema": "asabiya/catalog-v1", "technologies": sim.TechCatalog(), "eras": sim.Eras()}
+	case "export_geography":
+		if s.world == nil {
+			return fail("not_ready", fmt.Errorf("create_world first"))
+		}
+		var payload struct {
+			Directory string `json:"directory"`
+		}
+		if err := decodePayload(req.Payload, &payload); err != nil {
+			return fail("invalid_arguments", err)
+		}
+		if payload.Directory == "" {
+			return fail("invalid_arguments", fmt.Errorf("directory is required"))
+		}
+		directory, err := filepath.Abs(payload.Directory)
+		if err != nil {
+			return fail("invalid_arguments", err)
+		}
+		if _, err = WriteGeography(directory, s.world, s.surface); err != nil {
+			return fail("export_failed", err)
+		}
+		response.Data = map[string]any{"directory": directory, "manifest": "manifest.json"}
 	case "pause":
 		if err := decodePayload(req.Payload, &struct{}{}); err != nil {
 			return fail("invalid_arguments", err)
@@ -135,14 +171,46 @@ func (s *Session) Handle(req Request) Response {
 		}
 		switch req.Op {
 		case "get_state":
-			response.Data = s.simulation.Snapshot()
+			var payload struct {
+				View string `json:"view"`
+			}
+			if err := decodePayload(req.Payload, &payload); err != nil {
+				return fail("invalid_arguments", err)
+			}
+			if payload.View != "" && payload.View != "map" {
+				return fail("invalid_arguments", fmt.Errorf("unknown state view"))
+			}
+			view := s.simulation.Snapshot()
+			if payload.View == "map" {
+				response.Data = projectState(view)
+			} else {
+				response.Data = view
+			}
 		case "get_status":
 			response.Data = map[string]any{"status": s.simulation.Status(), "nextSequence": s.simulation.NextSequence(), "rulesSHA256": s.simulation.RulesDigest()}
 		case "advance":
-			if err := decodePayload(req.Payload, &struct{}{}); err != nil {
+			var payload struct {
+				View        string `json:"view"`
+				Publication string `json:"publication"`
+			}
+			if err := decodePayload(req.Payload, &payload); err != nil {
 				return fail("invalid_arguments", err)
 			}
-			response.Data = s.simulation.AdvanceYearWithDelta()
+			if (payload.View != "" && payload.View != "map") || (payload.Publication != "" && payload.Publication != "status") {
+				return fail("invalid_arguments", fmt.Errorf("unknown publication/view"))
+			}
+			if payload.Publication == "status" {
+				s.simulation.AdvanceYear()
+				status := s.simulation.Status()
+				response.Data = map[string]any{"schema": "asabiya/advance-status-v1", "year": status.Year, "rng": status.HistoryRNG}
+			} else {
+				delta := s.simulation.AdvanceYearWithDelta()
+				if payload.View == "map" {
+					response.Data = projectDelta(delta)
+				} else {
+					response.Data = delta
+				}
+			}
 		case "apply_command":
 			var command sim.Command
 			if err := decodePayload(req.Payload, &command); err != nil {
@@ -220,6 +288,10 @@ func (s *Session) Handle(req Request) Response {
 		}
 	}
 	response.OK = true
+	if s.simulation != nil {
+		year := s.simulation.Status().Year
+		response.Year = &year
+	}
 	return response
 }
 

@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"slices"
 )
 
 // catalog_v06.json is extracted from the immutable v0.6 HTML by
@@ -129,7 +130,20 @@ func mustLoadCatalog() *legacyCatalog {
 }
 
 // TechCatalog returns a copy of the v0.6 technology table, in its storage order.
-func TechCatalog() []TechDef { return append([]TechDef(nil), v06.Tech...) }
+func TechCatalog() []TechDef {
+	out := append([]TechDef(nil), v06.Tech...)
+	for k := range out {
+		out[k].Pre = slices.Clone(out[k].Pre)
+		out[k].Pos = slices.Clone(out[k].Pos)
+		if v06.Tech[k].Emergence != nil {
+			out[k].Emergence = make(map[string]float64, len(v06.Tech[k].Emergence))
+			for key, value := range v06.Tech[k].Emergence {
+				out[k].Emergence[key] = value
+			}
+		}
+	}
+	return out
+}
 
 // Eras returns the v0.6 era names.
 func Eras() []string { return append([]string(nil), v06.Eras...) }

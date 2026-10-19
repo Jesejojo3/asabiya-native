@@ -74,8 +74,12 @@ func (h *history) climateStep() {
 		h.epoch = e
 		h.epochs = append(h.epochs, e)
 	}
-	// Procedural worlds only (Earth uses a fixed orbital curve, not ported).
-	h.orbM = .5 + .5*math.Cos(2*math.Pi*(float64(y)-h.orb0)/23000)
+	// Earth has a fixed orbital curve and consumes no orbital-phase draw.
+	if h.world.source.Kind == "earth" {
+		h.orbM = 1 / (1 + math.Exp((float64(y)+3300)/320))
+	} else {
+		h.orbM = .5 + .5*math.Cos(2*math.Pi*(float64(y)-h.orb0)/23000)
+	}
 }
 
 func (c *legacyCatalog) epochKind(kind string) *epochKind {

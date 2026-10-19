@@ -57,6 +57,7 @@ type StatsEntry struct {
 // far. World stays immutable; every per-province array here belongs to one
 // simulation. Fields are added only together with the systems that use them.
 type history struct {
+	earth *EarthHistory
 	annualState
 	world *World
 	rules Rules
@@ -140,11 +141,11 @@ func (w *World) ring(c CellID, rad int, f func(CellID)) {
 	}
 }
 
-// newHistory ports v0.6 lines 864–916 for procedural worlds. The RNG order is:
-// orbital phase, 800 weather anomalies, climateStep, founding seeds and their
-// languages/peoples, ten ethPass rounds, farming hearths, then the five other
-// technique hearths. snapshot() (map history for the time slider) is not part
-// of the causal state and belongs to internal/history; it is not ported here.
+// newHistory ports v0.6 lines 864–916. Procedural worlds draw an orbital phase;
+// Earth skips it, shuffles the macro pool, and uses fixed founding coordinates.
+// Weather, climate, languages, ten ethPass rounds, and source-specific hearths
+// retain their original order. NewSimulation then prepares the annual storage
+// and captures the initial compressed map history without additional RNG draws.
 func newHistory(w *World, historySeed string, rules Rules) *history {
 	n := w.Len()
 	start := int(rules.get("startYear"))
@@ -163,7 +164,9 @@ func newHistory(w *World, historySeed string, rules Rules) *history {
 	for _, c := range w.landList {
 		h.adapt[c] = float32(float64(w.malaria[c]) * .5)
 	}
-	h.orb0 = r.Float64() * 23000
+	if w.source.Kind != "earth" {
+		h.orb0 = r.Float64() * 23000
+	}
 	for _, c := range w.coastList {
 		h.tech[TechSail][c] = coastalSailing
 	}
@@ -173,29 +176,34 @@ func newHistory(w *World, historySeed string, rules Rules) *history {
 	h.climateStep()
 	h.computeK()
 
-	// Founding stocks: procedural branch of v0.6 (Earth seeds are not ported).
+	// Founding stocks retain the source-specific RNG order.
 	seeds, macros := []CellID{}, []string{}
-	sep := .38
-	bands := int(rules.get("bands"))
-	for t := 0; t < 20000 && len(seeds) < bands; t++ {
-		if t%4000 == 3999 {
-			sep *= .7
-		}
-		i := w.landList[int(r.Float64()*float64(len(w.landList)))]
-		if w.temperature[i] < 4 || w.precipitation[i] < 350 || w.landmassSizes[w.landmass[i]] < 20 {
-			continue
-		}
-		ok := true
-		for _, j := range seeds {
-			if !(w.angDist(i, j) > sep) {
-				ok = false
-				break
+	if w.source.Kind == "earth" {
+		seeds, macros = h.earthFounders()
+		h.earth = &EarthHistory{First: make(map[string]RegionalFirst)}
+	} else {
+		sep := .38
+		bands := int(rules.get("bands"))
+		for t := 0; t < 20000 && len(seeds) < bands; t++ {
+			if t%4000 == 3999 {
+				sep *= .7
 			}
-		}
-		if ok {
-			seeds = append(seeds, i)
-			k := (len(seeds) - 1 + int(r.Float64()*float64(len(v06.Macros)))) % len(v06.Macros)
-			macros = append(macros, v06.Macros[k].Key)
+			i := w.landList[int(r.Float64()*float64(len(w.landList)))]
+			if w.temperature[i] < 4 || w.precipitation[i] < 350 || w.landmassSizes[w.landmass[i]] < 20 {
+				continue
+			}
+			ok := true
+			for _, j := range seeds {
+				if !(w.angDist(i, j) > sep) {
+					ok = false
+					break
+				}
+			}
+			if ok {
+				seeds = append(seeds, i)
+				k := (len(seeds) - 1 + int(r.Float64()*float64(len(v06.Macros)))) % len(v06.Macros)
+				macros = append(macros, v06.Macros[k].Key)
+			}
 		}
 	}
 	q := make([]CellID, n)
@@ -238,46 +246,50 @@ func newHistory(w *World, historySeed string, rules Rules) *history {
 		h.ethPass(false)
 	}
 
-	// Hearths: v0.6 uses the random branch for every non-Earth world.
-	var cand []CellID
-	for _, i := range w.landList {
-		if float64(w.farmSuitability[i]) > .45 && w.landmassSizes[w.landmass[i]] > 40 {
-			cand = append(cand, i)
-		}
-	}
-	var hs []CellID
-	hearthCount := int(rules.get("hearths"))
-	for t := 0; t < 4000 && len(hs) < hearthCount && len(cand) > 0; t++ {
-		i := cand[int(r.Float64()*float64(len(cand)))]
-		if r.Float64() > float64(w.farmSuitability[i])*(.6+.4*float64(w.river[i])) {
-			continue
-		}
-		ok := true
-		for _, j := range hs {
-			if !(w.angDist(i, j) > .32) {
-				ok = false
-				break
+	if w.source.Kind == "earth" && rules.HearthMode != "random" {
+		h.earthHearths()
+	} else {
+		// Hearths: v0.6 uses the random branch for every non-Earth world.
+		var cand []CellID
+		for _, i := range w.landList {
+			if float64(w.farmSuitability[i]) > .45 && w.landmassSizes[w.landmass[i]] > 40 {
+				cand = append(cand, i)
 			}
 		}
-		if ok {
-			hs = append(hs, i)
+		var hs []CellID
+		hearthCount := int(rules.get("hearths"))
+		for t := 0; t < 4000 && len(hs) < hearthCount && len(cand) > 0; t++ {
+			i := cand[int(r.Float64()*float64(len(cand)))]
+			if r.Float64() > float64(w.farmSuitability[i])*(.6+.4*float64(w.river[i])) {
+				continue
+			}
+			ok := true
+			for _, j := range hs {
+				if !(w.angDist(i, j) > .32) {
+					ok = false
+					break
+				}
+			}
+			if ok {
+				hs = append(hs, i)
+			}
 		}
-	}
-	jsInt := func(x float64) int { return int(int32(math.Trunc(x))) } // (expr)|0 in range
-	for k, c := range hs {
-		var offset float64
-		if k == 0 {
-			offset = 200 + r.Float64()*900
-		} else {
-			offset = 400 + r.Float64()*5500
+		jsInt := func(x float64) int { return int(int32(math.Trunc(x))) } // (expr)|0 in range
+		for k, c := range hs {
+			var offset float64
+			if k == 0 {
+				offset = 200 + r.Float64()*900
+			} else {
+				offset = 400 + r.Float64()*5500
+			}
+			h.hearths = append(h.hearths, Hearth{Kind: "farm", Cell: c, Year: jsInt(float64(h.start) + offset)})
 		}
-		h.hearths = append(h.hearths, Hearth{Kind: "farm", Cell: c, Year: jsInt(float64(h.start) + offset)})
-	}
-	for _, x := range []struct {
-		kind       string
-		base, span float64
-	}{{"sail", 1500, 3000}, {"copper", 3800, 1800}, {"horse", 4000, 1500}, {"camel", 6500, 1500}, {"ard", 4300, 1500}} {
-		h.hearths = append(h.hearths, Hearth{Kind: x.kind, Cell: NoCell, Year: jsInt(float64(h.start) + x.base + r.Float64()*x.span)})
+		for _, x := range []struct {
+			kind       string
+			base, span float64
+		}{{"sail", 1500, 3000}, {"copper", 3800, 1800}, {"horse", 4000, 1500}, {"camel", 6500, 1500}, {"ard", 4300, 1500}} {
+			h.hearths = append(h.hearths, Hearth{Kind: x.kind, Cell: NoCell, Year: jsInt(float64(h.start) + x.base + r.Float64()*x.span)})
+		}
 	}
 	first := NoCell
 	if len(seeds) > 0 {

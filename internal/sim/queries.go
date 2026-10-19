@@ -11,6 +11,7 @@ import (
 const StateViewSchema = "asabiya/state-v1"
 
 type ProvinceView struct {
+	Era         int    `json:"era"`
 	ID          CellID `json:"id"`
 	Land        bool   `json:"land"`
 	OwnerPolity int    `json:"ownerPolityId"`
@@ -51,6 +52,7 @@ type EntityRecord struct {
 	Fields map[string]any `json:"fields"`
 }
 type StateView struct {
+	Earth       *EarthHistory             `json:"earth,omitempty"`
 	Schema      string                    `json:"schema"`
 	Engine      string                    `json:"engine"`
 	WorldSHA256 string                    `json:"worldSHA256"`
@@ -78,6 +80,7 @@ func (s *Simulation) Province(id CellID) (ProvinceView, bool) {
 func (s *Simulation) provinceLocked(i CellID) ProvinceView {
 	h := s.h
 	p := ProvinceView{ID: i, Land: s.world.land[i], OwnerPolity: int(h.pol[i]), People: int(h.eth[i]), SecondaryPeople: int(h.eth2[i]), Mixture: h.mix[i], Population: h.pop[i], Capacity: h.K[i], Religion: int(h.religion[i]), City: int(h.city[i]), Cohesion: h.cohesion[i], Integration: h.integ[i], Fortification: h.fort[i], Forest: h.forest[i], Fertility: h.fert[i], Salinity: h.salt[i], MalariaAdaptation: h.adapt[i], DiseasePool: h.plaguePool[i], Immunity: h.immunity[i], Infection: h.infection[i], Outbreak: int(h.outbreakAt[i]), CaravanActivity: h.caravan[i], PastureDisease: h.rp[i], CapacityModifier: h.kMod[i], CapacityModifierUntil: h.kModUntil[i], EcologicalExit: h.exit[i], Circumscription: h.circE[i], WeatherAnomaly: h.anom[i], RainMultiplier: h.wm[i], DistanceToCapital: h.dist[i]}
+	p.Era = h.eraOf(int(i))
 	for k := range h.tech {
 		p.Technology[k] = h.tech[k][i]
 	}
@@ -91,6 +94,7 @@ func (s *Simulation) Snapshot() StateView {
 func (s *Simulation) snapshotLocked() StateView {
 	h := s.h
 	v := StateView{Schema: StateViewSchema, Engine: EngineVersion, WorldSHA256: s.world.Digest(), StateSHA256: s.stateDigestLocked(), Year: h.year, StartYear: h.start, RNG: h.r.Position(), Rules: h.rules.clone(), Favor: h.favor, Entities: make(map[string][]EntityRecord), Provinces: make([]ProvinceView, s.world.Len()), Events: cloneEvents(h.events), Narrative: slices.Clone(h.eventText), Stats: slices.Clone(h.stats)}
+	v.Earth = h.earthView()
 	for k := range v.Stats {
 		v.Stats[k].EraShare = slices.Clone(h.stats[k].EraShare)
 	}

@@ -4,6 +4,7 @@ package app
 import (
 	"flag"
 	"fmt"
+	"github.com/Jesejojo3/asabiya-native/internal/mapsource"
 	"github.com/Jesejojo3/asabiya-native/internal/sim"
 	"io"
 	"math"
@@ -12,6 +13,7 @@ import (
 )
 
 type Options struct {
+	Source                   sim.WorldSource
 	ReplayInput              string
 	Years                    int
 	CheckpointEvery          int
@@ -28,10 +30,16 @@ type Options struct {
 }
 
 func Parse(args []string, stderr io.Writer) (Options, error) {
-	o := Options{World: sim.DefaultWorldConfig("Asabiya"), HistorySeed: "1", Rules: sim.DefaultRules()}
+	o := Options{World: sim.DefaultWorldConfig("Asabiya"), Source: sim.DefaultWorldSource(), HistorySeed: "1", Rules: sim.DefaultRules()}
+	var sourceFile, earthHTML, heightImage, temperatureImage, precipitationImage string
 	startYear, bands := o.Rules.Values["startYear"], o.Rules.Values["bands"]
 	f := flag.NewFlagSet("asabiya", flag.ContinueOnError)
 	f.SetOutput(stderr)
+	f.StringVar(&sourceFile, "world-source", "", "local world-source JSON (climate controls, input hashes and image scaling)")
+	f.StringVar(&earthHTML, "earth-html", "", "load embedded Earth rasters from the preserved v0.6 HTML")
+	f.StringVar(&heightImage, "height-image", "", "import a PNG/JPEG/GIF elevation image, black -11000 m, white 9000 m, midpoint sea level")
+	f.StringVar(&temperatureImage, "temperature-image", "", "import temperature image, black -40 C, white 35 C")
+	f.StringVar(&precipitationImage, "precipitation-image", "", "import precipitation image, black 0, white 4000 mm/year")
 	f.StringVar(&o.World.Seed, "seed", o.World.Seed, "world seed (UTF-8)")
 	f.StringVar(&o.HistorySeed, "history-seed", o.HistorySeed, "history seed (initialization only)")
 	f.IntVar(&o.World.Width, "width", o.World.Width, "logical map width, 24..400")
@@ -59,6 +67,35 @@ func Parse(args []string, stderr io.Writer) (Options, error) {
 	}
 	if o.Years < 0 || o.Years > 100000 || o.CheckpointEvery < 0 {
 		return o, fmt.Errorf("years must be 0..100000 and checkpoint-every nonnegative")
+	}
+	if sourceFile != "" {
+		if earthHTML != "" || heightImage != "" || temperatureImage != "" || precipitationImage != "" {
+			return o, fmt.Errorf("world-source cannot be combined with image/Earth input flags")
+		}
+		var err error
+		o.Source, err = mapsource.ReadConfig(sourceFile)
+		if err != nil {
+			return o, err
+		}
+	} else {
+		if earthHTML != "" && heightImage != "" {
+			return o, fmt.Errorf("choose Earth or an imported height image")
+		}
+		if earthHTML != "" {
+			o.Source.Kind = "earth"
+			o.Source.FitClimate = true
+			o.Source.Assets = append(o.Source.Assets, sim.SourceAsset{Role: "earth-html", Path: earthHTML})
+		}
+		if heightImage != "" {
+			o.Source.Kind = "imported"
+			o.Source.Assets = append(o.Source.Assets, sim.SourceAsset{Role: "height", Path: heightImage, Min: -11000, Max: 9000, Midpoint: true})
+		}
+		if temperatureImage != "" {
+			o.Source.Assets = append(o.Source.Assets, sim.SourceAsset{Role: "temperature", Path: temperatureImage, Min: -40, Max: 35})
+		}
+		if precipitationImage != "" {
+			o.Source.Assets = append(o.Source.Assets, sim.SourceAsset{Role: "precipitation", Path: precipitationImage, Min: 0, Max: 4000})
+		}
 	}
 	o.Rules.Values["startYear"], o.Rules.Values["bands"] = startYear, bands
 	if err := o.Rules.Validate(); err != nil {

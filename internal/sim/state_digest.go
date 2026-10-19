@@ -72,6 +72,9 @@ func (e *canonicalState) history(v reflect.Value) {
 	typ := v.Type()
 	for k := 0; k < v.NumField(); k++ {
 		name := typ.Field(k).Name
+		if name == "earth" && v.Field(k).IsNil() {
+			continue
+		}
 		if name == "world" || name == "r" {
 			continue
 		}

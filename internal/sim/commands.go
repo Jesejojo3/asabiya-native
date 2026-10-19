@@ -36,6 +36,7 @@ type CommandResult struct {
 	OmenID    *int         `json:"omenId,omitempty"`
 }
 type Replay struct {
+	WorldSource   *WorldSource    `json:"worldSource,omitempty"`
 	FinalSHA256   string          `json:"finalSHA256"`
 	FinalYear     int             `json:"finalYear"`
 	Schema        string          `json:"schema"`
@@ -182,6 +183,10 @@ func (s *Simulation) Replay() Replay {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	r := Replay{Schema: "asabiya/replay-v1", Engine: EngineVersion, Profile: NativeProfile, World: s.world.Config(), WorldSHA256: s.world.Digest(), HistorySeed: s.h.seed, InitialRules: s.initialRules.clone(), InitialSHA256: s.initialHistory.SHA256, Commands: make([]CommandResult, len(s.commandLog))}
+	if s.world.extended {
+		source := s.world.Source()
+		r.WorldSource = &source
+	}
 	r.FinalSHA256 = s.stateDigestLocked()
 	r.FinalYear = s.h.year
 	for k, c := range s.commandLog {

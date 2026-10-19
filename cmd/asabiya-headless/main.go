@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/Jesejojo3/asabiya-native/internal/app"
 	"github.com/Jesejojo3/asabiya-native/internal/interop"
+	"github.com/Jesejojo3/asabiya-native/internal/mapsource"
 	"github.com/Jesejojo3/asabiya-native/internal/presentation/terrain"
 	"github.com/Jesejojo3/asabiya-native/internal/sim"
 	"io"
@@ -63,17 +64,17 @@ func run(args []string, stdout, stderr io.Writer) error {
 		o.World = replay.World
 		o.HistorySeed = replay.HistorySeed
 		o.Rules = replay.InitialRules
+		o.Source = sim.DefaultWorldSource()
+		if replay.WorldSource != nil {
+			o.Source = *replay.WorldSource
+		}
 	}
 	if o.HighResolution && o.PNG == "" {
 		return fmt.Errorf("--high-res requires --png in headless")
 	}
 	var w *sim.World
 	var surface *sim.Surface
-	if o.HighResolution || o.ExportPath != "" {
-		w, surface, err = sim.GenerateWorldWithSurface(o.World)
-	} else {
-		w, err = sim.GenerateWorld(o.World)
-	}
+	w, surface, err = mapsource.Generate(o.World, o.Source, o.HighResolution || o.ExportPath != "")
 	if err != nil {
 		return err
 	}

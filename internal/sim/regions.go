@@ -88,6 +88,5 @@ func (h *history) regionPass() {
 		}
 	}
 	h.darkWatch = remaining
-	// Earth-only region shares and agriculture/state surveys accompany the Earth
-	// world branch; procedural worlds return here in the reference as well.
+	h.earthRegionPass()
 }

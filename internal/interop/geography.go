@@ -36,24 +36,26 @@ type Layer struct {
 	Units      string `json:"units,omitempty"`
 }
 type GeographyManifest struct {
-	Schema         string          `json:"schema"`
-	Engine         string          `json:"engine"`
-	WorldVersion   string          `json:"worldVersion"`
-	WorldSHA256    string          `json:"worldSHA256"`
-	World          sim.WorldConfig `json:"world"`
-	Logical        Grid            `json:"logical"`
-	Fine           *Grid           `json:"fine"`
-	Projection     string          `json:"projection"`
-	LongitudeWrap  bool            `json:"longitudeWrap"`
-	PolarWrap      bool            `json:"polarWrap"`
-	NeighborOrder  [4]string       `json:"neighborOrder"`
-	ProvinceID     string          `json:"provinceId"`
-	FineProvinceID string          `json:"fineProvinceId"`
-	File           string          `json:"file"`
-	ByteOrder      string          `json:"byteOrder"`
-	Bytes          int64           `json:"bytes"`
-	SHA256         string          `json:"sha256"`
-	Layers         []Layer         `json:"layers"`
+	Source         sim.WorldSource   `json:"source"`
+	Regions        []sim.WorldRegion `json:"regions,omitempty"`
+	Schema         string            `json:"schema"`
+	Engine         string            `json:"engine"`
+	WorldVersion   string            `json:"worldVersion"`
+	WorldSHA256    string            `json:"worldSHA256"`
+	World          sim.WorldConfig   `json:"world"`
+	Logical        Grid              `json:"logical"`
+	Fine           *Grid             `json:"fine"`
+	Projection     string            `json:"projection"`
+	LongitudeWrap  bool              `json:"longitudeWrap"`
+	PolarWrap      bool              `json:"polarWrap"`
+	NeighborOrder  [4]string         `json:"neighborOrder"`
+	ProvinceID     string            `json:"provinceId"`
+	FineProvinceID string            `json:"fineProvinceId"`
+	File           string            `json:"file"`
+	ByteOrder      string            `json:"byteOrder"`
+	Bytes          int64             `json:"bytes"`
+	SHA256         string            `json:"sha256"`
+	Layers         []Layer           `json:"layers"`
 }
 type geoWriter struct {
 	out    io.Writer
@@ -184,7 +186,13 @@ func WriteGeography(dir string, w *sim.World, surface *sim.Surface) (GeographyMa
 	g.layer("seaTargets", "i32", "connectivity", "province ID", len(links), 1, func(i, _ int) uint32 { return uint32(links[i].Target) })
 	g.layer("seaDistances", "u8", "connectivity", "legacy sea steps", len(links), 1, func(i, _ int) uint32 { return uint32(links[i].Distance) })
 	config := w.Config()
-	manifest := GeographyManifest{Schema: GeographySchema, Engine: sim.EngineVersion, WorldVersion: sim.WorldVersion, WorldSHA256: w.Digest(), World: config, Logical: Grid{config.Width, config.Height}, Projection: "equirectangular cell centers", LongitudeWrap: true, PolarWrap: false, NeighborOrder: [4]string{"west", "east", "north", "south"}, ProvinceID: "y * logical.width + x", FineProvinceID: "floor(fineY / detail) * logical.width + floor(fineX / detail)", File: "geography.bin", ByteOrder: "little-endian"}
+	manifest := GeographyManifest{Schema: GeographySchema, Engine: sim.EngineVersion, WorldVersion: w.Version(), WorldSHA256: w.Digest(), World: config, Source: w.Source(), Regions: w.Regions(), Logical: Grid{config.Width, config.Height}, Projection: "equirectangular cell centers", LongitudeWrap: true, PolarWrap: false, NeighborOrder: [4]string{"west", "east", "north", "south"}, ProvinceID: "y * logical.width + x", FineProvinceID: "floor(fineY / detail) * logical.width + floor(fineX / detail)", File: "geography.bin", ByteOrder: "little-endian"}
+	if kg := w.Koppen(); kg != nil {
+		g.layer("koppen", "u8", "logical", "legacy Koppen code", len(kg), 1, func(i, _ int) uint32 { return uint32(kg[i]) })
+	}
+	if grade := w.ClimateGrade(); grade != nil {
+		g.layer("climateGrade", "u8", "logical", "0 none; 1 match; 2 dry; 3 wet; 4 cold; 5 warm", len(grade.Code), 1, func(i, _ int) uint32 { return uint32(grade.Code[i]) })
+	}
 	if surface != nil {
 		sw, sh := surface.Size()
 		if sw != config.Width*config.Detail || sh != config.Height*config.Detail {

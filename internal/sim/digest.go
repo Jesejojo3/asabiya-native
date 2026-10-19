@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"github.com/Jesejojo3/asabiya-native/internal/rng"
 	"hash"
 	"math"
@@ -71,20 +72,27 @@ func (w *World) BaseDigest() string {
 
 type WorldSummary struct {
 	BaseWorldSummary
-	BaseSHA256   string  `json:"baseSHA256"`
-	RiverCells   int     `json:"riverCells"`
-	SeaLinkCount int     `json:"seaLinks"`
-	BiomeCounts  [10]int `json:"biomeCounts"`
-	EcoReady     bool    `json:"ecoReady"`
-	AnomalyGrid  [2]int  `json:"anomalyGrid"`
+	Source       *WorldSource  `json:"source,omitempty"`
+	ClimateGrade *ClimateGrade `json:"climateGrade,omitempty"`
+	BaseSHA256   string        `json:"baseSHA256"`
+	RiverCells   int           `json:"riverCells"`
+	SeaLinkCount int           `json:"seaLinks"`
+	BiomeCounts  [10]int       `json:"biomeCounts"`
+	EcoReady     bool          `json:"ecoReady"`
+	AnomalyGrid  [2]int        `json:"anomalyGrid"`
 }
 
 func (w *World) Summary() WorldSummary {
 	b := w.BaseSummary()
 	baseHash := b.SHA256
-	b.Version = WorldVersion
+	b.Version = w.Version()
 	b.SHA256 = w.Digest()
 	s := WorldSummary{BaseWorldSummary: b, BaseSHA256: baseHash, SeaLinkCount: len(w.seaTargets), EcoReady: w.ecoReady, AnomalyGrid: [2]int{WeatherGridWidth, WeatherGridHeight}}
+	if w.extended {
+		source := w.Source()
+		s.Source = &source
+		s.ClimateGrade = w.ClimateGrade()
+	}
 	for i := 0; i < w.Len(); i++ {
 		s.BiomeCounts[w.biome[i]]++
 		if w.river[i] > 0 {
@@ -99,7 +107,7 @@ func (w *World) Summary() WorldSummary {
 // Optional Surface belongs to presentation, so retaining it cannot change this.
 func (w *World) Digest() string {
 	h := sha256.New()
-	writeString(h, WorldVersion)
+	writeString(h, w.Version())
 	writeString(h, w.BaseDigest())
 	for i := 0; i < w.Len(); i++ {
 		for _, a := range [][]float32{w.x3, w.y3, w.z3, w.cosLon, w.sinLon, w.cosLat, w.filled, w.accumulation, w.river, w.farmSuitability, w.herdSuitability, w.growingSeason, w.leach, w.tropical, w.monsoonZone, w.forest, w.heavySoil, w.malaria, w.oncho, w.circumscription, w.nicheTemperature, w.nicheMoisture, w.nicheLifestyle, w.nicheDisease} {
@@ -144,6 +152,23 @@ func (w *World) Digest() string {
 		writeU32(h, 1)
 	} else {
 		writeU32(h, 0)
+	}
+	if w.extended {
+		source := w.Source()
+		for k := range source.Assets {
+			source.Assets[k].Path = ""
+		}
+		metadata, _ := json.Marshal(source) // validated finite configuration; no maps
+		writeString(h, string(metadata))
+		writeU64(h, uint64(w.fitChanged))
+		for _, values := range [][]float32{w.rawTemperature, w.rawPrecipitation, w.rawAmplitude} {
+			for _, v := range values {
+				writeU32(h, math.Float32bits(v))
+			}
+		}
+		for _, v := range w.koppen {
+			writeU32(h, uint32(v))
+		}
 	}
 	return hex.EncodeToString(h.Sum(nil))
 }
