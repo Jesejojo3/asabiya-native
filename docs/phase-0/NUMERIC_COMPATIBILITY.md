@@ -1,53 +1,38 @@
-# C1 — contrato numérico y viabilidad de internal/jsmath
+# Contrato numérico — decisión de producto Windows x64
 
-Estado: decisión de diseño propuesta para segunda revisión; **no hay port matemático Go ni equivalencia Go/V8 demostrada**. C1 se acepta como defecto del diseño anterior. La corrección de Fase 0 es un contrato verificable y un oráculo reforzado; implementar `jsmath` será una prueba técnica matemática previa a portar mecánicas, sólo cuando se autorice esa fase.
+**Decisión aprobada por el usuario tras la segunda auditoría de Claude:** Asabiya Native es un simulador personal para **Windows x64**. El perfil nativo utiliza inicialmente `math` de Go; la equivalencia bit a bit con JavaScript/V8 **no es un requisito** ni una puerta de entrada a Fase 1. No existe todavía código Go ni se ha demostrado reproducibilidad del motor nativo.
 
-## Oráculo y perfiles
+## Alcance de los perfiles
 
-Oráculo fijado: Node **24.19.0**, V8 **13.6.233.17-node.51**, x64, little-endian. `.node-version` y `tools/oracle-runtime.json` deben coincidir. El HTML y sus pruebas originales no cambian. Las mediciones Linux/Node 22.22.0/Go 1.24.7 del auditor son evidencia recibida, no ejecuciones Go repetidas por Codex en esta corrección.
-
-| Perfil | Contrato y límites |
+| Perfil | Contrato |
 |---|---|
-| `v06-compat` permanente | Reglas, IDs, algoritmos, calendario, colecciones y flujo RNG originales. Objetivo estricto verificable para estado causal, nombres generados y eventos estructurados; narrativa localizada fuera de ese contrato, decisión explícita en EVENTS_AND_SAVE.md. Ningún desacuerdo numérico que cambie RNG, IDs o eventos se acepta por tolerancia. Sólo se comparan fixtures sin cambios a mitad de año. |
-| `native` futuro | Evolución con reglas, catálogo, calendario, formato de guardado y contrato numérico versionados. Reproducible dentro de la combinación publicada de perfil/reglas/backend/plataforma validada. No se afirma que reproduzca v0.6 ni que todos los equipos compartan resultados hasta validarlo. |
+| `native` — producto principal | Go + Ebitengine sobre Windows x64. Preservar la intención y mecanismos históricos del original, RNG controlado, calendario causal, IDs y estabilidad numérica. Aceptar historias distintas del HTML cuando no impliquen errores ni pérdida de invariantes. Reproducibilidad dentro del entorno/versiones fijados, a comprobar durante la implementación; no se promete identidad entre CPUs distintas sin probar. |
+| `v06-compat` — referencia diagnóstica | Conservar **sin modificar** el HTML v0.6, sus corpus y hashes; sirven para inspeccionar algoritmos y detectar cambios de comportamiento. No obliga a que los hashes o funciones matemáticas de Go sean iguales a V8, ni requiere desarrollar un segundo motor compatible. |
 
-Cambiar backend matemático, orden, frontera de comandos o algoritmo exige versión de contrato y nuevos fixtures separados. `native` nunca sobrescribe valores de referencia de `v06-compat`.
+Se fijarán la versión de Go, dependencias y configuración Windows amd64 al comenzar la implementación. `GOAMD64=v1` es una configuración inicial razonable, pero **no garantiza** por sí sola resultados idénticos en todos los procesadores: algunas funciones de `math`, como `Exp`, pueden escoger una ruta según capacidades de CPU (FMA). Para esta instalación personal bastan verificaciones básicas de determinismo; si el usuario necesita compartir partidas entre equipos Windows diferentes, revisar las rutas numéricas relevantes y probarlas. No copiar aún una implementación alternativa de `Exp` sin necesidad demostrada.
 
-## Por qué math de Go no basta
+## Qué se preserva del legado
 
-El informe de Claude presenta diferencias de bits en nueve funciones, un ejemplo concreto de `sin`, rutas dependientes de CPU y diferencias de compilación FMA. Se acepta el riesgo demostrado de bibliotecas distintas, pero no se extrapolan sus porcentajes a otras versiones o CPUs. La especificación Go permite fusión y especifica que una conversión explícita impone el redondeo correspondiente: [operadores flotantes](https://go.dev/ref/spec#Floating_point_operators). Elegir `GOAMD64=v1` por sí solo no demuestra ausencia de rutas matemáticas seleccionadas por CPU.
+- `hashStr` (UTF-16), Mulberry32, operaciones de 32 bits y semilla/contador RNG.
+- Orden del calendario anual, iteración de colecciones, orden de catálogos y redondeos que influyen en decisiones discretas.
+- Representación por celda, índices/IDs y centinelas; las diferencias numéricas se analizan si provocan fallos, NaN, poblaciones inválidas, cambios históricos graves o replays inconsistentes.
+- Registro de decisiones de port intencionales; los fixtures históricos **nunca** se reescriben para ocultar una diferencia.
+- CI rápida obligatoria en Windows x64; diagnóstico Linux opcional y no bloqueante, con resultados estrictos sin cambiar oráculos.
 
-Tampoco se adopta automáticamente la lista de funciones «exactas» propuesta por el auditor: `Max`/`Min` necesitan comprobar NaN y signo de cero con semántica JS; `sqrt`, floor, abs y conversiones tienen casos límite. Igualdad observada en muestras de amd64 no certifica arm64 ni todo binary64.
+El comportamiento numérico puede alterar eventos y consumo de RNG incluso cuando las diferencias son de un ULP. Por ello no se declara el port «matemáticamente equivalente»: se verificará mediante invariantes, reproducción con semilla y estadísticas/hitos históricos, y se tratarán las divergencias relevantes de forma explícita.
 
-## Ruta propuesta para jsmath
+## Evidencia histórica y limitaciones
 
-Port en Go puro, sin cgo, ensamblador ni despacho por capacidades de CPU, basado en **la fuente incluida en el Node fijado**, no en el HEAD actual de V8 ni en un fdlibm genérico. Cubrir `sin`, `cos`, `exp`, `log`, `log10`, `pow` y `**`, `atan2`, `asin`, `acos`; auditar también redondeo, min/max, signos de cero y constantes.
+En la primera auditoría de Claude se observaron discrepancias entre funciones de V8 y Go, además de rutas dependientes de CPU. En Fase 0 también se observó, con Node **24.19.0** y V8 **13.6.233.17-node.51**, una diferencia Windows/Linux de **3 entre 2 273** entradas de `Math.pow` por **1 ULP**. El oráculo histórico de Windows pasó; el diagnóstico estricto Linux falló. El origen preciso no se demostró y no se atribuye sin evidencia a FMA. La evidencia binaria original permanece en `evidence/math-pow.platform-mismatch.node24.json`.
 
-`hypot` requiere una corrección a la propuesta de Claude: no basta portar `ieee754.cc`. La [implementación MathHypot de V8 en math.tq](https://raw.githubusercontent.com/nodejs/node/v24.19.0/deps/v8/src/builtins/math.tq) tiene rutas para dos y tres argumentos y una suma compensada para más argumentos. El core usa normas de varias componentes. Se debe reproducir la ruta y aridad efectivas, los casos especiales y el orden de sumas.
+Esta discrepancia **no bloquea la Fase 0 ni la versión nativa Windows x64**. La prueba Linux sigue siendo útil para diagnóstico pero no para la aceptación del producto. Mantener Node y la versión V8 fijados sólo para comprobar el legado y sus golden originales.
 
-La [fuente ieee754.cc fijada](https://raw.githubusercontent.com/nodejs/node/v24.19.0/deps/v8/src/base/ieee754.cc) contiene la licencia de Sun/fdlibm y modificaciones de Google; [LICENSE de V8](https://raw.githubusercontent.com/nodejs/node/v24.19.0/deps/v8/LICENSE) exige conservar avisos, condiciones y descargos, también al distribuir binarios. La viabilidad técnica es favorable, con coste alto: reducción de argumentos, constantes por bits, ramas de casos especiales y rutas del JIT deben trazarse. Antes de copiar código, guardar fuentes exactas con hash, avisos completos de cada archivo y un registro de modificaciones en `THIRD_PARTY_NOTICES`; comprobar dependencias adicionales. No se incorpora código de terceros en esta entrega ni se adjudica licencia al resto del juego.
+## `internal/jsmath`: opción descartada por defecto
 
-## Validación obligatoria antes de afirmar compatibilidad
+La propuesta anterior requería portar las rutas matemáticas de V8 desde `ieee754.cc` y otros builtins, con millones de vectores, análisis FMA, avisos de licencias y equivalencia bit a bit. Esa propuesta era pertinente si el objetivo era replicar estrictamente V8, **pero el usuario retiró dicho requisito**. El directorio `internal/jsmath` queda reservado **sin implementación**; no es dependencia de `internal/sim` ni requisito de inicio de Fase 1.
 
-1. Rastrear llamadas del core hasta las rutas efectivas de V8 de la versión fijada, incluidos builtins, `**`, aridades de hypot y optimizaciones. Portar con constantes de bits y operaciones en el mismo orden.
-2. Corpus dirigido de ceros con signo, subnormales, extremos, infinito, NaN por clasificación, fronteras de ramas, potencias enteras/no enteras y rangos reales del motor; además millones de vectores deterministas y trazas de argumentos reales. Los vectores finitos e infinitos se comparan por bits; NaN por clase, salvo que un formato necesite preservar payload.
-3. El programa Go futuro recibirá los **mismos bits de entrada** emitidos por `tools/math-vectors.mjs --vectors-out corpus.jsonl`; no regenerará entradas usando sus propias funciones matemáticas. Comparar cada resultado y detener en la primera diferencia. Los resúmenes SHA no sustituyen ese comparador por vector.
-4. Cero diferencias en corpus rápido y extenso, y en fixtures de mundo/historia por etapas. Una muestra finita aprobada no prueba todo binary64; la promesa se limita al conjunto de plataformas y versiones ensayadas y al contrato publicado.
-5. Analizador Go futuro sobre AST/tipos: prohibir `math` numérico no aprobado en `internal/sim` y `internal/jsmath`, alias de importación y llamadas indirectas incluidos; permitir explícitamente sólo operaciones revisadas. Prohibir `math.FMA`. No se añade ahora un linter que pueda pasar por ausencia de código Go.
-6. Impedir fusión en todas las fórmulas relevantes mediante barreras de redondeo explícitas, preservando fronteras float32/float64. Inspeccionar ensamblador del código de producción y dependencias numéricas para instrucciones FMA, con una lista revisada para cada arquitectura; búsqueda textual sola no certifica todo el binario ni rutas no ejecutadas.
+Si en el futuro se decide implementar una compatibilidad exacta, será una tarea optativa con alcance explícito, pruebas de entrada/salida por bits, licencias de los componentes reutilizados y revisión de rutas reales de V8, incluyendo `hypot` con distintas aridades. No introducir ese trabajo preventivamente.
 
-## Plataformas, coste y puerta de salida
+## Validación mínima futura
 
-Objetivo inicial propuesto: **Windows amd64**, `GOAMD64=v1`, backend puro y toolchain Go fijado al aprobar la prueba técnica. Linux amd64 sirve como segundo entorno de oráculo. ARM64 y otras CPU/OS son objetivos posteriores, sin validación atribuida en esta fase. Probar al menos rutas con FMA disponible y deshabilitada/máquina sin FMA antes de prometer replays intercambiables; una compilación cruzada no equivale a ejecutar.
-
-El backend puro podría perder rendimiento frente al ensamblador de Go; no se asigna un porcentaje inventado. Medir por función, generación de mundo y año completo, separando hashing y render. No se sustituye por aproximaciones para alcanzar FPS. Una alternativa con V8 embebido conservaría un runtime extranjero y distribución compleja; cgo/fdlibm tampoco garantiza por sí solo la semántica V8. Se descartan como ruta por defecto, conservándolas como alternativas a revisar si el port puro falla.
-
-**Puerta numérica pendiente:** revisión humana del contrato, prueba técnica jsmath y sus licencias, vectores Go/V8 sin diferencias dentro del ámbito publicado, controles FMA y fixtures causales aprobados. Sin ello no se declara resuelto el objetivo de equivalencia estricta ni se inicia automáticamente el port de mecánicas.
-
-## Hallazgo nuevo durante las correcciones: el Node fijado tampoco basta como contrato multiplataforma
-
-La CI ejecutó Node/V8 fijados en Windows 2022 y Ubuntu 24.04. El golden histórico completo pasó en ambos; el corpus matemático detectó **tres diferencias de un ULP en pow entre 2 273 entradas idénticas**. Se conservaron entradas/salidas por bits y diagnóstico en evidence/math-pow.platform-mismatch.node24.json y math-pow.quick.windows-node24.json. Ejemplo: pow(9.149881526827812, 11.74791868776083) produjo bits Windows 4246f1484cecb063 frente a Linux 4246f1484cecb064.
-
-No se ha aislado si la causa es compilación, ruta de runtime, CPU u otra diferencia de implementación; no atribuirla sin prueba a FMA o al sistema operativo en general. La observación demuestra que fijar sólo el número de versión no certifica todo el corpus entre esos entornos. La futura puerta técnica debe fijar build/ruta y oráculo matemático canónico, no buscar coincidencia simultánea con dos resultados diferentes. Windows x64 es el candidato inicial, pendiente de aprobación.
-
-**La comprobación Linux permanece estricta y fallando ante esta diferencia.** No se cambia el fixture, se añade tolerancia, se omite pow ni se convierte el fallo en éxito. La equivalencia matemática Linux/Windows queda pendiente y visible para la segunda auditoría. Una reproducción de los primeros 54 años no la resuelve.
+Durante Fase 1: verificar que una misma semilla/reglas/versiones en el equipo objetivo reproduzcan la partida; comprobar invariantes de población, estado, guerras, fechas, guardado/restauración y continuidad del RNG; comparar estadísticas e hitos razonables con v0.6, **sin exigir hashes idénticos**. Tests breves y específicos según cada módulo, no campañas matemáticas multiplataforma.
