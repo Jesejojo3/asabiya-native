@@ -1,0 +1,242 @@
+{
+ "schema": "asabiya/v06-interventions-v1",
+ "referenceSha256": "988ce360e70d2d034a3898f60b9a4c38d40b0ab56dd7a147329740f15fa8e9e9",
+ "omens": [
+  {
+   "key": "kindle",
+   "name": "Kindle",
+   "cost": 1,
+   "km": 450,
+   "needs": "land",
+   "desc": "A comet stirs a people: local asabiya rises"
+  },
+  {
+   "key": "discord",
+   "name": "Discord",
+   "cost": 1,
+   "km": 900,
+   "needs": "realm",
+   "desc": "Rival claimants split a realm: its cohesion falls"
+  },
+  {
+   "key": "bounty",
+   "name": "Bounty",
+   "cost": 1,
+   "km": 450,
+   "needs": "land",
+   "desc": "A century of good harvests: the land feeds more people"
+  },
+  {
+   "key": "drought",
+   "name": "Drought",
+   "cost": 1,
+   "km": 600,
+   "needs": "land",
+   "desc": "Six decades of failed rains: hunger and flight"
+  },
+  {
+   "key": "spark",
+   "name": "Spark",
+   "cost": 2,
+   "km": 0,
+   "needs": "realm",
+   "desc": "A brilliant mind appears: the realm learns new techniques"
+  },
+  {
+   "key": "prophet",
+   "name": "Prophet",
+   "cost": 2,
+   "km": 0,
+   "needs": "people",
+   "desc": "A prophet begins to preach a new faith here"
+  },
+  {
+   "key": "plague",
+   "name": "Pestilence",
+   "cost": 2,
+   "km": 0,
+   "needs": "people",
+   "desc": "A new disease breaks out here"
+  },
+  {
+   "key": "doom",
+   "name": "Cataclysm",
+   "cost": 3,
+   "km": 0,
+   "needs": "land",
+   "desc": "Unleash the catastrophe of the age here"
+  }
+ ],
+ "cataclysms": [
+  {
+   "key": "deluge",
+   "eras": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "w": 1,
+   "scope": "region",
+   "km": 1300,
+   "pop": 0.3,
+   "tech": 0.6,
+   "infra": 0.6,
+   "kmod": 0.7,
+   "kyrs": 30,
+   "s": 0.6,
+   "site": "lowland",
+   "kind": "Flood",
+   "title": "The Great Deluge",
+   "text": "the waters rise over {place}",
+   "why": "Rivers burst and the sea breaks in; fields, stores and villages are swept away."
+  },
+  {
+   "key": "eruption",
+   "eras": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "w": 0.6,
+   "scope": "region",
+   "km": 1000,
+   "pop": 0.25,
+   "tech": 0.5,
+   "infra": 0.5,
+   "kmod": 0.55,
+   "kyrs": 25,
+   "s": 0.7,
+   "site": "mountain",
+   "world": {
+    "kmod": 0.9,
+    "kyrs": 8
+   },
+   "kind": "Volcano",
+   "title": "The Eruption of {place}",
+   "text": "a mountain explodes at {place}",
+   "why": "Ash buries the land for hundreds of kilometres and the sky darkens across the world."
+  },
+  {
+   "key": "unravel",
+   "eras": [
+    2,
+    3,
+    4
+   ],
+   "w": 1.1,
+   "scope": "region",
+   "km": 2600,
+   "pop": 0.22,
+   "tech": 1,
+   "infra": 0.55,
+   "kmod": 0.8,
+   "kyrs": 40,
+   "s": 0.35,
+   "site": "leader",
+   "kind": "Systems collapse",
+   "title": "The Great Unravelling",
+   "text": "raiders, drought and famine break the palaces around {place}",
+   "why": "Trade collapses and writing is forgotten across a whole region."
+  },
+  {
+   "key": "winter",
+   "eras": [
+    3,
+    4,
+    5
+   ],
+   "w": 0.5,
+   "scope": "global",
+   "pop": 0.12,
+   "tech": 0.25,
+   "infra": 0.2,
+   "kmod": 0.72,
+   "kyrs": 15,
+   "s": 0.8,
+   "kind": "Volcanic winter",
+   "title": "The Year Without Summer",
+   "text": "the sun dims and harvests fail across the world",
+   "why": "A distant eruption veils the sky; famine and disorder follow."
+  },
+  {
+   "key": "quake",
+   "eras": [
+    4,
+    5,
+    6,
+    7
+   ],
+   "w": 0.8,
+   "scope": "region",
+   "km": 650,
+   "pop": 0.35,
+   "tech": 0.5,
+   "infra": 0.85,
+   "kmod": 0.85,
+   "kyrs": 20,
+   "s": 0.7,
+   "site": "mountain",
+   "kind": "Earthquake",
+   "title": "The Great Earthquake of {place}",
+   "text": "the earth shakes {place} to rubble",
+   "why": "Cities fall and a great wave sweeps the coast."
+  },
+  {
+   "key": "iceage",
+   "eras": [
+    5,
+    6,
+    7
+   ],
+   "w": 0.5,
+   "scope": "global",
+   "pop": 0.1,
+   "tech": 0.25,
+   "infra": 0.2,
+   "kmod": 0.8,
+   "kyrs": 70,
+   "s": 0.7,
+   "kind": "Climate",
+   "title": "The Long Winter",
+   "text": "a long cold settles on the world",
+   "why": "Seventy years of short summers bring famine, revolts and wandering peoples."
+  },
+  {
+   "key": "impact",
+   "eras": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "w": 0.06,
+   "scope": "region",
+   "km": 2600,
+   "pop": 0.6,
+   "tech": 1.3,
+   "infra": 0.9,
+   "kmod": 0.5,
+   "kyrs": 30,
+   "s": 0.4,
+   "site": "any",
+   "world": {
+    "kmod": 0.65,
+    "kyrs": 20
+   },
+   "kind": "Asteroid",
+   "title": "The Starfall",
+   "text": "a rock from the sky strikes near {place}",
+   "why": "Fire, then years of dark skies across the whole world."
+  }
+ ]
+}

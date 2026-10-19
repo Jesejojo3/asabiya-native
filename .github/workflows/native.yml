@@ -43,6 +43,9 @@ jobs:
           node tools/check-society-oracle.mjs
           node tools/check-polity-oracle.mjs
           node tools/check-politics-oracle.mjs
+          node tools/extract-intervention-catalog.mjs
+          node tools/check-interventions-oracle.mjs
+          node tools/check-calendar-oracle.mjs
       - name: Build both executables without a C toolchain
         shell: pwsh
         run: |

@@ -3,6 +3,13 @@ package sim
 // Annual state is added together with its causal systems. It is not a second
 // simulation and does not expose a partial AdvanceYear API.
 type annualState struct {
+	snapshots                     mapHistory
+	omens                         []*Omen
+	cataclysms                    []*Cataclysm
+	lastCataclysm                 int
+	volcanoYears                  int
+	withinMark                    []int32
+	withinStamp                   int32
 	alive                         []int // owning collection: politics visits append-created rebels live
 	fallen                        []*Polity
 	darkWatch                     []DarkWatch
@@ -91,6 +98,8 @@ func (h *history) prepareAnnualState() {
 	h.islandNames = make(map[int32]string)
 	h.islandBy = make(map[int32]int)
 	h.annualReady = true
+	h.lastCataclysm = -1e9
+	h.withinMark = make([]int32, n)
 }
 
 func (h *history) recordDiscovery(k int, c CellID) {

@@ -78,6 +78,7 @@ type War struct {
 }
 
 type Religion struct {
+	Omen                                          bool
 	Founder, Born, Polity, People, Holder, Parent int
 	Origin, Holy                                  CellID
 	RGB                                           [3]uint8
@@ -141,6 +142,7 @@ type TradeRoute struct {
 }
 
 type Outbreak struct {
+	Omen                    bool
 	ID                      int
 	Name                    string
 	Origin                  CellID
