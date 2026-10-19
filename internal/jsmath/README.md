@@ -1,5 +1,3 @@
-# internal/jsmath
+# internal/jsmath — reserva opcional
 
-Reserva para backend Go puro de compatibilidad V8, sujeto a licencias, vectores y controles FMA. Sin implementación. Ver docs/phase-0/NUMERIC_COMPATIBILITY.md.
-
-Diseño: [arquitectura](../../docs/phase-0/ARCHITECTURE.md).
+La compatibilidad matemática bit a bit con V8 deja de ser requisito para el proyecto personal Windows x64. El perfil `native` utilizará inicialmente `math` de Go. Este directorio no contiene implementación ni bloquea la Fase 1; reabrir solamente ante necesidad demostrada. Mantener el legado, corpus y fixtures sin cambios. Véase [contrato numérico](../../docs/phase-0/NUMERIC_COMPATIBILITY.md).
