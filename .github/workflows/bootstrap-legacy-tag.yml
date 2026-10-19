@@ -1,0 +1,33 @@
+name: Bootstrap exact legacy reference tag
+on:
+  push:
+    branches: [phase-1/native-world]
+    paths: [.github/workflows/bootstrap-legacy-tag.yml]
+permissions:
+  contents: write
+jobs:
+  tag:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - name: Create or verify only the approved legacy tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected=fe58bdb2ccf4db83857b02d16fa1852b54836824
+          ref=refs/tags/legacy-v0.6
+          remote=$(git ls-remote --tags origin "$ref")
+          if [ -n "$remote" ]; then
+            git fetch --no-tags origin "$ref"
+            actual=$(git rev-parse 'FETCH_HEAD^{commit}')
+            test "$actual" = "$expected"
+          else
+            git cat-file -e "$expected^{commit}"
+            git tag legacy-v0.6 "$expected"
+            git push origin "$ref"
+          fi
+          git fetch --no-tags origin "$ref"
+          test "$(git rev-parse 'FETCH_HEAD^{commit}')" = "$expected"
+          echo "legacy-v0.6 verified at $expected"
