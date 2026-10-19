@@ -1,0 +1,46 @@
+name: Native Windows x64
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  GOOS: windows
+  GOARCH: amd64
+  GOAMD64: v1
+  CGO_ENABLED: '0'
+  GOTOOLCHAIN: local
+jobs:
+  native:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: '.go-version'
+          check-latest: false
+      - run: go mod verify
+      - run: go vet ./...
+      - run: go test -count=1 ./...
+      - name: Build both executables without a C toolchain
+        shell: pwsh
+        run: |
+          ./tools/build-native.ps1
+      - name: Independent processes and native regression golden
+        shell: pwsh
+        run: ./tools/check-native-repro.ps1
+      - name: Publish review artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: asabiya-native-windows-x64
+          path: |
+            bin/*.exe
+            artifacts/native/*
+          if-no-files-found: error
+          retention-days: 14
