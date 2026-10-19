@@ -238,6 +238,7 @@ func (h *history) castOmen(kind string, cell CellID) (*Omen, string) {
 		h.favor -= float64(def.Cost)
 	}
 	h.chron("omen", om.Text, cell)
+	h.annotateEvent(om.Why, EntityRef{Kind: "omen", ID: om.ID})
 	om.Entry = len(h.chronicle) - 1
 	h.omens = append(h.omens, om)
 	return om, om.Text
@@ -407,6 +408,7 @@ func (h *history) omenFollow(om *Omen) {
 		why += "; " + cat.Name + " killed about " + fmtK(cat.Deaths)
 	}
 	h.chron("omen", text, c)
+	h.annotateEvent(why+".", EntityRef{Kind: "omen", ID: om.ID})
 	// The explanatory sentence is retained with its omen for read-only views.
 	om.FollowText = text
 	om.FollowWhy = why + "."

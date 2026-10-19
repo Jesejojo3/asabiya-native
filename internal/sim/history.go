@@ -95,6 +95,7 @@ type history struct {
 }
 
 func (h *history) chron(kind, text string, cell CellID) {
+	h.recordEvent(kind, text, cell)
 	h.chronicle = append(h.chronicle, ChronicleEntry{Year: h.year, Kind: kind, Text: text, Cell: cell})
 	if len(h.chronicle) > maxChronicle {
 		h.chronicle = append([]ChronicleEntry(nil), h.chronicle[chronicleTrim:]...)

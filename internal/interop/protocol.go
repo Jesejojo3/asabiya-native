@@ -1,0 +1,295 @@
+package interop
+
+import (
+	"bufio"
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"net"
+	"path/filepath"
+	"sync"
+
+	"github.com/Jesejojo3/asabiya-native/internal/sim"
+)
+
+const LocalSchema = "asabiya/local-v1"
+
+type Request struct {
+	Schema  string          `json:"schema"`
+	ID      string          `json:"id"`
+	Session uint64          `json:"session,omitempty"`
+	Op      string          `json:"op"`
+	Payload json.RawMessage `json:"payload,omitempty"`
+}
+type ProtocolError struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+type Response struct {
+	Schema  string         `json:"schema"`
+	ID      string         `json:"id"`
+	Session uint64         `json:"session"`
+	OK      bool           `json:"ok"`
+	Data    any            `json:"data,omitempty"`
+	Error   *ProtocolError `json:"error,omitempty"`
+}
+type Session struct {
+	mu         sync.Mutex
+	generation uint64
+	world      *sim.World
+	surface    *sim.Surface
+	simulation *sim.Simulation
+}
+
+func decodePayload(raw json.RawMessage, target any) error {
+	if len(raw) == 0 {
+		raw = []byte("{}")
+	}
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.DisallowUnknownFields()
+	return decoder.Decode(target)
+}
+func (s *Session) Handle(req Request) Response {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	response := Response{Schema: LocalSchema, ID: req.ID, Session: s.generation}
+	fail := func(code string, err error) Response {
+		response.Error = &ProtocolError{Code: code, Message: err.Error()}
+		return response
+	}
+	if req.Schema != LocalSchema || req.ID == "" {
+		return fail("invalid_request", fmt.Errorf("schema %s and nonempty id are required", LocalSchema))
+	}
+	if req.Session != 0 && req.Session != s.generation {
+		return fail("stale_session", fmt.Errorf("session has changed"))
+	}
+	switch req.Op {
+	case "create_world":
+		var payload struct {
+			World *sim.WorldConfig `json:"world"`
+			Fine  *bool            `json:"fine"`
+		}
+		if err := decodePayload(req.Payload, &payload); err != nil {
+			return fail("invalid_arguments", err)
+		}
+		config := sim.DefaultWorldConfig("Asabiya")
+		if payload.World != nil {
+			config = *payload.World
+		}
+		var w *sim.World
+		var surface *sim.Surface
+		var err error
+		if payload.Fine == nil || *payload.Fine {
+			w, surface, err = sim.GenerateWorldWithSurface(config)
+		} else {
+			w, err = sim.GenerateWorld(config)
+		}
+		if err != nil {
+			return fail("invalid_arguments", err)
+		}
+		s.world = w
+		s.surface = surface
+		s.simulation = nil
+		s.generation++
+		response.Session = s.generation
+		response.Data = w.Summary()
+	case "start_history":
+		if s.world == nil {
+			return fail("not_ready", fmt.Errorf("create_world first"))
+		}
+		var payload struct {
+			HistorySeed string     `json:"historySeed"`
+			Rules       *sim.Rules `json:"rules"`
+		}
+		if err := decodePayload(req.Payload, &payload); err != nil {
+			return fail("invalid_arguments", err)
+		}
+		rules := sim.DefaultRules()
+		if payload.Rules != nil {
+			rules = *payload.Rules
+		}
+		history, err := sim.NewSimulationWithRules(s.world, payload.HistorySeed, rules)
+		if err != nil {
+			return fail("invalid_arguments", err)
+		}
+		s.simulation = history
+		s.generation++
+		response.Session = s.generation
+		response.Data = s.simulation.Snapshot()
+	case "get_world":
+		if s.world == nil {
+			return fail("not_ready", fmt.Errorf("create_world first"))
+		}
+		response.Data = s.world.Summary()
+	case "pause":
+		if err := decodePayload(req.Payload, &struct{}{}); err != nil {
+			return fail("invalid_arguments", err)
+		}
+		response.Data = map[string]any{"paused": true, "mode": "request-driven"}
+	case "shutdown":
+		response.Data = map[string]any{"shutdown": true}
+	default:
+		if s.simulation == nil {
+			return fail("not_ready", fmt.Errorf("start_history first"))
+		}
+		switch req.Op {
+		case "get_state":
+			response.Data = s.simulation.Snapshot()
+		case "get_status":
+			response.Data = map[string]any{"status": s.simulation.Status(), "nextSequence": s.simulation.NextSequence(), "rulesSHA256": s.simulation.RulesDigest()}
+		case "advance":
+			if err := decodePayload(req.Payload, &struct{}{}); err != nil {
+				return fail("invalid_arguments", err)
+			}
+			response.Data = s.simulation.AdvanceYearWithDelta()
+		case "apply_command":
+			var command sim.Command
+			if err := decodePayload(req.Payload, &command); err != nil {
+				return fail("invalid_arguments", err)
+			}
+			result := s.simulation.ApplyCommand(command)
+			response.Data = map[string]any{"result": result, "state": s.simulation.Snapshot()}
+		case "get_province", "get_province_history":
+			var payload struct {
+				ID sim.CellID `json:"id"`
+			}
+			if err := decodePayload(req.Payload, &payload); err != nil {
+				return fail("invalid_arguments", err)
+			}
+			province, ok := s.simulation.Province(payload.ID)
+			if !ok {
+				return fail("not_found", fmt.Errorf("province not found"))
+			}
+			if req.Op == "get_province" {
+				response.Data = province
+			} else {
+				response.Data = map[string]any{"provinceId": payload.ID, "precisionYears": 10, "records": s.simulation.OwnershipHistory(payload.ID)}
+			}
+		case "get_entity", "list_entities":
+			var payload struct {
+				Kind string `json:"kind"`
+				ID   int    `json:"id"`
+			}
+			if err := decodePayload(req.Payload, &payload); err != nil {
+				return fail("invalid_arguments", err)
+			}
+			if req.Op == "get_entity" {
+				record, ok := s.simulation.Entity(payload.Kind, payload.ID)
+				if !ok {
+					return fail("not_found", fmt.Errorf("entity not found; dynasty labels are not standalone entities"))
+				}
+				response.Data = record
+			} else {
+				response.Data = s.simulation.Entities(payload.Kind)
+			}
+		case "get_historical_layer":
+			var payload struct {
+				Year int `json:"year"`
+			}
+			if err := decodePayload(req.Payload, &payload); err != nil {
+				return fail("invalid_arguments", err)
+			}
+			layer, ok := s.simulation.HistoricalLayer(payload.Year)
+			if !ok {
+				return fail("not_found", fmt.Errorf("no retained historical layer for that year"))
+			}
+			response.Data = layer
+		case "get_replay":
+			response.Data = s.simulation.Replay()
+		case "export":
+			var payload struct {
+				Directory string `json:"directory"`
+			}
+			if err := decodePayload(req.Payload, &payload); err != nil {
+				return fail("invalid_arguments", err)
+			}
+			if payload.Directory == "" {
+				return fail("invalid_arguments", fmt.Errorf("directory is required"))
+			}
+			directory, err := filepath.Abs(payload.Directory)
+			if err != nil {
+				return fail("invalid_arguments", err)
+			}
+			if err = WriteBundle(directory, s.world, s.surface, s.simulation); err != nil {
+				return fail("export_failed", err)
+			}
+			response.Data = map[string]any{"directory": directory, "manifest": "manifest.json", "state": "state.json"}
+		default:
+			return fail("unknown_operation", fmt.Errorf("unknown operation %q", req.Op))
+		}
+	}
+	response.OK = true
+	return response
+}
+
+// Serve only accepts a loopback listener. Requests are processed sequentially;
+// one advance means one complete year, so a queued pause never waits for an
+// arbitrary multi-year batch. There is no simulation clock or background run.
+func Serve(ctx context.Context, listener net.Listener, session *Session) error {
+	address, ok := listener.Addr().(*net.TCPAddr)
+	if !ok || !address.IP.IsLoopback() {
+		return fmt.Errorf("local protocol requires a loopback TCP listener")
+	}
+	defer listener.Close()
+	done := make(chan struct{})
+	defer close(done)
+	go func() {
+		select {
+		case <-ctx.Done():
+			listener.Close()
+		case <-done:
+		}
+	}()
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			if ctx.Err() != nil {
+				return nil
+			}
+			return err
+		}
+		shutdown, err := serveConnection(ctx, conn, session)
+		conn.Close()
+		if shutdown {
+			return nil
+		}
+		if ctx.Err() != nil {
+			return nil
+		}
+		if err != nil {
+			continue
+		}
+	}
+}
+func serveConnection(ctx context.Context, conn net.Conn, session *Session) (bool, error) {
+	done := make(chan struct{})
+	defer close(done)
+	go func() {
+		select {
+		case <-ctx.Done():
+			conn.Close()
+		case <-done:
+		}
+	}()
+	scanner := bufio.NewScanner(conn)
+	scanner.Buffer(make([]byte, 4096), 16*1024*1024)
+	encoder := json.NewEncoder(conn)
+	for scanner.Scan() {
+		var req Request
+		if err := json.Unmarshal(scanner.Bytes(), &req); err != nil {
+			if err = encoder.Encode(Response{Schema: LocalSchema, Error: &ProtocolError{Code: "invalid_json", Message: err.Error()}}); err != nil {
+				return false, err
+			}
+			continue
+		}
+		response := session.Handle(req)
+		if err := encoder.Encode(response); err != nil {
+			return false, err
+		}
+		if req.Op == "shutdown" && response.OK {
+			return true, nil
+		}
+	}
+	return false, scanner.Err()
+}

@@ -231,7 +231,8 @@ func (h *history) caravanPass() {
 			}
 		}
 		if route == nil {
-			route = &TradeRoute{ID: len(h.routes), Key: key, Born: h.year, A: a, B: hit, Path: points}
+			route = &TradeRoute{ID: len(h.routes), NativeID: len(h.routeArchive), Key: key, Born: h.year, A: a, B: hit, Path: points}
+			h.routeArchive = append(h.routeArchive, route)
 			h.routes = append(h.routes, route)
 			if ea != nil && eb != nil && ea.Family != eb.Family && !h.caravanPairs.Has(key) {
 				h.caravanPairs.Add(key)

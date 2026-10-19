@@ -12,14 +12,19 @@ import (
 )
 
 type Options struct {
-	World          sim.WorldConfig
-	HistorySeed    string
-	Cell           string
-	Output         string
-	PNG            string
-	HighResolution bool
-	Peoples        bool
-	Rules          sim.Rules
+	ReplayInput              string
+	Years                    int
+	CheckpointEvery          int
+	SnapshotPath, ReplayPath string
+	ExportPath               string
+	World                    sim.WorldConfig
+	HistorySeed              string
+	Cell                     string
+	Output                   string
+	PNG                      string
+	HighResolution           bool
+	Peoples                  bool
+	Rules                    sim.Rules
 }
 
 func Parse(args []string, stderr io.Writer) (Options, error) {
@@ -38,6 +43,12 @@ func Parse(args []string, stderr io.Writer) (Options, error) {
 	f.StringVar(&o.PNG, "png", "", "write a terrain preview PNG")
 	f.BoolVar(&o.HighResolution, "high-res", false, "retain fine layers for PNG export (requires --png in headless)")
 	f.BoolVar(&o.Peoples, "peoples", false, "include every people, language and lineage in the report (headless)")
+	f.IntVar(&o.Years, "years", 0, "complete historical years to advance (headless)")
+	f.IntVar(&o.CheckpointEvery, "checkpoint-every", 0, "validate IDs/state and report a checkpoint at this year interval (headless)")
+	f.StringVar(&o.SnapshotPath, "snapshot", "", "write a versioned complete read-only state JSON (headless)")
+	f.StringVar(&o.ReplayPath, "replay", "", "write reproducible initial configuration and accepted/rejected commands (headless)")
+	f.StringVar(&o.ExportPath, "export", "", "write geography binary, manifest and historical states for Godot (headless)")
+	f.StringVar(&o.ReplayInput, "replay-in", "", "reconstruct a recorded native replay before optional additional years (headless)")
 	f.Float64Var(&startYear, "start-year", startYear, "history start year, -12000..-4000 in steps of 500 (rule startYear)")
 	f.Float64Var(&bands, "bands", bands, "founding peoples, 3..24 (rule bands)")
 	if err := f.Parse(args); err != nil {
@@ -45,6 +56,9 @@ func Parse(args []string, stderr io.Writer) (Options, error) {
 	}
 	if f.NArg() != 0 {
 		return o, fmt.Errorf("unexpected arguments: %s", strings.Join(f.Args(), " "))
+	}
+	if o.Years < 0 || o.Years > 100000 || o.CheckpointEvery < 0 {
+		return o, fmt.Errorf("years must be 0..100000 and checkpoint-every nonnegative")
 	}
 	o.Rules.Values["startYear"], o.Rules.Values["bands"] = startYear, bands
 	if err := o.Rules.Validate(); err != nil {

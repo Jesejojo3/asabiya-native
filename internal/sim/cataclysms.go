@@ -296,6 +296,7 @@ func (h *history) cataclysm(kind string, origin CellID, omen bool) *Cataclysm {
 	cat.Why = c.Why + " About " + fmtK(deaths) + " dead" + regression + "."
 	if !omen {
 		h.chron("cata", cat.Text, origin)
+		h.annotateEvent(cat.Why, EntityRef{Kind: "cataclysm", ID: cat.ID})
 		h.spot(cat.Text, origin)
 	}
 	return cat

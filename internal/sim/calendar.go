@@ -3,6 +3,7 @@ package sim
 // advanceYear is deliberately private until atomic commands, full-state digest
 // and immutable publication are integrated. No renderer can observe its stages.
 func (h *history) advanceYear() {
+	h.advanced = true
 	h.prepareAnnualState()
 	if h.snapshots.last == nil {
 		h.snapshot()

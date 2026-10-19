@@ -3,6 +3,11 @@ package sim
 // Annual state is added together with its causal systems. It is not a second
 // simulation and does not expose a partial AdvanceYear API.
 type annualState struct {
+	events                        []Event
+	eventText                     []EventText
+	nextEventID                   int
+	routeArchive                  []*TradeRoute
+	advanced                      bool
 	snapshots                     mapHistory
 	omens                         []*Omen
 	cataclysms                    []*Cataclysm

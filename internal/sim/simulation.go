@@ -2,6 +2,7 @@ package sim
 
 import (
 	"errors"
+	"sync"
 	"unicode/utf8"
 
 	"github.com/Jesejojo3/asabiya-native/internal/rng"
@@ -10,12 +11,16 @@ import (
 const SimulationVersion = "native/history-init-v1"
 
 // Simulation owns one history over an immutable World. It is initialized by
-// newHistory (founding peoples and initial population). There is still no
-// AdvanceYear: the annual calendar needs weather, growth, migration, technology
-// and the other stepG systems before a year can be advanced honestly.
+// newHistory. The mutex serializes complete years, commands and read-only
+// copies. Rendering and transport never access mutable history directly.
 type Simulation struct {
-	world *World
-	h     *history
+	commandSequence uint64
+	commandLog      []CommandResult
+	initialRules    Rules
+	mu              sync.RWMutex
+	initialHistory  HistorySummary
+	world           *World
+	h               *history
 }
 
 // NewSimulation initializes a history with the default v0.6 rules.
@@ -33,7 +38,12 @@ func NewSimulationWithRules(world *World, historySeed string, rules Rules) (*Sim
 	if err := rules.Validate(); err != nil {
 		return nil, err
 	}
-	return &Simulation{world: world, h: newHistory(world, historySeed, rules.clone())}, nil
+	s := &Simulation{world: world, h: newHistory(world, historySeed, rules.clone())}
+	s.initialHistory = s.summaryLocked()
+	s.initialRules = rules.clone()
+	s.h.prepareAnnualState()
+	s.h.snapshot()
+	return s, nil
 }
 
 type SimulationStatus struct {
@@ -47,8 +57,32 @@ type SimulationStatus struct {
 }
 
 func (s *Simulation) World() *World { return s.world }
-func (s *Simulation) Rules() Rules  { return s.h.rules.clone() }
+func (s *Simulation) Rules() Rules  { s.mu.RLock(); defer s.mu.RUnlock(); return s.h.rules.clone() }
 func (s *Simulation) Status() SimulationStatus {
-	return SimulationStatus{Version: SimulationVersion, RulesVersion: s.h.rules.Version, HistorySeed: s.h.seed, StartYear: s.h.start,
-		Year: s.h.year, Stage: "founded", HistoryRNG: s.h.r.Position()}
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.statusLocked()
+}
+func (s *Simulation) statusLocked() SimulationStatus {
+	version, stage := SimulationVersion, "founded"
+	if s.h.advanced {
+		version = EngineVersion
+		stage = "running"
+	}
+	return SimulationStatus{Version: version, RulesVersion: s.h.rules.Version, HistorySeed: s.h.seed, StartYear: s.h.start, Year: s.h.year, Stage: stage, HistoryRNG: s.h.r.Position()}
+}
+
+const EngineVersion = "native/v06-core-v1"
+
+// AdvanceYear executes the entire original calendar synchronously. No partial
+// year, UI scheduling yield or background writer escapes this operation.
+func (s *Simulation) AdvanceYear() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.applyCommandLocked(s.nextCommandLocked("advance_year"))
+}
+func (s *Simulation) InitialSummary() HistorySummary {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return cloneHistorySummary(s.initialHistory)
 }

@@ -32,11 +32,19 @@ type HistorySummary struct {
 }
 
 func (s *Simulation) Summary() HistorySummary {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.summaryLocked()
+}
+func (s *Simulation) summaryLocked() HistorySummary {
 	h, w := s.h, s.world
 	sum := HistorySummary{Version: HistoryDigestVersion, RulesVersion: h.rules.Version, StartYear: h.start, Year: h.year,
 		FoundingStocks: len(h.seeds), Peoples: len(h.peoples), TemperatureAnomaly: h.gT + h.epochTemp(), OrbitalMonsoon: h.orbM,
 		Hearths: append([]Hearth(nil), h.hearths...), Chronicle: append([]ChronicleEntry(nil), h.chronicle...),
-		Stats: append([]StatsEntry(nil), h.stats...), SHA256: s.Digest()}
+		Stats: append([]StatsEntry(nil), h.stats...), SHA256: s.digestLocked()}
+	if h.advanced || s.commandSequence > 0 {
+		sum.Version = StateDigestVersion
+	}
 	for i := range sum.Stats {
 		sum.Stats[i].EraShare = slices.Clone(h.stats[i].EraShare)
 	}
@@ -92,6 +100,11 @@ type PeopleView struct {
 }
 
 func (s *Simulation) Peoples() []PeopleView {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.peoplesLocked()
+}
+func (s *Simulation) peoplesLocked() []PeopleView {
 	out := make([]PeopleView, len(s.h.peoples))
 	cells, pop := make([]int, len(out)), make([]float64, len(out))
 	for _, c := range s.world.landList {
@@ -120,6 +133,11 @@ type CellHistory struct {
 }
 
 func (s *Simulation) Cell(id CellID) (CellHistory, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.cellLocked(id)
+}
+func (s *Simulation) cellLocked(id CellID) (CellHistory, bool) {
 	h, w := s.h, s.world
 	if id < 0 || int(id) >= w.Len() {
 		return CellHistory{}, false
@@ -136,6 +154,17 @@ func (s *Simulation) Cell(id CellID) (CellHistory, bool) {
 // RNG position, every state array and every people/hearth/chronicle record, in
 // creation order. It is not a save format.
 func (s *Simulation) Digest() string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.digestLocked()
+}
+func (s *Simulation) digestLocked() string {
+	if s.h.advanced || s.commandSequence > 0 {
+		return s.stateDigestLocked()
+	}
+	return s.initialDigestLocked()
+}
+func (s *Simulation) initialDigestLocked() string {
 	h := s.h
 	d := sha256.New()
 	writeString(d, HistoryDigestVersion)
@@ -240,4 +269,18 @@ func (s *Simulation) Digest() string {
 		writeU32(d, options)
 	}
 	return hex.EncodeToString(d.Sum(nil))
+}
+
+func cloneHistorySummary(h HistorySummary) HistorySummary {
+	h.Hearths = slices.Clone(h.Hearths)
+	h.Chronicle = slices.Clone(h.Chronicle)
+	h.Stats = slices.Clone(h.Stats)
+	for k := range h.Stats {
+		h.Stats[k].EraShare = slices.Clone(h.Stats[k].EraShare)
+	}
+	if h.Epoch != nil {
+		e := *h.Epoch
+		h.Epoch = &e
+	}
+	return h
 }

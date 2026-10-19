@@ -46,13 +46,17 @@ jobs:
           node tools/extract-intervention-catalog.mjs
           node tools/check-interventions-oracle.mjs
           node tools/check-calendar-oracle.mjs
-      - name: Build both executables without a C toolchain
+      - name: Build native executables without a C toolchain
         shell: pwsh
         run: |
           ./tools/build-native.ps1
       - name: Independent processes and native regression golden
         shell: pwsh
         run: ./tools/check-native-repro.ps1
+      - name: Local protocol, independent replay and Godot geography consumer
+        run: |
+          node tools/check-local-protocol.mjs bin/asabiya-server.exe bin/asabiya-headless.exe artifacts/native/local
+          node tools/verify-godot-bundle.mjs artifacts/native/local/bundle
       - name: Publish review artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:

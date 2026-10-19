@@ -186,7 +186,7 @@ func (h *history) succession(o *Polity) {
 	et := h.etOf(o)
 	old, r0 := o.Dynasty, o.Ruler
 	chance := .06 + .25*math.Max(0, o.E/et-1) + .35*math.Max(0, .6-o.Mandate)
-	o.Rulers = append(o.Rulers, RulerRecord{Name: r0.Name, Base: r0.Base, Epithet: r0.Epithet, From: r0.Since, To: h.year, Conquests: r0.Conquests, Figure: r0.Figure, Dynasty: o.Dynasty})
+	o.Rulers = append(o.Rulers, RulerRecord{ID: r0.ID, Name: r0.Name, Base: r0.Base, Epithet: r0.Epithet, From: r0.Since, To: h.year, Conquests: r0.Conquests, Figure: r0.Figure, Dynasty: o.Dynasty})
 	if len(o.Rulers) > 60 {
 		o.Rulers = o.Rulers[1:]
 	}

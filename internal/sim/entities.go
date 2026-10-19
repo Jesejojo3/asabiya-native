@@ -116,6 +116,7 @@ type Ruler struct {
 	Figure                                             int
 }
 type RulerRecord struct {
+	ID                           int
 	Name, Base, Epithet, Dynasty string
 	From, To, Conquests, Figure  int
 }
@@ -134,6 +135,7 @@ type FamilyTitle struct {
 	Figure, Polity int
 }
 type TradeRoute struct {
+	NativeID   int
 	ID         int
 	Key        string
 	Born, Last int
