@@ -26,6 +26,8 @@ Una generación tardía no se presenta como dos procesos independientes aprobado
 
 `reference.yml`: Node exacto, acciones por SHA, PR y push a main sin duplicado de push de rama, matriz Windows 2022 y Ubuntu 24.04. Verifica referencia, golden original, RNG, codificador e inventario, además del corpus rápido. `reference-extended.yml`: ejecución manual separada, corpus de 2,6 millones y fixture tardío. No hay cron ni automatización externa creada. GitHub puede exigir presencia del workflow en la rama por defecto para exponer el botón manual; no se integra main para habilitarlo.
 
+Primera ejecución correctiva de Windows (run 39194292609): el verificador detectó que el checkout con autocrlf transformó SHA256SUMS a CRLF; el HTML mantuvo su hash. Se corrige la configuración del runner efímero antes de checkout (`core.autocrlf=false`) en ambos workflows, sin modificar el verificador, el HTML ni los valores esperados. El resultado de la repetición del nuevo HEAD se registra en la PR y en la entrega final; el fallo previo no se oculta como aprobado.
+
 ## Pendiente y fuera de las afirmaciones de esta entrega
 
 - Implementar y comparar `internal/jsmath` contra cada vector; validar licencias exactas y la ruta JIT/builtin, linter AST y FMA del código Go real.
