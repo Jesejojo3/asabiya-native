@@ -1,0 +1,918 @@
+{
+  "schemaVersion": 1,
+  "sourceSha256": "988ce360e70d2d034a3898f60b9a4c38d40b0ab56dd7a147329740f15fa8e9e9",
+  "parser": "Node 24.19.0 bundled Acorn 8.17.0",
+  "method": "AST inventory of every ForOfStatement in core, not an alias-analysis proof",
+  "loops": [
+    {
+      "line": 361,
+      "function": "top-level",
+      "collection": "PDEF",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 381,
+      "function": "top-level",
+      "collection": "CDEF",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 490,
+      "function": "gradeClimate",
+      "collection": "w.landIdx",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 579,
+      "function": "genWorld",
+      "collection": "landList",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 588,
+      "function": "genWorld",
+      "collection": "coastList",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 591,
+      "function": "genWorld",
+      "collection": "landList",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 593,
+      "function": "genWorld",
+      "collection": "landList",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 597,
+      "function": "genWorld",
+      "collection": "landList",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 616,
+      "function": "genWorld",
+      "collection": "landList",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 638,
+      "function": "genWorld",
+      "collection": "found.slice(0,10)",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 642,
+      "function": "genWorld",
+      "collection": "landList",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 644,
+      "function": "genWorld",
+      "collection": "landList",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 688,
+      "function": "top-level",
+      "collection": "['cons','cl','vow','pat','coda','place','ppl','pers','city']",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 705,
+      "function": "applyRules",
+      "collection": "rs",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 709,
+      "function": "syl",
+      "collection": "pat",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 727,
+      "function": "makeLang",
+      "collection": "LEX",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 742,
+      "function": "childLang",
+      "collection": "LEX",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 750,
+      "function": "hybridLang",
+      "collection": "LEX",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 760,
+      "function": "roman",
+      "collection": "v",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 880,
+      "function": "newHistory",
+      "collection": "w.landIdx",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 882,
+      "function": "newHistory",
+      "collection": "w.coastIdx",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 899,
+      "function": "newHistory",
+      "collection": "w.landIdx",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 902,
+      "function": "newHistory",
+      "collection": "EARTH_HEARTHS",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 904,
+      "function": "newHistory",
+      "collection": "w.landIdx",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 930,
+      "function": "climateStep",
+      "collection": "EPOCH_KINDS",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1021,
+      "function": "migrate",
+      "collection": "T",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1022,
+      "function": "migrate",
+      "collection": "T",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1048,
+      "function": "seaHop",
+      "collection": "s.tk",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1052,
+      "function": "seaHop",
+      "collection": "s.tk",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1116,
+      "function": "hearthCheck",
+      "collection": "s.hearths",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1168,
+      "function": "disease",
+      "collection": "s.outbreaks",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1169,
+      "function": "disease",
+      "collection": "s.inf",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1183,
+      "function": "disease",
+      "collection": "s.outbreaks",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1242,
+      "function": "newPolity",
+      "collection": "s.fallen",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1272,
+      "function": "polCells",
+      "collection": "WD.landIdx",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1277,
+      "function": "civilWar",
+      "collection": "cells",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1284,
+      "function": "civilWar",
+      "collection": "cells",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1287,
+      "function": "civilWar",
+      "collection": "cells",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1290,
+      "function": "civilWar",
+      "collection": "cells",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1293,
+      "function": "civilWar",
+      "collection": "ids",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1294,
+      "function": "civilWar",
+      "collection": "cells",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1304,
+      "function": "collapse",
+      "collection": "w.landIdx",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1361,
+      "function": "decisive",
+      "collection": "polCells(d.id)",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1370,
+      "function": "distBFS",
+      "collection": "s.alive",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1374,
+      "function": "distBFS",
+      "collection": "bk",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1387,
+      "function": "declareWar",
+      "collection": "A.allies",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1388,
+      "function": "declareWar",
+      "collection": "D.allies",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1389,
+      "function": "declareWar",
+      "collection": "D.nb",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1392,
+      "function": "declareWar",
+      "collection": "war.a",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1392,
+      "function": "declareWar",
+      "collection": "war.d",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1393,
+      "function": "declareWar",
+      "collection": "war.a.concat(war.d)",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1399,
+      "function": "endWar",
+      "collection": "war.a",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1399,
+      "function": "endWar",
+      "collection": "war.d",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1418,
+      "function": "affinity",
+      "collection": "o.nb",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1425,
+      "function": "diplomacy",
+      "collection": "s.alive",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1431,
+      "function": "diplomacy",
+      "collection": "o.nb",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1437,
+      "function": "diplomacy",
+      "collection": "o.nb",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1441,
+      "function": "diplomacy",
+      "collection": "polCells(o.id)",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1571,
+      "function": "settle",
+      "collection": "cells",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1581,
+      "function": "settle",
+      "collection": "cells",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1591,
+      "function": "hordeMigration",
+      "collection": "o.nb",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1592,
+      "function": "hordeMigration",
+      "collection": "cells",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1620,
+      "function": "politics",
+      "collection": "politicsG()",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1624,
+      "function": "politicsG",
+      "collection": "s.alive",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1631,
+      "function": "politicsG",
+      "collection": "s.alive",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1633,
+      "function": "politicsG",
+      "collection": "o.enemies",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1634,
+      "function": "politicsG",
+      "collection": "o.allies",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1636,
+      "function": "politicsG",
+      "collection": "o.sample",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1663,
+      "function": "politicsG",
+      "collection": "next",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1681,
+      "function": "politicsG",
+      "collection": "polCells(id)",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1688,
+      "function": "politicsG",
+      "collection": "polCells(id)",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1714,
+      "function": "politicsG",
+      "collection": "T.pre",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1717,
+      "function": "politicsG",
+      "collection": "L",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1730,
+      "function": "politicsG",
+      "collection": "o.nb",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1743,
+      "function": "politicsG",
+      "collection": "s.activeWars",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1752,
+      "function": "politicsG",
+      "collection": "s.alive",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1801,
+      "function": "politicsG",
+      "collection": "s.alive",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1802,
+      "function": "politicsG",
+      "collection": "s.activeMigs.slice()",
+      "iteration": "explicit snapshot",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1804,
+      "function": "politicsG",
+      "collection": "w.landIdx",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1808,
+      "function": "politicsG",
+      "collection": "w.landIdx",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1839,
+      "function": "ethPass",
+      "collection": "E",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1865,
+      "function": "cityPass",
+      "collection": "s.alive",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1866,
+      "function": "cityPass",
+      "collection": "w.landIdx",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1871,
+      "function": "cityPass",
+      "collection": "s.cities",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1875,
+      "function": "polShape",
+      "collection": "w.landIdx",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1879,
+      "function": "shapePass",
+      "collection": "s.alive",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1884,
+      "function": "regionPass",
+      "collection": "w.landIdx",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1886,
+      "function": "regionPass",
+      "collection": "d.cells",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1891,
+      "function": "regionPass",
+      "collection": "w.regions",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1891,
+      "function": "regionPass",
+      "collection": "R.cells",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1892,
+      "function": "regionPass",
+      "collection": "cnt",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1894,
+      "function": "regionPass",
+      "collection": "cells",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1894,
+      "function": "regionPass",
+      "collection": "cnt",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1898,
+      "function": "regionPass",
+      "collection": "w.landIdx",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1899,
+      "function": "regionPass",
+      "collection": "w.landIdx",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1904,
+      "function": "recordStats",
+      "collection": "w.landIdx",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1905,
+      "function": "recordStats",
+      "collection": "s.alive",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1906,
+      "function": "recordStats",
+      "collection": "s.eths",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1910,
+      "function": "step",
+      "collection": "stepG()",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1930,
+      "function": "prepEco",
+      "collection": "w.landIdx",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1938,
+      "function": "prepEco",
+      "collection": "w.landIdx",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1941,
+      "function": "prepEco",
+      "collection": "w.landIdx",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 1995,
+      "function": "poolPass",
+      "collection": "L",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2000,
+      "function": "poolPass",
+      "collection": "L",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2015,
+      "function": "volcano",
+      "collection": "s.alive",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2024,
+      "function": "caravanPass",
+      "collection": "L",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2030,
+      "function": "caravanPass",
+      "collection": "srcs",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2039,
+      "function": "caravanPass",
+      "collection": "path",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2119,
+      "function": "castOmen",
+      "collection": "O.km?area:cellsWithin(k,450)",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2124,
+      "function": "castOmen",
+      "collection": "area",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2128,
+      "function": "castOmen",
+      "collection": "cells",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2135,
+      "function": "castOmen",
+      "collection": "area",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2146,
+      "function": "castOmen",
+      "collection": "got",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2146,
+      "function": "castOmen",
+      "collection": "polCells(o.id)",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2147,
+      "function": "castOmen",
+      "collection": "cells",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2147,
+      "function": "castOmen",
+      "collection": "cells",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2180,
+      "function": "omenFollow",
+      "collection": "area",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2185,
+      "function": "omenFollow",
+      "collection": "born",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2216,
+      "function": "cataSite",
+      "collection": "s.alive",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2216,
+      "function": "cataSite",
+      "collection": "s.tk",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2222,
+      "function": "leadEra",
+      "collection": "w.landIdx",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2226,
+      "function": "randomCataclysm",
+      "collection": "Object.entries(CATA)",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2228,
+      "function": "randomCataclysm",
+      "collection": "opts",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2240,
+      "function": "cataclysm",
+      "collection": "cellsWithin(k0,C.km)",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2240,
+      "function": "cataclysm",
+      "collection": "L",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2242,
+      "function": "cataclysm",
+      "collection": "L",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2253,
+      "function": "cataclysm",
+      "collection": "L",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2255,
+      "function": "cataclysm",
+      "collection": "hitW",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2272,
+      "function": "omenPass",
+      "collection": "s.omens",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    },
+    {
+      "line": 2298,
+      "function": "layerAt",
+      "collection": "S.snap.layers",
+      "iteration": "live ECMAScript iterator",
+      "portRequirement": "Preserve collection identity, order, and mutation effects; see COLLECTION_SEMANTICS.md"
+    }
+  ]
+}

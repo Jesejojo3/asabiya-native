@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "profile": "v06-compat",
+  "scenario": {
+    "world": "Earth",
+    "historySeed": "1",
+    "fitClimate": true,
+    "startYear": -9000,
+    "endYear": -3500,
+    "commands": []
+  },
+  "oracle": {
+    "schemaVersion": 1,
+    "node": "24.19.0",
+    "v8": "13.6.233.17-node.51",
+    "arch": "x64",
+    "endianness": "LE",
+    "referenceSha256": "988ce360e70d2d034a3898f60b9a4c38d40b0ab56dd7a147329740f15fa8e9e9"
+  },
+  "worldDigest": "fd2cb8f448a78b0a3be40a87d302bd5ad9ff0caa9082d4c62cd7a6158712ac40",
+  "stateDigest": "eb6326feccc32ae93d7d7f5c8c2e312dae9a7e998006b8b491405850d55f5ade",
+  "position": {
+    "seed": 3245295878,
+    "calls": 99869912,
+    "state": 592143294
+  },
+  "nextRandom": [
+    0.6386397229507565,
+    0.37508633895777166,
+    0.9075647371355444,
+    0.8901273005176336,
+    0.11990813328884542,
+    0.1987177541013807,
+    0.4523961136583239,
+    0.9949170984327793
+  ],
+  "firstState": -3837,
+  "firstWar": -3619,
+  "final": {
+    "year": -3500,
+    "states": 8,
+    "wars": 5,
+    "peoples": 1098
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "classification": "Observed oracle portability failure; not a Go comparison",
+  "node": "24.19.0",
+  "v8": "13.6.233.17-node.51",
+  "sourceWindowsDigest": "73330a461127748cdef99eba9fb946a73c2c6984249ad009208dfb0927edbaa7",
+  "observedLinuxDigest": "c7b803b3615508d228e99267e842f8d7924289abbfe0c44a08e5c19d907544c8",
+  "checked": 2273,
+  "mismatches": 3,
+  "run": "https://github.com/Jesejojo3/asabiya-native/actions/runs/39194565396",
+  "job": "https://github.com/Jesejojo3/asabiya-native/actions/runs/39194565396/job/117874407294",
+  "head": "58f875eb9ed87e72bb68a4c9dceaf6cf4fb389ce",
+  "vectors": [
+    {
+      "index": 299,
+      "input": [
+        "40224cbd45800000",
+        "40277eef32c00000"
+      ],
+      "expectedWindows": "4246f1484cecb063",
+      "observedLinux": "4246f1484cecb064"
+    },
+    {
+      "index": 1084,
+      "input": [
+        "23dd20767da7d07f",
+        "c000b07782400000"
+      ],
+      "expectedWindows": "7a7f5f5b7977ef1f",
+      "observedLinux": "7a7f5f5b7977ef1e"
+    },
+    {
+      "index": 1158,
+      "input": [
+        "5879214af65bb322",
+        "3ff3789388800000"
+      ],
+      "expectedWindows": "5dcc7c5d5636d68c",
+      "observedLinux": "5dcc7c5d5636d68b"
+    }
+  ],
+  "policy": "Keep strict assertions and Windows fixtures unchanged; Linux numeric compatibility not validated; investigate runtime/build/CPU route in future numeric spike"
+}

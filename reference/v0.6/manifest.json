@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "version": "v0.6",
+  "sourceFilename": "Asabiya History Engine (Copy).html",
+  "repositoryPath": "reference/v0.6/Asabiya History Engine (Copy).html",
+  "sourceLocation": "Archivo local homónimo en Descargas, aportado por el usuario; sin transformaciones",
+  "bytes": 1553001,
+  "sha256": "988ce360e70d2d034a3898f60b9a4c38d40b0ab56dd7a147329740f15fa8e9e9",
+  "gitBlobSha1": "940af36bce0cdb05c3552f1d086ffe4290e392ac",
+  "encodingObservation": "UTF-8: round-trip de bytes verificado; sin BOM",
+  "newlines": {
+    "lf": 3199,
+    "crlf": 0
+  },
+  "verifiedOn": "2026-10-18",
+  "repository": "Jesejojo3/asabiya-native",
+  "baseCommit": "16e7e8adcb86e30b3b6e7487967bf636077b3403",
+  "tagPolicy": "legacy-v0.6 pendiente: únicamente después de integrar el commit de importación con aprobación humana",
+  "scope": "HTML completo con assets, núcleo e interfaz; no se reformatea ni extrae en la referencia"
+}
