@@ -198,7 +198,7 @@ func (w *World) prepareEcology() {
 		if w.elevation[i] < 1500 {
 			w.malaria[i] = float32(clamp((t-19)/5, 0, 1) * clamp((p-650)/700, 0, 1))
 		}
-		if rv > .25 && w.roughness[i] > .12 {
+		if rv > .25 && float64(w.roughness[i]) > .12 {
 			w.oncho[i] = float32(clamp((t-21)/3, 0, 1) * clamp((p-700)/300, 0, 1) * clamp((1900-p)/300, 0, 1))
 		}
 		extra := 0.0
