@@ -302,7 +302,7 @@ func _issue_command(kind_name: String, payload: Dictionary) -> void:
 		hud.set_command_outcome({"accepted":false, "error":"Esta vista no dispone de un motor Go activo."})
 		return
 	var known_years: PackedInt32Array = source.years()
-	if not _following_live or known_years.is_empty() or current_year != known_years[known_years.size() - 1]:
+	if known_years.is_empty() or current_year != known_years[known_years.size() - 1]:
 		hud.set_command_outcome({"accepted":false, "error":"Vuelve al último año calculado antes de intervenir. No se modifica el pasado observado."})
 		return
 	(source as BridgeSource).submit_command(kind_name, payload)
