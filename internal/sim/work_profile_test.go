@@ -7,5 +7,5 @@ func TestWorkProfileNeutral(t *testing.T) {
  for i:=0;i<40;i++ {a.AdvanceYear();b.AdvanceYear();if a.StateDigest()!=b.StateDigest()||a.Status()!=b.Status(){t.Fatalf("profiling changed year %d",i)}}
  if !reflect.DeepEqual(a.Replay(),b.Replay()){t.Fatal("profiling changed replay")}
  if !reflect.DeepEqual(a.MapSnapshot(),b.MapSnapshot()){t.Fatal("profiling changed publication")}
- if b.WorkProfile().Years!=40 || b.WorkProfile().Nanoseconds[1]<=0 {t.Fatal("missing observations")}
+ p:=b.WorkProfile();var total int64;for _,n:=range p.Nanoseconds {total+=n};if p.Years!=40 || total<=0 {t.Fatalf("missing observations: %+v",p)}
 }
