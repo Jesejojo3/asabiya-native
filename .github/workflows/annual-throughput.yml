@@ -1,7 +1,7 @@
 name: Annual throughput profiling and Windows package
 on:
   push:
-    branches: ['mission/annual-throughput', 'fix/annual-throughput-finalization']
+    branches: ['mission/annual-throughput', 'fix/annual-throughput-finalization', 'perf/publication-transfer-audit']
   workflow_dispatch:
 permissions:
   contents: read
@@ -43,8 +43,222 @@ jobs:
         run: |
           go test -count=1 ./internal/sim -run '^(TestWorkProfileNeutral|TestMapPublicationReconstructsFullState|TestCanonicalScalarEncodingParity)$' 2>&1 | Tee-Object artifacts/annual-throughput/integrity.txt
           if ($LASTEXITCODE -ne 0) { throw 'Integrity failed' }
-          go test -count=1 ./internal/interop -run '^(TestMapColumnsLossless|TestStatusYearsPreserveHistory)$' 2>&1 | Tee-Object artifacts/annual-throughput/column-integrity.txt
+          go test -count=1 ./internal/interop -run '^(TestMapColumnsLossless|TestStatusYearsPreserveHistory|TestSparseEntityPublicationPreservesFramesAndHistory)$' 2>&1 | Tee-Object artifacts/annual-throughput/column-integrity.txt
           if ($LASTEXITCODE -ne 0) { throw 'Column integrity failed' }
+          go test -run '^
+          go test -run '^$' -bench '^BenchmarkAnnualThroughput$' -benchtime=6x -count=1 -cpuprofile artifacts/annual-throughput/cpu.pprof -memprofile artifacts/annual-throughput/memory.pprof ./internal/interop 2>&1 | Tee-Object artifacts/annual-throughput/go-benchmark.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Benchmark failed' }
+          go tool pprof -top -nodecount=30 artifacts/annual-throughput/cpu.pprof | Out-File artifacts/annual-throughput/cpu-top.txt
+          go tool pprof -top -alloc_space -nodecount=20 artifacts/annual-throughput/memory.pprof | Out-File artifacts/annual-throughput/alloc-top.txt
+      - name: Bounded first state formation measurement
+        if: contains(github.event.head_commit.message, '[profile]')
+        timeout-minutes: 3
+        run: |
+          $env:ASABIYA_FIRST_STATE='1'
+          go test -count=1 -v ./internal/interop -run '^TestAnnualFirstStateWindow$' 2>&1 | Tee-Object artifacts/annual-throughput/first-state.txt
+          Remove-Item Env:ASABIYA_FIRST_STATE
+          if ($LASTEXITCODE -ne 0) { throw 'First state measurement failed' }
+      - name: Compile and export the Windows package
+        run: |
+          New-Item -ItemType Directory -Force -Path build/client | Out-Null
+          Copy-Item -LiteralPath tools/measure-throughput.ps1 -Destination build/client/measure-throughput.ps1
+          ./tools/package-windows.ps1 -OutputDirectory build/client -SourceRevision "${{ github.sha }}" -ValidationSummary 'atlas UI headless contracts, performance and bridge regressions recorded by workflow; graphical runtime not executed'
+          $manifest=Get-Content -Raw -LiteralPath build/client/BUILD-MANIFEST.json | ConvertFrom-Json
+          $entry=@($manifest.files | Where-Object { $_.path -eq 'measure-throughput.ps1' })
+          $sha=(Get-FileHash -LiteralPath build/client/measure-throughput.ps1 -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($entry.Count -ne 1 -or $entry[0].sha256 -ne $sha) { throw 'Measurement tool is missing or mis-hashed in the Windows package manifest' }
+          Compress-Archive -Path build/client/* -DestinationPath build/AsabiyaNative-Windows-x64-throughput.zip
+          Get-FileHash -Algorithm SHA256 build/AsabiyaNative-Windows-x64-throughput.zip | Format-List | Out-File artifacts/annual-throughput/package-sha256.txt
+      - name: Focused Godot geometry and worker regressions
+        run: |
+          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
+          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
+          & $editor --headless --path client/godot --script res://tests/performance_regressions.gd 2>&1 | Tee-Object artifacts/annual-throughput/godot.txt
+          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/godot.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Godot technical regressions failed' }
+      - name: Bridge recovery and session lifecycle without graphics
+        timeout-minutes: 3
+        run: |
+          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
+          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
+          $server=Join-Path $PWD 'build/bin/asabiya-server.exe'
+          & $editor --headless --path client/godot --script res://tests/bridge_stability_regressions.gd -- --server $server 2>&1 | Tee-Object artifacts/annual-throughput/bridge-stability.txt
+          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/bridge-stability.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Bridge stability regressions failed' }
+      - name: Focused headless atlas interface contracts
+        timeout-minutes: 3
+        run: |
+          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
+          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
+          & $editor --headless --path client/godot --script res://tests/atlas_ux_regressions.gd 2>&1 | Tee-Object artifacts/annual-throughput/ui.txt
+          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/ui.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Atlas UI regressions failed' }
+      - name: Fast-forward, columns, pause and uncertainty regressions
+        timeout-minutes: 3
+        run: |
+          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
+          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
+          $server=Join-Path $PWD 'build/bin/asabiya-server.exe'
+          & $editor --headless --path client/godot --script res://tests/annual_throughput_regressions.gd -- --server $server 2>&1 | Tee-Object artifacts/annual-throughput/throughput-tests.txt
+          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/throughput-tests.txt -Pattern 'SCRIPT ERROR|Parse Error|(?m)^FAIL(?:\s|$)' -Quiet)) { throw 'Annual throughput regressions failed' }
+      - name: Godot pipeline baseline with and without app updates
+        timeout-minutes: 4
+        run: |
+          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
+          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
+          $server=Join-Path $PWD 'build/bin/asabiya-server.exe'
+          foreach ($size in @(@(24,16),@(400,200))) {
+            foreach ($appMode in @($false,$true)) {
+              $tag="$($size[0])x$($size[1])-$appMode"
+              $env:ASABIYA_THROUGHPUT_DIR=Join-Path $PWD "artifacts/annual-throughput/$tag"
+              $extra=@()
+              if ($appMode) { $extra=@('--app') }
+              & $editor --headless --path client/godot --script res://tests/annual_pipeline_benchmark.gd -- --server $server --width $size[0] --height $size[1] --samples 6 @extra 2>&1 | Tee-Object "artifacts/annual-throughput/pipeline-$tag.txt"
+              if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath "artifacts/annual-throughput/pipeline-$tag.txt" -Pattern 'SCRIPT ERROR|Parse Error|PIPELINE ERROR|TIMEOUT' -Quiet)) { throw 'Pipeline benchmark failed' }
+            }
+          }
+          Remove-Item Env:ASABIYA_THROUGHPUT_DIR
+      - name: Explicit fast-forward pipeline
+        timeout-minutes: 3
+        run: |
+          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
+          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
+          $server=Join-Path $PWD 'build/bin/asabiya-server.exe'
+          $env:ASABIYA_THROUGHPUT_DIR=Join-Path $PWD 'artifacts/annual-throughput/fast-400'
+          & $editor --headless --path client/godot --script res://tests/annual_pipeline_benchmark.gd -- --server $server --width 400 --height 200 --samples 100 --app --fast 2>&1 | Tee-Object artifacts/annual-throughput/fast-400.txt
+          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/fast-400.txt -Pattern 'SCRIPT ERROR|Parse Error|PIPELINE ERROR|TIMEOUT' -Quiet)) { throw 'Fast pipeline benchmark failed' }
+          Remove-Item Env:ASABIYA_THROUGHPUT_DIR
+      - name: Publish Windows package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: AsabiyaNative-Windows-x64-throughput
+          path: build/AsabiyaNative-Windows-x64-throughput.zip
+          if-no-files-found: error
+          retention-days: 14
+      - name: Show compilation errors
+        if: failure()
+        run: |
+          foreach ($file in @('build/godot-import.log','build/godot-export.log')) {
+            if (Test-Path -LiteralPath $file) {
+              Select-String -LiteralPath $file -Pattern 'SCRIPT ERROR|Parse Error|Compilation failed|ERROR:' -Context 0,2
+            }
+          }
+      - name: Publish validation and compilation evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: annual-throughput-evidence
+          path: |
+            artifacts/annual-throughput/**
+            build/godot-import.log
+            build/godot-export.log
+          if-no-files-found: warn
+          retention-days: 14
+ -bench '^BenchmarkEntityWirePublication
+          go test -run '^$' -bench '^BenchmarkAnnualThroughput$' -benchtime=6x -count=1 -cpuprofile artifacts/annual-throughput/cpu.pprof -memprofile artifacts/annual-throughput/memory.pprof ./internal/interop 2>&1 | Tee-Object artifacts/annual-throughput/go-benchmark.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Benchmark failed' }
+          go tool pprof -top -nodecount=30 artifacts/annual-throughput/cpu.pprof | Out-File artifacts/annual-throughput/cpu-top.txt
+          go tool pprof -top -alloc_space -nodecount=20 artifacts/annual-throughput/memory.pprof | Out-File artifacts/annual-throughput/alloc-top.txt
+      - name: Bounded first state formation measurement
+        if: contains(github.event.head_commit.message, '[profile]')
+        timeout-minutes: 3
+        run: |
+          $env:ASABIYA_FIRST_STATE='1'
+          go test -count=1 -v ./internal/interop -run '^TestAnnualFirstStateWindow$' 2>&1 | Tee-Object artifacts/annual-throughput/first-state.txt
+          Remove-Item Env:ASABIYA_FIRST_STATE
+          if ($LASTEXITCODE -ne 0) { throw 'First state measurement failed' }
+      - name: Compile and export the Windows package
+        run: |
+          New-Item -ItemType Directory -Force -Path build/client | Out-Null
+          Copy-Item -LiteralPath tools/measure-throughput.ps1 -Destination build/client/measure-throughput.ps1
+          ./tools/package-windows.ps1 -OutputDirectory build/client -SourceRevision "${{ github.sha }}" -ValidationSummary 'atlas UI headless contracts, performance and bridge regressions recorded by workflow; graphical runtime not executed'
+          $manifest=Get-Content -Raw -LiteralPath build/client/BUILD-MANIFEST.json | ConvertFrom-Json
+          $entry=@($manifest.files | Where-Object { $_.path -eq 'measure-throughput.ps1' })
+          $sha=(Get-FileHash -LiteralPath build/client/measure-throughput.ps1 -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($entry.Count -ne 1 -or $entry[0].sha256 -ne $sha) { throw 'Measurement tool is missing or mis-hashed in the Windows package manifest' }
+          Compress-Archive -Path build/client/* -DestinationPath build/AsabiyaNative-Windows-x64-throughput.zip
+          Get-FileHash -Algorithm SHA256 build/AsabiyaNative-Windows-x64-throughput.zip | Format-List | Out-File artifacts/annual-throughput/package-sha256.txt
+      - name: Focused Godot geometry and worker regressions
+        run: |
+          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
+          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
+          & $editor --headless --path client/godot --script res://tests/performance_regressions.gd 2>&1 | Tee-Object artifacts/annual-throughput/godot.txt
+          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/godot.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Godot technical regressions failed' }
+      - name: Bridge recovery and session lifecycle without graphics
+        timeout-minutes: 3
+        run: |
+          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
+          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
+          $server=Join-Path $PWD 'build/bin/asabiya-server.exe'
+          & $editor --headless --path client/godot --script res://tests/bridge_stability_regressions.gd -- --server $server 2>&1 | Tee-Object artifacts/annual-throughput/bridge-stability.txt
+          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/bridge-stability.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Bridge stability regressions failed' }
+      - name: Focused headless atlas interface contracts
+        timeout-minutes: 3
+        run: |
+          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
+          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
+          & $editor --headless --path client/godot --script res://tests/atlas_ux_regressions.gd 2>&1 | Tee-Object artifacts/annual-throughput/ui.txt
+          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/ui.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Atlas UI regressions failed' }
+      - name: Fast-forward, columns, pause and uncertainty regressions
+        timeout-minutes: 3
+        run: |
+          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
+          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
+          $server=Join-Path $PWD 'build/bin/asabiya-server.exe'
+          & $editor --headless --path client/godot --script res://tests/annual_throughput_regressions.gd -- --server $server 2>&1 | Tee-Object artifacts/annual-throughput/throughput-tests.txt
+          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/throughput-tests.txt -Pattern 'SCRIPT ERROR|Parse Error|(?m)^FAIL(?:\s|$)' -Quiet)) { throw 'Annual throughput regressions failed' }
+      - name: Godot pipeline baseline with and without app updates
+        timeout-minutes: 4
+        run: |
+          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
+          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
+          $server=Join-Path $PWD 'build/bin/asabiya-server.exe'
+          foreach ($size in @(@(24,16),@(400,200))) {
+            foreach ($appMode in @($false,$true)) {
+              $tag="$($size[0])x$($size[1])-$appMode"
+              $env:ASABIYA_THROUGHPUT_DIR=Join-Path $PWD "artifacts/annual-throughput/$tag"
+              $extra=@()
+              if ($appMode) { $extra=@('--app') }
+              & $editor --headless --path client/godot --script res://tests/annual_pipeline_benchmark.gd -- --server $server --width $size[0] --height $size[1] --samples 6 @extra 2>&1 | Tee-Object "artifacts/annual-throughput/pipeline-$tag.txt"
+              if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath "artifacts/annual-throughput/pipeline-$tag.txt" -Pattern 'SCRIPT ERROR|Parse Error|PIPELINE ERROR|TIMEOUT' -Quiet)) { throw 'Pipeline benchmark failed' }
+            }
+          }
+          Remove-Item Env:ASABIYA_THROUGHPUT_DIR
+      - name: Explicit fast-forward pipeline
+        timeout-minutes: 3
+        run: |
+          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
+          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
+          $server=Join-Path $PWD 'build/bin/asabiya-server.exe'
+          $env:ASABIYA_THROUGHPUT_DIR=Join-Path $PWD 'artifacts/annual-throughput/fast-400'
+          & $editor --headless --path client/godot --script res://tests/annual_pipeline_benchmark.gd -- --server $server --width 400 --height 200 --samples 100 --app --fast 2>&1 | Tee-Object artifacts/annual-throughput/fast-400.txt
+          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/fast-400.txt -Pattern 'SCRIPT ERROR|Parse Error|PIPELINE ERROR|TIMEOUT' -Quiet)) { throw 'Fast pipeline benchmark failed' }
+          Remove-Item Env:ASABIYA_THROUGHPUT_DIR
+      - name: Publish Windows package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: AsabiyaNative-Windows-x64-throughput
+          path: build/AsabiyaNative-Windows-x64-throughput.zip
+          if-no-files-found: error
+          retention-days: 14
+      - name: Show compilation errors
+        if: failure()
+        run: |
+          foreach ($file in @('build/godot-import.log','build/godot-export.log')) {
+            if (Test-Path -LiteralPath $file) {
+              Select-String -LiteralPath $file -Pattern 'SCRIPT ERROR|Parse Error|Compilation failed|ERROR:' -Context 0,2
+            }
+          }
+      - name: Publish validation and compilation evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: annual-throughput-evidence
+          path: |
+            artifacts/annual-throughput/**
+            build/godot-import.log
+            build/godot-export.log
+          if-no-files-found: warn
+          retention-days: 14
+ -benchtime=15x -count=1 -cpu=2 -benchmem ./internal/interop 2>&1 | Tee-Object artifacts/annual-throughput/entity-wire-benchmark.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Entity publication benchmark failed' }
           go test -run '^$' -bench '^BenchmarkAnnualThroughput$' -benchtime=6x -count=1 -cpuprofile artifacts/annual-throughput/cpu.pprof -memprofile artifacts/annual-throughput/memory.pprof ./internal/interop 2>&1 | Tee-Object artifacts/annual-throughput/go-benchmark.txt
           if ($LASTEXITCODE -ne 0) { throw 'Benchmark failed' }
           go tool pprof -top -nodecount=30 artifacts/annual-throughput/cpu.pprof | Out-File artifacts/annual-throughput/cpu-top.txt
