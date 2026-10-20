@@ -31,6 +31,17 @@ Los resultados de ejecución se consultan en Actions, no se deducen del análisi
 
 Las pruebas r3 ejecutadas antes de pasar a trabajo exclusivo en GitHub aprobaron la base. Esa evidencia no valida las modificaciones de esta misión.
 
+## Primer resultado medido
+
+[Actions 39360654237](https://github.com/Jesejojo3/asabiya-native/actions/runs/39360654237), revisión `f6104ae`, Windows x64 / Go 1.27.2 / AMD EPYC 7763:
+
+| Camino de publicación | Tiempo por año | Bytes asignados por año | Asignaciones | Bytes JSON |
+| --- | ---: | ---: | ---: | ---: |
+| Provincias completas y proyección | 196,78 ms | 83.935.418 | 7.650 | 2.531.505 |
+| Captura compacta | 154,12 ms | 20.813.581 | 7.629 | 2.531.505 |
+
+Muestra preliminar de tres años por camino: ~75,2 % menos bytes asignados y ~21,7 % menos tiempo. Ambos caminos de esta comparación ya reutilizan la huella del mundo; no mide por separado el beneficio de esa caché. Los digest finales coinciden. No representa RAM máxima, FPS ni una partida prolongada. Las regresiones Go y la exportación pasaron en esa ejecución; un error de tipos del nuevo script de pruebas Godot impidió publicar el ZIP y se corrigió posteriormente.
+
 ## Medición gráfica reproducible
 
 El trazado está desactivado por defecto. Para activarlo en una sesión Windows:

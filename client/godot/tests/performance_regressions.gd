@@ -27,7 +27,7 @@ func _run() -> void:
 
 func _test_grid() -> void:
 	var terrain := Terrain.new()
-	for n in [1, 2, 10, 20, 40, 80, 160]:
+	for n: int in [1, 2, 10, 20, 40, 80, 160]:
 		var mesh: ArrayMesh = terrain._grid_mesh(n)
 		var arrays := mesh.surface_get_arrays(0)
 		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
@@ -74,7 +74,7 @@ func _test_sampling() -> void:
 		w.elevation_fine[i] = sin(float(i) * 0.13) * 3000.0
 	var math := MapMath.new()
 	math.setup(w)
-	for point in [Vector2(-0.1, -0.3), Vector2(95.9, 64.2), Vector2(0.5, 0.5), Vector2(33.7, 40.2)]:
+	for point: Vector2 in [Vector2(-0.1, -0.3), Vector2(95.9, 64.2), Vector2(0.5, 0.5), Vector2(33.7, 40.2)]:
 		var ix := floori(point.x - 0.5)
 		var iz := floori(point.y - 0.5)
 		var fx := point.x - 0.5 - ix
@@ -100,7 +100,7 @@ func _test_vegetation() -> void:
 	var veg := Vegetation.new()
 	root.add_child(veg)
 	veg.setup_veg(w, math)
-	for key in [0, 10, 19]:
+	for key: int in [0, 10, 19]:
 		veg.set_band(key, {})
 	veg._prune(Vector2(40, 40))
 	check(veg.has_band(0) and veg.has_band(19) and not veg.has_band(10), "pruning releases distant tiles and preserves longitude neighbours")
