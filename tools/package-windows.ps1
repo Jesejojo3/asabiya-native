@@ -1,5 +1,5 @@
 # Compilation/export only. Does not run tests, simulations, or the game.
-param([string]$GodotPath='', [string]$OutputDirectory='', [string]$Seed='Asabiya', [string]$SourceRevision='working-copy')
+param([string]$GodotPath='', [string]$OutputDirectory='', [string]$Seed='Asabiya', [string]$SourceRevision='working-copy', [string]$ValidationSummary='not executed; user-owned')
 $ErrorActionPreference='Stop'
 $repo=(Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $build=Join-Path $repo 'build'
@@ -70,7 +70,11 @@ $earth | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $out 'as
 Copy-Item -LiteralPath (Join-Path $repo 'docs/integration/LEEME.txt') -Destination (Join-Path $out 'LEEME.txt') -Force
 New-Item -ItemType Directory -Force -Path (Join-Path $out 'licenses') | Out-Null
 Copy-Item -LiteralPath (Join-Path $repo 'client/licenses/GODOT_LICENSE.txt'),(Join-Path $repo 'client/licenses/GODOT_COPYRIGHT.txt'),(Join-Path $repo 'client/licenses/GO_LICENSE.txt') -Destination (Join-Path $out 'licenses') -Force
-$manifest=@{schema='asabiya/windows-build-v1';sourceRevision=$SourceRevision;godot="$actualGodot";go=((& go version)-join '');target='windows/amd64';goamd64='v1';cgo=$false;finalTests='not executed; user-owned';files=@()}
+$diagnostics=Join-Path $out 'diagnostics'
+New-Item -ItemType Directory -Force -Path $diagnostics | Out-Null
+Copy-Item -LiteralPath $importLog,$exportLog -Destination $diagnostics -Force
+Copy-Item -LiteralPath (Join-Path $repo 'docs/integration/PERFORMANCE.md') -Destination (Join-Path $out 'PERFORMANCE.md') -Force
+$manifest=@{schema='asabiya/windows-build-v1';sourceRevision=$SourceRevision;godot="$actualGodot";go=((& go version)-join '');target='windows/amd64';goamd64='v1';cgo=$false;finalTests=$ValidationSummary;files=@()}
 foreach ($item in Get-ChildItem -LiteralPath $out -File -Recurse) {
     if ($item.Name -eq 'BUILD-MANIFEST.json') { continue }
     $manifest.files+=@{path=[System.IO.Path]::GetRelativePath($out,$item.FullName).Replace('\','/');bytes=$item.Length;sha256=(Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}

@@ -7,6 +7,7 @@ extends Node3D
 ## Geography textures are uploaded once. Historical data only touches the small
 ## per-cell textures (400×200), so political changes never rebuild geometry.
 
+const Trace := preload("res://scripts/data/performance_trace.gd")
 const TerrainShader := preload("res://shaders/terrain.gdshader")
 const WaterShader := preload("res://shaders/water.gdshader")
 
@@ -41,17 +42,40 @@ var key_tex: ImageTexture
 var river_tex: Texture2D
 var river_baker: RiverBaker
 
+var _trace: PerformanceTrace
+
 var stats := {"triangles": 0, "chunks": 0}
+var _view_valid := false
+var _view_position := Vector3.ZERO
+var _view_projection := Vector3.ZERO
+var _overlay_colors := PackedByteArray()
+var _overlay_keys := PackedFloat32Array()
+var _overlay_style := Vector3(INF, INF, INF)
+var _selection := Vector3(INF, INF, INF)
 
 
 func setup(w: WorldData, math: MapMath) -> void:
+	_view_valid = false
+	_overlay_colors.clear()
+	_overlay_keys.clear()
 	world = w
 	mm = math
+	_trace = Trace.new()
+	set_process(_trace.enabled())
+	var started := Time.get_ticks_usec()
 	_build_textures()
+	_trace.record("terrain-textures", {"elapsedUsec":Time.get_ticks_usec() - started})
+	started = Time.get_ticks_usec()
 	_build_material()
 	_build_lod_meshes()
 	_build_chunks()
 	_build_water()
+	_trace.record("terrain-geometry", {"elapsedUsec":Time.get_ticks_usec() - started,
+		"chunks":chunks.size(),"lodLevels":lod_meshes.size()})
+
+
+func _process(_dt: float) -> void:
+	_trace.frame()
 
 
 func _build_textures() -> void:
@@ -123,46 +147,74 @@ func set_river_texture(tex: Texture2D) -> void:
 
 func _grid_mesh(n: int) -> ArrayMesh:
 	var cs := float(chunk_size)
+	var base := (n + 1) * (n + 1)
+	var ring := PackedInt32Array()
+	ring.resize(n * 4)
 	var verts := PackedVector3Array()
 	var cols := PackedColorArray()
 	var idx := PackedInt32Array()
+	verts.resize(base + n * 4)
+	cols.resize(verts.size())
+	cols.fill(Color(0, 0, 0))
+	idx.resize(n * n * 6 + n * 48)
 	var step := cs / n
 	for j in n + 1:
 		for i in n + 1:
-			verts.append(Vector3(i * step, 0.0, j * step))
-			cols.append(Color(0, 0, 0))
+			verts[j * (n + 1) + i] = Vector3(i * step, 0.0, j * step)
+	var at := 0
 	for j in n:
 		for i in n:
 			var a := j * (n + 1) + i
 			var b := a + 1
 			var c := a + n + 1
 			var d := c + 1
-			# alternate diagonals for a more isotropic surface
+			# Same alternating diagonals, with no temporary Array per quad.
+			idx[at] = a
+			idx[at + 1] = b
 			if (i + j) % 2 == 0:
-				idx.append_array([a, b, d, a, d, c])
+				idx[at + 2] = d
+				idx[at + 3] = a
 			else:
-				idx.append_array([a, b, c, b, d, c])
-	# skirts: duplicate the border ring, flagged to drop below the surface
-	var ring: Array[int] = []
+				idx[at + 2] = c
+				idx[at + 3] = b
+			idx[at + 4] = d
+			idx[at + 5] = c
+			at += 6
+	var r := 0
 	for i in n + 1:
-		ring.append(i)
+		ring[r] = i
+		r += 1
 	for j in range(1, n + 1):
-		ring.append(j * (n + 1) + n)
+		ring[r] = j * (n + 1) + n
+		r += 1
 	for i in range(n - 1, -1, -1):
-		ring.append(n * (n + 1) + i)
+		ring[r] = n * (n + 1) + i
+		r += 1
 	for j in range(n - 1, 0, -1):
-		ring.append(j * (n + 1))
-	var base := verts.size()
+		ring[r] = j * (n + 1)
+		r += 1
 	for k in ring.size():
-		verts.append(verts[ring[k]])
-		cols.append(Color(1, 0, 0))
+		verts[base + k] = verts[ring[k]]
+		cols[base + k] = Color(1, 0, 0)
 	for k in ring.size():
-		var a2: int = ring[k]
-		var b2: int = ring[(k + 1) % ring.size()]
-		var a3: int = base + k
-		var b3: int = base + (k + 1) % ring.size()
-		idx.append_array([a2, a3, b2, b2, a3, b3])
-		idx.append_array([a2, b2, a3, b2, b3, a3])  # both faces: skirts seen from any side
+		var a2 := ring[k]
+		var b2 := ring[(k + 1) % ring.size()]
+		var a3 := base + k
+		var b3 := base + (k + 1) % ring.size()
+		# Both skirt faces keep their original winding.
+		idx[at] = a2
+		idx[at + 1] = a3
+		idx[at + 2] = b2
+		idx[at + 3] = b2
+		idx[at + 4] = a3
+		idx[at + 5] = b3
+		idx[at + 6] = a2
+		idx[at + 7] = b2
+		idx[at + 8] = a3
+		idx[at + 9] = b2
+		idx[at + 10] = b3
+		idx[at + 11] = a3
+		at += 12
 	var normals := PackedVector3Array()
 	normals.resize(verts.size())
 	normals.fill(Vector3.UP)
@@ -177,7 +229,6 @@ func _grid_mesh(n: int) -> ArrayMesh:
 	mesh.surface_set_material(0, material)
 	return mesh
 
-
 func _build_lod_meshes() -> void:
 	lod_meshes.clear()
 	for n in lod_subdivisions:
@@ -185,6 +236,7 @@ func _build_lod_meshes() -> void:
 
 
 func _build_chunks() -> void:
+	_view_valid = false
 	for c in chunks:
 		c.queue_free()
 	chunks.clear()
@@ -231,6 +283,12 @@ func update_view(cam: Camera3D) -> void:
 		return
 	var cp := cam.global_position
 	var vh := float(get_viewport().get_visible_rect().size.y)
+	var projection := Vector3(vh, cam.fov, target_pixels_per_quad)
+	if _view_valid and cp == _view_position and projection == _view_projection:
+		return
+	_view_valid = true
+	_view_position = cp
+	_view_projection = projection
 	var focal := vh / (2.0 * tan(deg_to_rad(cam.fov) * 0.5))
 	var tris := 0
 	var half := chunk_size * 0.5
@@ -238,7 +296,8 @@ func update_view(cam: Camera3D) -> void:
 		var o := chunk_origin[k]
 		var cx := mm.wrap_x_near(o.x + half, cp.x) - half
 		var mi := chunks[k]
-		mi.position.x = cx
+		if mi.position.x != cx:
+			mi.position.x = cx
 		# distance from camera to the chunk footprint
 		var dx := maxf(0.0, maxf(cx - cp.x, cp.x - (cx + chunk_size)))
 		var dz := maxf(0.0, maxf(o.y - cp.z, cp.z - (o.y + chunk_size)))
@@ -254,7 +313,7 @@ func update_view(cam: Camera3D) -> void:
 		if mi.mesh != mesh:
 			mi.mesh = mesh
 		var n := lod_subdivisions[lod]
-		tris += n * n * 2
+		tris += n * n * 2 + n * 16
 	for k in water_planes.size():
 		water_planes[k].position.x = mm.wrap_x_near(mm.map_w * 0.5, cp.x) + (k - 1) * mm.map_w
 	stats["triangles"] = tris
@@ -266,13 +325,21 @@ func update_view(cam: Camera3D) -> void:
 ## Replaces the per-cell overlay (colours with alpha, group keys). Cheap: two
 ## 400×200 texture uploads, no geometry work.
 func set_overlay(colors: PackedByteArray, keys: PackedFloat32Array) -> void:
-	color_img.set_data(world.width, world.height, false, Image.FORMAT_RGBA8, colors)
-	color_tex.update(color_img)
-	key_img.set_data(world.width, world.height, false, Image.FORMAT_RF, keys.to_byte_array())
-	key_tex.update(key_img)
+	if colors != _overlay_colors:
+		color_img.set_data(world.width, world.height, false, Image.FORMAT_RGBA8, colors)
+		color_tex.update(color_img)
+		_overlay_colors = colors.duplicate()
+	if keys != _overlay_keys:
+		key_img.set_data(world.width, world.height, false, Image.FORMAT_RF, keys.to_byte_array())
+		key_tex.update(key_img)
+		_overlay_keys = keys.duplicate()
 
 
 func set_overlay_style(opacity: float, key_border: float, province_border: float) -> void:
+	var style := Vector3(opacity, key_border, province_border)
+	if style == _overlay_style:
+		return
+	_overlay_style = style
 	material.set_shader_parameter("overlay_opacity", opacity)
 	material.set_shader_parameter("key_border", key_border)
 	material.set_shader_parameter("province_border", province_border)
@@ -280,6 +347,10 @@ func set_overlay_style(opacity: float, key_border: float, province_border: float
 
 
 func set_selection(cell: int, hovered: int, key: float) -> void:
+	var value := Vector3(cell, hovered, key)
+	if value == _selection:
+		return
+	_selection = value
 	material.set_shader_parameter("selected_cell", cell)
 	material.set_shader_parameter("hovered_cell", hovered)
 	material.set_shader_parameter("selected_key", key)

@@ -1,0 +1,66 @@
+name: Performance and Windows package
+on:
+  push:
+    branches: ['mission/performance-stability']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: performance-windows-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 35
+    env:
+      GOTOOLCHAIN: local
+      GOOS: windows
+      GOARCH: amd64
+      GOAMD64: v1
+      CGO_ENABLED: '0'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version-file: '.go-version'
+          check-latest: false
+      - name: Targeted protocol and annual publication regressions
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts/performance | Out-Null
+          go test -count=1 -v ./internal/interop 2>&1 | Tee-Object artifacts/performance/protocol.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Protocol regressions failed' }
+          go test -count=1 -v ./internal/sim -run '^(TestMapPublication.*|TestQueriesAndAnnualWriterShareOnlyCompleteBoundaries)$' 2>&1 | Tee-Object artifacts/performance/publication.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Annual publication regressions failed' }
+      - name: Compare full and compact annual publication costs
+        run: |
+          go test ./internal/interop -run '^$' -bench '^BenchmarkMapAnnualPublication$' -benchtime=3x -count=1 -benchmem 2>&1 | Tee-Object artifacts/performance/annual-benchmark.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Annual publication benchmark failed' }
+      - name: Compile and export the Windows package
+        run: |
+          ./tools/package-windows.ps1 -OutputDirectory build/client -SourceRevision "${{ github.sha }}" -ValidationSummary 'targeted Go protocol/publication checks passed; graphical runtime not executed'
+          Compress-Archive -Path build/client/* -DestinationPath build/AsabiyaNative-Windows-x64-performance.zip
+          Get-FileHash -Algorithm SHA256 build/AsabiyaNative-Windows-x64-performance.zip | Format-List | Out-File artifacts/performance/package-sha256.txt
+      - name: Publish Windows package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: AsabiyaNative-Windows-x64-performance
+          path: build/AsabiyaNative-Windows-x64-performance.zip
+          if-no-files-found: error
+          retention-days: 14
+      - name: Publish validation and compilation evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: performance-evidence
+          path: |
+            artifacts/performance/**
+            build/godot-import.log
+            build/godot-export.log
+          if-no-files-found: warn
+          retention-days: 14

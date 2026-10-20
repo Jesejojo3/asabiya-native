@@ -138,10 +138,11 @@ func elev_bicubic(px: float, pz: float) -> float:
 	var iz := floori(sz)
 	var fx := sx - ix
 	var fz := sz - iz
-	var rows: Array[float] = []
-	for j in range(-1, 3):
-		rows.append(_cr(_texel(ix - 1, iz + j), _texel(ix, iz + j), _texel(ix + 1, iz + j), _texel(ix + 2, iz + j), fx))
-	return _cr(rows[0], rows[1], rows[2], rows[3], fz)
+	var r0 := _cr(_texel(ix - 1, iz - 1), _texel(ix, iz - 1), _texel(ix + 1, iz - 1), _texel(ix + 2, iz - 1), fx)
+	var r1 := _cr(_texel(ix - 1, iz), _texel(ix, iz), _texel(ix + 1, iz), _texel(ix + 2, iz), fx)
+	var r2 := _cr(_texel(ix - 1, iz + 1), _texel(ix, iz + 1), _texel(ix + 1, iz + 1), _texel(ix + 2, iz + 1), fx)
+	var r3 := _cr(_texel(ix - 1, iz + 2), _texel(ix, iz + 2), _texel(ix + 1, iz + 2), _texel(ix + 2, iz + 2), fx)
+	return _cr(r0, r1, r2, r3, fz)
 
 
 ## Smooth elevation: bicubic inland/offshore, bilinear near the coast so the

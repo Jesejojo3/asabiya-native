@@ -89,6 +89,18 @@ func can_advance() -> bool:
 	return connected and not busy and not _live_advance_pending and not _closing
 
 func start(_extra_args := PackedStringArray()) -> bool:
+	if _thread != null or (_pid > 0 and OS.is_process_running(_pid)):
+		last_error = "La sesión anterior debe cerrarse antes de reiniciar el motor."
+		return false
+	_closing = false
+	_stop = false
+	last_error = ""
+	_pending.clear()
+	_outgoing.clear()
+	_received.clear()
+	_session = 0
+	_frames.clear()
+	_years.clear()
 	if not available:
 		last_error = "No se encontró %s junto a Asabiya Native." % EXE_WIN
 		return false
@@ -96,18 +108,23 @@ func start(_extra_args := PackedStringArray()) -> bool:
 	_directory = OS.get_user_data_dir().path_join("sessions").path_join("%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()])
 	if DirAccess.make_dir_recursive_absolute(_directory) != OK:
 		last_error = "No se pudo crear la carpeta local de la sesión."
+		busy = false
 		return false
 	_endpoint = _directory.path_join("endpoint.json")
 	_pid = OS.create_process(exe, PackedStringArray(["--port","0","--endpoint-file",_endpoint,
 		"--log-file",_directory.path_join("engine.log"),"--parent-pid",str(OS.get_process_id())]), false)
 	if _pid <= 0:
 		last_error = "No se pudo iniciar el motor Go."
+		busy = false
 		return false
 	_thread = Thread.new()
 	var err := _thread.start(_worker)
 	if err != OK:
 		last_error = "No se pudo iniciar la conexión local."
 		OS.kill(_pid)
+		_pid = -1
+		_thread = null
+		busy = false
 		return false
 	status_changed.emit("Iniciando el motor Go…")
 	return true
@@ -288,6 +305,15 @@ func _fail(message: String) -> void:
 	busy = false
 	_remaining = 0
 	last_error = message
+	_pending.clear()
+	_mutex.lock()
+	_outgoing.clear()
+	_stop = true
+	_mutex.unlock()
+	# Release the owned server after a terminal transport/protocol failure.
+	# Never retry an annual operation whose acceptance is uncertain.
+	if _pid > 0 and OS.is_process_running(_pid):
+		OS.kill(_pid)
 	status_changed.emit(message)
 
 func _push(response: Dictionary) -> void:
@@ -360,6 +386,10 @@ func _worker() -> void:
 				break
 			sent += int(written[1])
 			if sent >= pending_bytes.size(): pending_bytes.clear()
+		# This is an absolute request deadline, including a slow/trickling peer.
+		if not inflight.is_empty() and Time.get_ticks_msec() > deadline:
+			_push({"_error":"El motor tardó demasiado. No se repetirá un avance cuyo resultado sea incierto."})
+			break
 		var count := mini(peer.get_available_bytes(), 1048576)
 		if count > 0:
 			var chunk: Array = peer.get_partial_data(count)
@@ -382,8 +412,13 @@ func _worker() -> void:
 				if response.get("schema", "") != PROTOCOL or str(response.get("id", "")) != str(inflight.get("id", "")):
 					_push({"_error":"La respuesta no corresponde a la sesión o petición enviada."})
 					break
-				session = int(response.get("session", session))
 				var op: String = inflight.get("op", "")
+				var response_session := int(response.get("session", -1))
+				var expected_session := session + 1 if op in ["create_world", "start_history"] and response.get("ok", false) else session
+				if response_session != expected_session:
+					_push({"_error":"La respuesta pertenece a otra sesión del motor."})
+					break
+				session = response_session
 				if response.get("ok", false):
 					var data: Dictionary = response.get("data", {})
 					if op == "export_geography":
@@ -395,9 +430,6 @@ func _worker() -> void:
 						response.erase("data") # Do not retain large raw provincial dictionaries.
 				_push(response)
 				inflight = {}
-		elif not inflight.is_empty() and Time.get_ticks_msec() > deadline:
-			_push({"_error":"El motor tardó demasiado. No se repetirá un avance cuyo resultado sea incierto."})
-			break
 		else:
 			OS.delay_msec(2)
 	peer.disconnect_from_host()
@@ -406,6 +438,10 @@ func shutdown() -> void:
 	if _closing: return
 	stop_live()
 	_remaining = 0
+	_pending.clear()
+	_mutex.lock()
+	_outgoing.clear()
+	_mutex.unlock()
 	if connected:
 		request("shutdown")
 	_closing = true
@@ -419,13 +455,18 @@ func close() -> void:
 	_live_advance_pending = false
 	_mutex.lock()
 	_stop = true
+	_outgoing.clear()
 	_mutex.unlock()
 	if _pid > 0 and OS.is_process_running(_pid):
 		OS.kill(_pid)
 	if _thread != null and _thread.is_started():
 		_thread.wait_to_finish()
 	_thread = null
+	_pid = -1
 	_pending.clear()
+	_received.clear()
+	_frames.clear()
+	_years.clear()
 	connected = false
 	busy = false
 	# Remove only our generated geography, never a user-provided snapshot.
