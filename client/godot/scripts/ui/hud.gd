@@ -1153,6 +1153,14 @@ func _on_search(text: String) -> void:
 					break
 				var fields: Dictionary = records[entity_id]
 				var name := str(fields.get("name", ""))
+				# Some native entities intentionally lack a generated name.
+				# Derive only an ID/type label; never synthesize historical lore.
+				if name.is_empty():
+					match entity_kind:
+						"omen": name = "Presagio %s #%d" % [str(fields.get("type", "")), int(entity_id)]
+						"route": name = "Ruta comercial #%d" % int(entity_id)
+						"outbreak": name = "Epidemia #%d" % int(entity_id)
+						"cataclysm": name = "%s #%d" % [str(fields.get("kind", "Cataclismo")), int(entity_id)]
 				if name.is_empty():
 					continue
 				var title := str(fields.get("title", "")) if entity_kind == "figure" else ""
