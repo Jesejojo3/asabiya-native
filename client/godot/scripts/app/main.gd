@@ -596,7 +596,7 @@ func _show_cell(c: int) -> void:
 			pol.append(["Religión", null, _need("religions")])
 		pol.append(["Población", Hud._fmt_int(f.population[c]) if f != null and f.has_layer("population") else null, _need("population")])
 		pol.append(["Capacidad de carga", Hud._fmt_int(f.carrying[c]) if f != null and f.has_layer("carrying") else null, _need("carrying")])
-		pol.append(["Era tecnológica", ("%d de 7" % int(round(f.technology[c] * 7.0))) if f != null and f.has_layer("technology") else null, _need("technology")])
+		pol.append(["Era tecnológica", hud.era_name(int(round(f.technology[c] * 7.0))) if f != null and f.has_layer("technology") else null, _need("technology")])
 		sections.push_front(["Historia y sociedad", pol])
 		var here := []
 		if f != null:

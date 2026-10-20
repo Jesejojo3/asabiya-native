@@ -30,6 +30,8 @@ jobs:
         with:
           go-version-file: '.go-version'
           check-latest: false
+      - name: Verify immutable HTML reference
+        run: node tools/verify-reference.mjs
       - name: Targeted JSON protocol regressions
         run: |
           New-Item -ItemType Directory -Force -Path artifacts/atlas-ux | Out-Null

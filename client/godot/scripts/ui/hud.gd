@@ -17,6 +17,8 @@ signal world_requested(seed_text: String)
 signal deselect_requested
 signal setting_changed(key: String, value: Variant)
 
+const LEGACY_ERAS := ["Foraging","Neolithic","Bronze Age","Iron Age","Classical","Medieval","Gunpowder age","Age of Sail"]
+
 var app: Node
 var top_year: Label
 var top_seed: Label
@@ -1005,7 +1007,7 @@ func _fill_stats() -> void:
 
 		if not f.stats.is_empty():
 			var census: Dictionary = f.stats[f.stats.size() - 1]
-			stats_body.add_child(UiTheme.muted("Último censo: %s · era líder %d" % [fmt_year(int(census.get("year", f.year))), int(census.get("leadingEra", 0))], 12))
+			stats_body.add_child(UiTheme.muted("Último censo: %s · era líder %s" % [fmt_year(int(census.get("year", f.year))), era_name(int(census.get("leadingEra", 0)))], 12))
 		for group in [["war", "Guerras activas"], ["ruler", "Gobernantes"], ["religion", "Religiones"], ["route", "Rutas comerciales"]]:
 			stats_body.add_child(UiTheme.heading(group[1], 13))
 			var records: Dictionary = f.entity_records.get(group[0], {})
@@ -1223,3 +1225,15 @@ func show_session_error(message: String) -> void:
 	_notice_text.text = "Sesión interrumpida\n%s\nSe conserva la última vista. No se repetirá ningún avance incierto." % message
 	_notice_recover.show()
 	_notice.show()
+
+static func fmt_era(index: int, names: Array = []) -> String:
+	if index >= 0 and index < names.size() and names[index] is String and not names[index].strip_edges().is_empty():
+		return str(names[index])
+	if index >= 0 and index < LEGACY_ERAS.size():
+		return LEGACY_ERAS[index]
+	return "No disponible"
+
+
+func era_name(index: int) -> String:
+	var names: Array = (app.source as BridgeSource).era_names if app.source is BridgeSource else []
+	return fmt_era(index, names)

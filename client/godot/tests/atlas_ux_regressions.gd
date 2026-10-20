@@ -46,6 +46,17 @@ func _run() -> void:
 	check(hud.top_year.text == Hud.fmt_year(-100), "engine year is formatted")
 	check(hud.top_stats["states"].text == "1", "real state count")
 	check(hud.speed() == 10, "previous live pacing default preserved")
+	var original_eras := ["Foraging","Neolithic","Bronze Age","Iron Age","Classical","Medieval","Gunpowder age","Age of Sail"]
+	for i in original_eras.size():
+		check(Hud.fmt_era(i) == original_eras[i], "HTML era name " + str(i))
+	check(Hud.fmt_era(-1) == "No disponible" and Hud.fmt_era(8) == "No disponible", "unknown era does not masquerade as a known era")
+	observer.source.era_names = ["Nombre enviado por Go"]
+	check(hud.era_name(0) == "Nombre enviado por Go", "server era catalog is authoritative")
+	check(hud.era_name(7) == "Age of Sail", "partial catalog uses verified HTML fallback")
+	observer.source.era_names = ["", null]
+	check(hud.era_name(0) == "Foraging" and hud.era_name(1) == "Neolithic", "blank and invalid catalog labels use HTML fallback")
+	observer.source.era_names = original_eras
+
 	for icon in ["atlas","search","chronicle","home","focus","back","forward","close","play","pause","step","menu","people","state","city"]:
 		check(AtlasIcons.get_icon(icon) != null, "original icon " + icon)
 	check(AtlasIcons.get_icon("search") == AtlasIcons.get_icon("search"), "icon texture cached")
