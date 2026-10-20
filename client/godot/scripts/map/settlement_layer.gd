@@ -21,6 +21,7 @@ var _labels := {}        # settlement id -> Label3D
 var _label_root: Node3D
 var _settlements := []
 var _clear_radius := {}   # settlement id -> footprint radius (for decoration)
+var _presentation := {}
 
 
 func setup_settlements(w: WorldData, math: MapMath) -> void:
@@ -49,6 +50,12 @@ static func features(s: Dictionary) -> Dictionary:
 
 func set_settlements(list: Array) -> void:
 	_settlements = list
+	var presentation := {}
+	for settlement: Dictionary in list:
+		presentation[int(settlement["id"])] = [settlement.get("cell"), tier_of(settlement), features(settlement), settlement.get("era", 2), settlement.get("name", "")]
+	if presentation == _presentation and (_cache.size() == presentation.size()):
+		return
+	_presentation = presentation
 	var by_tile := {}
 	var live := {}
 	for s in list:
@@ -57,7 +64,7 @@ func set_settlements(list: Array) -> void:
 		var cell := int(s["cell"])
 		if cell < 0 or cell >= world.cell_count():
 			continue
-		var sig := "%d|%s|%d" % [tier_of(s), str(features(s)), cell]
+		var sig := "%d|%s|%d|%d" % [tier_of(s), str(features(s)), cell, int(s.get("era", 2))]
 		if not _cache.has(id) or _cache[id]["sig"] != sig:
 			_cache[id] = {"sig": sig, "kinds": _layout(s)}
 		var c := world.cell_center(cell)
@@ -74,6 +81,7 @@ func set_settlements(list: Array) -> void:
 		if not live.has(id):
 			_cache.erase(id)
 			_anchors.erase(id)
+			_clear_radius.erase(id)
 	clear()
 	for key in by_tile:
 		set_band(key, by_tile[key])

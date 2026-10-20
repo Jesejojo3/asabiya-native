@@ -13,6 +13,9 @@ var show_labels := true
 var show_events := true
 var show_routes := true
 var label_mode := "states"   # states | peoples | religions
+var _label_signature: Variant = null
+var _marker_signature: Variant = null
+var _route_signature: Variant = null
 
 
 func setup(w: WorldData, math: MapMath) -> void:
@@ -30,16 +33,52 @@ func clear() -> void:
 	_labels.clear()
 	_markers.clear()
 	_routes.clear()
+	_label_signature = null
+	_marker_signature = null
+	_route_signature = null
 
 
 func rebuild(frame: HistoryFrame, mode: String) -> void:
-	clear()
 	label_mode = mode
 	if frame == null:
+		clear()
 		return
-	_build_labels(frame)
-	_build_markers(frame)
-	_build_routes(frame)
+	var ids := frame.owner
+	var records := frame.states
+	if mode == "peoples":
+		ids = frame.people
+		records = frame.peoples
+	elif mode == "religions":
+		ids = frame.religion
+		records = frame.religions
+	var names := {}
+	for id: int in records: names[id] = records[id].get("name", "")
+	var labels := {"enabled":show_labels,"mode":mode,"ids":ids,"names":names}
+	if labels != _label_signature:
+		for node in _labels: node.queue_free()
+		_labels.clear()
+		_build_labels(frame)
+		_label_signature = labels
+	var recent := []
+	for event: Dictionary in frame.events:
+		if frame.year - int(event.get("year", frame.year)) <= 50 and int(event.get("cell", -1)) >= 0:
+			recent.append([event.get("id"), event.get("cell"), event.get("kind")])
+	var fronts := []
+	for war: Dictionary in frame.wars:
+		var front: PackedInt32Array = war.get("front", PackedInt32Array())
+		if not front.is_empty(): fronts.append(front)
+	var markers := {"enabled":show_events,"events":recent,"fronts":fronts,"relief":mm.land_scale}
+	if markers != _marker_signature:
+		for node in _markers: node.queue_free()
+		_markers.clear()
+		_build_markers(frame)
+		_marker_signature = markers
+	var routes := {"enabled":show_routes,"routes":frame.routes,"relief":mm.land_scale}
+	if routes != _route_signature:
+		for node in _routes: node.queue_free()
+		_routes.clear()
+		_build_routes(frame)
+		_route_signature = routes
 
 
 ## Wrap-aware centroid and extent of groups of cells.

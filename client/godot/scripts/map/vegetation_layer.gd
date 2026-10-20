@@ -61,6 +61,8 @@ func update_view(cam: Camera3D) -> void:
 
 ## Keeps decoration out of engine settlements. Rebuilds the affected tiles.
 func set_clearings(list: Array) -> void:
+	if list == _clearings:
+		return
 	if _task >= 0:
 		WorkerThreadPool.wait_for_task_completion(_task)
 		_task = -1

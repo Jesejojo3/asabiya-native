@@ -1,5 +1,7 @@
 # Instrucción vigente de entrega
 
+Actualización r4: el usuario reasigna también el trabajo del cliente a Codex y solicita corregir la interfaz, el zoom irregular y la reproducción a saltos. Mantener terreno 3D y simulación Go; implementar presentación sobria, rueda de precisión coherente y reproducción continua con años atómicos. El testeo visual y de juego sigue a cargo del usuario; compilar/exportar sin lanzar el juego, suites ni CI. No integrar a main.
+
 Actualización r3: el usuario autorizó expresamente pruebas específicas de serialización/deserialización del protocolo Go–Godot para corregir los enteros JSON decimales. Ejecutar sólo esa cobertura y las regresiones esenciales del protocolo. El testeo visual y de juego, las suites históricas extensas y CI siguen reservados al usuario. No lanzar el juego exportado ni integrar a main.
 
 El usuario asignó a Codex la integración del cliente Godot y el motor, y reservó todo el testeo para sí. No ejecutar pruebas, oráculos, simulaciones de comprobación ni CI sin una nueva instrucción. Se permite compilar/exportar para producir el paquete; no abrir el juego. Trabajar en integration/go-godot-windows, conservando los historiales y sin merge a main. La propiedad anterior del cliente se ha ampliado explícitamente por el usuario; se puede adaptar conservando el trabajo de Claude.

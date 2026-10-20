@@ -68,6 +68,37 @@ static func id_color(id: int, sat := 0.55, val := 0.82) -> Color:
 	return Color.from_hsv(fposmod(id * 0.61803398875, 1.0), sat, val)
 
 
+## Go exports six culture components, not one scalar index. RGB displays
+## components 1–3 only; the complete vector stays available in the people panel.
+## This is a visual encoding, not a new cultural metric in the simulation.
+static func culture_color(value: Variant) -> Variant:
+	if not value is Array or value.size() != 6:
+		return null
+	for component: Variant in value:
+		if not (component is float or component is int):
+			return null
+		if not is_finite(float(component)) or float(component) < 0.0 or float(component) > 1.0:
+			return null
+	return Color(0.25 + 0.65 * float(value[0]), 0.25 + 0.65 * float(value[1]), 0.25 + 0.65 * float(value[2]))
+
+
+static func war_participants(wars: Array) -> Dictionary:
+	var participants := {}
+	for war: Dictionary in wars:
+		for side: String in ["attackers", "defenders"]:
+			var members: Variant = war.get(side)
+			if members is Array:
+				for member: Variant in members:
+					var id := int(member)
+					if id > 0: participants[id] = true
+		# Legacy presentation frames may only have a/b. Native frames retain
+		# both complete coalitions, including participants beyond their leaders.
+		for side: String in ["a", "b"]:
+			var id := int(war.get(side, 0))
+			if id > 0: participants[id] = true
+	return participants
+
+
 ## Returns {colors: PackedByteArray (RGBA8), keys: PackedFloat32Array,
 ##          legend: {kind: "ramp"|"swatches"|"none", ...}}
 static func build(id: String, w: WorldData, frame: HistoryFrame) -> Dictionary:
@@ -145,10 +176,7 @@ static func build(id: String, w: WorldData, frame: HistoryFrame) -> Dictionary:
 						keys[i] = s
 		"wars":
 			if frame != null and frame.has_layer("owner"):
-				var at_war := {}
-				for wv in frame.wars:
-					at_war[int(wv["a"])] = true
-					at_war[int(wv["b"])] = true
+				var at_war := war_participants(frame.wars)
 				for i in w.land_cells:
 					var s := frame.owner[i]
 					if s > 0:
@@ -169,12 +197,17 @@ static func build(id: String, w: WorldData, frame: HistoryFrame) -> Dictionary:
 					var c: Color = info.get("rgb", id_color(p))
 					if id == "cultures":
 						k = p
-						c = ramp(clampf(float(info.get("culture", 0.0)), 0.0, 1.0))
+						var cultural_color: Variant = culture_color(info.get("culture"))
+						if cultural_color == null:
+							continue
+						c = cultural_color
 					elif id == "languages":
 						k = int(info.get("family", p))
 						c = id_color(k * 7 + 3, 0.6, 0.78)
 					put.call(i, c, 0.62)
 					keys[i] = k
+				if id == "cultures":
+					legend = {"kind":"text", "text":"Color: componentes 1–3 del vector cultural. Consulta los seis valores en cada pueblo; límites por pueblo."}
 		"religions":
 			if frame != null and frame.has_layer("religion"):
 				for i in w.land_cells:

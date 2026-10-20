@@ -2,7 +2,7 @@
 
 Esta rama incorpora el historial completo de PR #6/#7 y del cliente PR #8. El merge de incorporación es `7edec8d5bd300045cbd9f97444107d348db69001`, con padres `3130256ca5a3e8103ae131b395dec1cff81c41f3` y `f5b8d5635f0e2389bcc492fff11d3d6eb68ed9cd`. Las tres PR permanecían abiertas al preparar la integración. No hay merge a main ni reescritura de commits.
 
-El usuario reasignó a Codex la adaptación del cliente de Claude. Su instrucción posterior deja todo el testeo a su cargo. La entrega distingue compilación/exportación de verificación funcional: no se ejecuta el juego exportado, suites, oráculos, simulaciones de comprobación ni CI nuevos.
+El usuario reasignó a Codex el cliente de Claude y pidió corregir interfaz, zoom irregular y tiempo a saltos. [Cambios r4 y límites de comprobación](CLIENT_R4.md). Su instrucción mantiene el testeo visual y de juego a su cargo. La entrega distingue compilación/exportación de verificación funcional. Las pruebas numéricas específicas autorizadas en r3 se registran por separado; en r4 no se ejecuta el juego exportado, suites, oráculos, simulaciones de comprobación ni CI nuevos.
 
 ## Abrir y construir
 
@@ -30,7 +30,7 @@ Secuencia inicial: `create_world`, `get_catalog`, `export_geography`, `start_his
 
 Las operaciones `start_history`, `get_state` y `advance` aceptan `view: "map"`: son proyecciones versionadas `asabiya/map-state-v1` y `asabiya/map-delta-v1`. Conservan el contrato de entidades, eventos, RNG, estadísticas y digest. Sus registros provinciales contienen ID, propietario, pueblo, religión, población, capacidad, fortificación y era, sin repetir los 32 niveles tecnológicos y otros detalles en todas las celdas. `get_province` sigue ofreciendo esos datos completos. La respuesta incluye el año de consulta para evitar mezclar datos de años diferentes.
 
-Un avance individual aplica un delta. Para lotes, cada petición sigue avanzando exactamente un año; `publication: "status"` evita transmitir una publicación completa en cada paso. Se solicita un estado visible cada 50 años y al terminar el lote. Pausa detiene la secuencia después del año ya aceptado. No hay reloj de simulación en Godot ni avance oculto dentro de Go.
+Continuar aplica un delta cada año mediante un programador de presentación basado en reloj monotónico, con ritmos objetivo 1/2/5/10 años/s y como máximo un año en vuelo. No reproduce primero la caché ni acumula ráfagas si el cálculo tarda. Pausa detiene la secuencia después del año ya aceptado. El reloj de presentación sólo decide cuándo solicitar el siguiente año completo a Go; no calcula historia en Godot. Las herramientas que usan lotes pueden seguir utilizando `publication: "status"` y estados cada 50 años; esa optimización no se usa para la reproducción continua del cliente.
 
 ## Geografía y representación
 
@@ -38,7 +38,7 @@ Los formatos .asw y geography-v1 son diferentes. Se conserva el exportador .asw 
 
 Se conservan terreno 3D, shaders, cámara, costura longitudinal, relieve fino, LOD, vegetación y selección de Claude. Los cambios históricos modifican texturas y anotaciones; no reconstruyen la malla geográfica. CellID sigue siendo `y * width + x`. Estado 0 significa sin Estado; pueblo/religión -1 significan ausencia. El cliente no crea una entidad de Estado 0.
 
-La era provincial procede directamente de Go; su división por 7 sólo normaliza el color de la capa. La cultura es el índice numérico del pueblo, no una cultura nominal inventada. Las ciudades son sitios reales del motor; el tamaño visual usa población provincial. Las murallas visibles son un proxy del índice de fortificación; la disposición de casas es decorativa. No se inventan puertos, templos ni entidades de edificios. No se dibujan frentes de batalla inexistentes en el contrato. Las rutas usan el camino real y un grosor visual sin fingir un volumen comercial medido.
+La era provincial procede directamente de Go; su división por 7 sólo normaliza el color de la capa. La cultura es un vector de seis componentes del pueblo. La capa cultural asigna sus tres primeros componentes a RGB, con rango visual 0.25..0.90; la leyenda declara esa selección y los seis valores se conservan en el panel del pueblo. No se inventa un índice o una cultura nominal. Las fronteras de esa capa corresponden a IDs de pueblos. La capa de guerras incluye todos los atacantes y defensores que entrega Go, no sólo los líderes de coalición. Las ciudades son sitios reales del motor; el tamaño visual usa población provincial. Las murallas visibles son un proxy del índice de fortificación; la disposición de casas es decorativa. No se inventan puertos, templos ni entidades de edificios. No se dibujan frentes de batalla inexistentes en el contrato. Las rutas usan el camino real y un grosor visual sin fingir un volumen comercial medido.
 
 ## Memoria e historia
 

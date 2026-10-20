@@ -35,6 +35,8 @@ func _initialize() -> void:
 	test_cells()
 	test_raycast()
 	test_layers()
+	test_culture_vector_and_coalitions()
+	test_precision_wheel_and_live_pacing()
 	test_rivers()
 	test_frame_decoding()
 	test_settlement_tiers()
@@ -142,6 +144,67 @@ func test_rivers() -> void:
 			expected += 1
 	var paths := RiverBaker.build_paths(world)
 	check(paths.size() == expected, "one river path per engine river cell (%d vs %d)" % [paths.size(), expected])
+
+
+func test_precision_wheel_and_live_pacing() -> void:
+	var camera := StrategyCamera.new()
+	check(camera.wheel_ratio(0.2) > 1.0 and camera.wheel_ratio(0.2) < camera.wheel_ratio(1.0), "precision wheel keeps direction and scales its step")
+	check(is_equal_approx(camera.wheel_ratio(0.0), camera.zoom_step), "wheel without a precision factor uses one normal step")
+	check(is_equal_approx(camera.wheel_ratio(100.0), pow(camera.zoom_step, 3.0)), "a large wheel event is bounded")
+	camera.free()
+	# No process is launched here: inspect the producer's queue and scheduling
+	# independently of network latency. The normal bridge scenario remains below.
+	var live := BridgeSource.new(world, "not-launched")
+	live.connected = true
+	live.start_live(10)
+	live.poll()
+	check(live.busy and live._outgoing.size() == 1, "continuous play issues one year")
+	check(live._outgoing[0]["op"] == "advance" and live._outgoing[0]["payload"] == {"view":"map"}, "continuous play publishes every complete year")
+	live._live_due_us = 0
+	live.poll()
+	check(live._outgoing.size() == 1, "a slow calculation never queues a catch-up burst")
+	live.busy = false
+	live.poll()
+	check(live._outgoing.size() == 1, "an unrelated publication cannot release the pending live year")
+	live._outgoing.clear()
+	live._live_advance_pending = false
+	live.busy = false
+	live.set_live_rate(1)
+	live.poll()
+	check(live._outgoing.is_empty(), "the next year waits for its wall-clock deadline")
+	live.stop_live()
+	live._live_due_us = 0
+	live.poll()
+	check(not live.is_live() and live._outgoing.is_empty(), "stopping continuous play stops scheduling")
+	live.close()
+
+
+func test_culture_vector_and_coalitions() -> void:
+	var color: Variant = MapLayers.culture_color([0.1, 0.2, 0.3, 0.4, 0.5, 0.6])
+	check(color is Color and (color as Color).is_equal_approx(Color(0.315, 0.38, 0.445)), "culture RGB uses the actual vector components")
+	check(MapLayers.culture_color(0.5) == null, "culture is not a scalar")
+	check(MapLayers.culture_color([0.1, 0.2, null, 0.4, 0.5, 0.6]) == null, "missing culture component stays unavailable")
+	check(MapLayers.culture_color([0.1, 0.2, 0.3]) == null, "incomplete culture vector rejected")
+	check(MapLayers.culture_color([0.1, 0.2, 0.3, 0.4, 0.5, 1.5]) == null, "invalid culture component rejected")
+	var frame := HistoryFrame.new()
+	frame.owner.resize(world.cell_count())
+	frame.owner.fill(0)
+	frame.people.resize(world.cell_count())
+	frame.people.fill(-1)
+	var cell := int(world.land_cells[0])
+	frame.people[cell] = 7
+	frame.peoples[7] = {"culture":[0.1, 0.2, 0.3, 0.4, 0.5, 0.6]}
+	var cultures := MapLayers.build("cultures", world, frame)
+	check((cultures["colors"] as PackedByteArray)[cell * 4 + 3] > 0, "culture vector paints real people cells")
+	check((cultures["keys"] as PackedFloat32Array)[cell] == 7, "culture borders keep people IDs")
+	frame.wars = [{"a":11,"b":21,"attackers":[11,12],"defenders":[21,22]}]
+	frame.owner[cell] = 12
+	var wars := MapLayers.build("wars", world, frame)
+	check((wars["colors"] as PackedByteArray)[cell * 4 + 3] > 0, "coalition member beyond leader is painted at war")
+	var participants := MapLayers.war_participants(frame.wars)
+	check(participants.size() == 4 and participants.has(12) and participants.has(22), "all war participants are preserved")
+	check(not MapLayers.war_participants([{"a":0,"b":0}]).has(0), "unowned land never becomes a war participant")
+	check(MapLayers.war_participants([{"a":11,"b":21}]).size() == 2, "legacy a/b presentation frames remain supported")
 
 
 func _fixture_frame(n: int) -> Dictionary:

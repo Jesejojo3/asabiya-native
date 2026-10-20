@@ -1,5 +1,7 @@
 # Estado de la integración
 
+Revisión del cliente r4: por petición del usuario se reorganiza la interfaz, se corrige la rueda de precisión y el anclaje del zoom, y se añade reproducción continua con publicación anual. Se reducen reconstrucciones de presentación sin cambios históricos. Ver [CLIENT_R4.md](../integration/CLIENT_R4.md). Compilación/exportación no equivalen a aprobación visual; el usuario mantiene a su cargo el testeo.
+
 Rama vigente: integration/go-godot-windows, desde HEAD 3130256 de PR #7. Se incorpora PR #8 mediante merge 7edec8d5bd300045cbd9f97444107d348db69001, con ambos padres conservados. PR #7 sigue dependiendo de PR #6 corregida en d19e27ef. Ninguna de esas ramas ni main se sobrescribe.
 
 La instrucción más reciente asigna a Codex tanto el núcleo como la adaptación del cliente Godot. La instrucción posterior del usuario reserva todo el testeo para él: sólo se produce código, documentación y compilación/exportación del paquete Windows. No se abren partidas ni se ejecutan nuevas pruebas, oráculos o CI. No confundir compilación con integración verificada.

@@ -1,5 +1,7 @@
 # Entrega para el testeo del usuario
 
+Actualización r4: Codex asume el cliente completo y revisa interfaz, cámara y reproducción a petición del usuario. Ver [cambios y casos pendientes](CLIENT_R4.md). Se produce un ZIP r4 independiente; se mantienen r2/r3. Se compila/importa/exporta, sin abrir el juego ni ejecutar pruebas nuevas. La comprobación visual y de comportamiento con el ratón del usuario sigue pendiente. Continuar solicita años consecutivos con ritmo 1/2/5/10 años/s; el botón 1 año conserva el paso manual. Ya no presenta saltos de lotes como reproducción continua.
+
 Actualización r3: el usuario solicitó corregir los enteros JSON del protocolo y autorizó sus pruebas específicas. Se ejecutó esa cobertura y las dos regresiones esenciales previas del protocolo; ver [evidencia y contrato](JSON_INTEGER_FIX.md). El testeo visual y de juego sigue a su cargo. No se ejecutaron suites históricas extensas, oráculos, CI ni el juego exportado. Compilar Go, importar recursos y exportar Godot son pasos de producción del artefacto y no se presentan como aprobación visual.
 
 ## Evidencia anterior a la detención

@@ -9,7 +9,8 @@
 | Hilo trabajador propietario del transporte/decodificación | El hilo gráfico no espera el cálculo anual ni el JSON de Go. La publicación llega terminada. |
 | AdvanceYear atómico; lotes como peticiones anuales | Pausa puede cortar al terminar el año aceptado. No hay pasos parciales o simulación en Godot. |
 | Vistas map-state/map-delta opcionales | Reducen campos repetidos. Los detalles se consultan por ID, en el mismo protocolo y con año. |
-| Estado visible cada 50 años en lotes y al final | Evita transmitir todo por cada año de una corrida larga. El avance individual sigue aplicando delta. |
+| Reproducción continua con una publicación por año | El usuario pide observar tiempo continuo sin saltos de 10/50 años. Programación monotónica 1/2/5/10 años/s, una petición en vuelo, sin ráfagas. El año de Go sigue siendo atómico. El API de lotes previo permanece para herramientas. |
+| Interfaz compacta y zoom anclado al cursor | Se retira la columna permanente de mapas y el exceso de insignias. La rueda de precisión se interpreta en pasos exponenciales; límites estables e inversión sin inercia pendiente. Ver CLIENT_R4.md; comprobación visual pendiente del usuario. |
 | geography-v1 como fuente activa; .asw como herramienta heredada | Son formatos distintos. Se traducen explícitamente nombres/offsets y se verifica el binario. |
 | Estado 0 sin propietario; -1 en otras clases | Evita convertir el mar o un territorio sin Estado en una entidad artificial. |
 | Copias de arrays y caché acotada | Mantiene publicaciones anteriores inmutables y limita memoria del cliente. |

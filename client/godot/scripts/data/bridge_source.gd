@@ -41,6 +41,10 @@ var _remaining := 0
 var _since_publication := 0
 var _closing := false
 var _paused := false
+var _live_running := false
+var _live_advance_pending := false
+var _live_interval_us := 1000000
+var _live_due_us := 0
 
 func _init(w: WorldData = null, executable := "") -> void:
 	world = w
@@ -82,7 +86,7 @@ func frame(year: int) -> HistoryFrame:
 	return _frames.get(year)
 
 func can_advance() -> bool:
-	return connected and not busy and not _closing
+	return connected and not busy and not _live_advance_pending and not _closing
 
 func start(_extra_args := PackedStringArray()) -> bool:
 	if not available:
@@ -160,7 +164,29 @@ func _store(publication: HistoryFrame) -> void:
 		ys.remove_at(0)
 	_years = ys
 	frames_changed.emit()
-	status_changed.emit("Año %d · datos históricos del motor Go" % publication.year)
+	status_changed.emit("")
+
+
+func is_live() -> bool:
+	return _live_running
+
+
+func set_live_rate(years_per_second: int) -> void:
+	_live_interval_us = int(1000000.0 / clampi(years_per_second, 1, 10))
+	_live_due_us = Time.get_ticks_usec() + _live_interval_us
+
+
+func start_live(years_per_second: int) -> void:
+	if not connected or _closing: return
+	set_live_rate(years_per_second)
+	_live_running = true
+	_paused = false
+	_remaining = 0
+	_live_due_us = Time.get_ticks_usec()
+
+
+func stop_live() -> void:
+	_live_running = false
 
 func fetch_frame() -> void:
 	if not connected: return
@@ -169,6 +195,7 @@ func fetch_frame() -> void:
 
 func advance(count: int) -> void:
 	if not can_advance() or count < 1: return
+	stop_live()
 	busy = true
 	_remaining = clampi(count, 1, 10000)
 	_paused = false
@@ -196,6 +223,7 @@ func _next_advance() -> void:
 			_next_advance())
 
 func pause() -> void:
+	stop_live()
 	_remaining = 0 # One already accepted year finishes atomically.
 	_paused = true
 	if connected:
@@ -242,8 +270,20 @@ func poll() -> void:
 			_fail(str(detail.get("message", "El motor rechazó la petición.")))
 			continue
 		if callback.is_valid(): callback.call(response)
+	# Continuous play is wall-clock paced, with at most one complete year in
+	# flight. Publish every year, never replay cached frames or batch 10/50-year
+	# jumps. A slow calculation lowers the achieved rate; it never queues a burst.
+	if _live_running and can_advance() and Time.get_ticks_usec() >= _live_due_us:
+		_live_due_us = Time.get_ticks_usec() + _live_interval_us
+		_live_advance_pending = true
+		busy = true
+		request("advance", {"view":"map"}, func(response: Dictionary):
+			_live_advance_pending = false
+			_on_frame(response))
 
 func _fail(message: String) -> void:
+	stop_live()
+	_live_advance_pending = false
 	connected = false
 	busy = false
 	_remaining = 0
@@ -364,6 +404,7 @@ func _worker() -> void:
 
 func shutdown() -> void:
 	if _closing: return
+	stop_live()
 	_remaining = 0
 	if connected:
 		request("shutdown")
@@ -374,6 +415,8 @@ func shutdown() -> void:
 	close()
 
 func close() -> void:
+	stop_live()
+	_live_advance_pending = false
 	_mutex.lock()
 	_stop = true
 	_mutex.unlock()

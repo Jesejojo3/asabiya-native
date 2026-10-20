@@ -1,37 +1,40 @@
 class_name UiTheme
 extends RefCounted
-## Code-built theme: dark slate panels, parchment text, gold accents.
+## Restrained map interface: opaque charcoal, quiet separators, no card shadows.
 
-const BG := Color(0.07, 0.085, 0.105, 0.92)
-const BG_SOFT := Color(0.10, 0.12, 0.15, 0.88)
-const LINE := Color(0.79, 0.64, 0.36, 0.35)
-const GOLD := Color(0.86, 0.70, 0.40)
-const TEXT := Color(0.93, 0.90, 0.83)
-const MUTED := Color(0.62, 0.62, 0.60)
+const BG := Color(0.075, 0.085, 0.09, 0.98)
+const BG_SOFT := Color(0.11, 0.125, 0.13, 0.98)
+const LINE := Color(0.24, 0.27, 0.28, 1.0)
+const GOLD := Color(0.75, 0.78, 0.73)
+const TEXT := Color(0.88, 0.89, 0.86)
+const MUTED := Color(0.59, 0.63, 0.63)
 const MISSING := Color(0.55, 0.55, 0.58)
 const OK := Color(0.45, 0.78, 0.55)
 const WARN := Color(0.93, 0.66, 0.30)
 
 
-static func panel_style(bg := BG, radius := 6, border := true) -> StyleBoxFlat:
+static func panel_style(bg := BG, radius := 0, border := true) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
 	s.bg_color = bg
 	s.set_corner_radius_all(radius)
-	s.set_content_margin_all(10)
+	s.set_content_margin_all(12)
 	if border:
 		s.border_color = LINE
 		s.set_border_width_all(1)
 	s.shadow_color = Color(0, 0, 0, 0.35)
-	s.shadow_size = 6
+	s.shadow_size = 0
 	return s
 
 
 static func build() -> Theme:
 	var t := Theme.new()
+	var body := SystemFont.new()
+	body.font_names = PackedStringArray(["Segoe UI", "Noto Sans"])
+	t.default_font = body
 	t.default_font_size = 14
 	t.set_color("font_color", "Label", TEXT)
 	t.set_color("font_color", "Button", TEXT)
-	t.set_color("font_hover_color", "Button", Color(1, 0.96, 0.86))
+	t.set_color("font_hover_color", "Button", Color(1, 1, 0.97))
 	t.set_color("font_pressed_color", "Button", GOLD)
 	t.set_color("font_disabled_color", "Button", Color(0.45, 0.45, 0.47))
 	t.set_color("font_color", "CheckBox", TEXT)
@@ -41,31 +44,35 @@ static func build() -> Theme:
 	t.set_stylebox("panel", "PanelContainer", panel_style())
 	t.set_stylebox("panel", "Panel", panel_style())
 	var btn := StyleBoxFlat.new()
-	btn.bg_color = Color(0.13, 0.15, 0.19, 0.9)
-	btn.set_corner_radius_all(4)
-	btn.set_content_margin_all(6)
+	btn.bg_color = Color(0.13, 0.15, 0.15, 1.0)
+	btn.set_corner_radius_all(2)
+	btn.set_content_margin_all(7)
 	btn.content_margin_left = 10
 	btn.content_margin_right = 10
 	var hov := btn.duplicate() as StyleBoxFlat
-	hov.bg_color = Color(0.19, 0.21, 0.26, 0.95)
+	hov.bg_color = Color(0.19, 0.22, 0.22, 1.0)
 	var prs := btn.duplicate() as StyleBoxFlat
-	prs.bg_color = Color(0.24, 0.20, 0.13, 0.95)
+	prs.bg_color = Color(0.23, 0.27, 0.25, 1.0)
 	prs.border_color = GOLD
 	prs.set_border_width_all(1)
 	var dis := btn.duplicate() as StyleBoxFlat
 	dis.bg_color = Color(0.10, 0.11, 0.13, 0.6)
+	var focus := btn.duplicate() as StyleBoxFlat
+	focus.bg_color = Color(0, 0, 0, 0)
+	focus.border_color = GOLD
+	focus.set_border_width_all(1)
 	for cls in ["Button", "OptionButton", "MenuButton"]:
 		t.set_stylebox("normal", cls, btn)
 		t.set_stylebox("hover", cls, hov)
 		t.set_stylebox("pressed", cls, prs)
 		t.set_stylebox("hover_pressed", cls, prs)
 		t.set_stylebox("disabled", cls, dis)
-		t.set_stylebox("focus", cls, StyleBoxEmpty.new())
+		t.set_stylebox("focus", cls, focus)
 	var le := StyleBoxFlat.new()
 	le.bg_color = Color(0.05, 0.06, 0.08, 0.95)
 	le.border_color = LINE
 	le.set_border_width_all(1)
-	le.set_corner_radius_all(4)
+	le.set_corner_radius_all(2)
 	le.set_content_margin_all(6)
 	t.set_stylebox("normal", "LineEdit", le)
 	t.set_stylebox("focus", "LineEdit", le)

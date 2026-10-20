@@ -20,6 +20,7 @@ static var pending_source: Dictionary = {}
 
 var _startup: CanvasLayer
 var _loading_label: Label
+var _retry_button: Button
 var _following_live := true
 var _quitting := false
 var _province_details: Dictionary = {}
@@ -43,7 +44,6 @@ var overlay_opacity := 0.85
 var toggles := {"borders": true, "labels": true, "settlements": true, "events": true, "vegetation": true}
 var selection := {"kind": "", "id": -1}
 var settings := {"quality": 1, "relief": 1}
-var _play_accum := 0.0
 
 const SETTINGS_PATH := "user://settings.cfg"
 const QUALITY_PX := [9.0, 12.0, 20.0]
@@ -105,31 +105,41 @@ func _ready() -> void:
 			hud.set_session(source, world)
 			_refresh_ui()
 		elif _loading_label != null:
-			_loading_label.text = text)
+			_loading_label.text = text
+			if _retry_button != null: _retry_button.visible = bridge.last_error != "")
 	if not bridge.start():
 		_loading_label.text = bridge.last_error
+		_retry_button.show()
 
 
 func _show_loading(text: String) -> void:
 	_startup = CanvasLayer.new()
 	add_child(_startup)
-	var panel := PanelContainer.new()
-	panel.theme = UiTheme.build()
-	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.position = Vector2(180, 240)
-	_startup.add_child(panel)
+	var backdrop := ColorRect.new()
+	backdrop.color = UiTheme.BG
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_startup.add_child(backdrop)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	center.theme = UiTheme.build()
+	_startup.add_child(center)
 	var box := VBoxContainer.new()
-	panel.add_child(box)
-	_loading_label = Label.new()
-	_loading_label.text = text
+	box.custom_minimum_size.x = 420
+	box.add_theme_constant_override("separation", 20)
+	center.add_child(box)
+	var title := UiTheme.heading("Asabiya", 28)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(title)
+	_loading_label = UiTheme.muted(text, 14)
+	_loading_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_loading_label)
-	var retry := Button.new()
-	retry.text = "Reiniciar sesión"
-	retry.pressed.connect(func() -> void:
+	_retry_button = Button.new()
+	_retry_button.text = "Reintentar"
+	_retry_button.visible = false
+	_retry_button.pressed.connect(func():
 		if source != null: source.close()
 		get_tree().reload_current_scene())
-	box.add_child(retry)
-
+	box.add_child(_retry_button)
 
 func _accept_world(value: WorldData) -> void:
 	world = value
@@ -137,6 +147,7 @@ func _accept_world(value: WorldData) -> void:
 		_startup.queue_free()
 		_startup = null
 		_loading_label = null
+		_retry_button = null
 	current_year = int(world.header.get("session", {}).get("year", -9000))
 	_build_scene()
 	hud.set_session(source, world)
@@ -177,7 +188,9 @@ func _apply_ui_scale() -> void:
 		var h := DisplayServer.screen_get_size(screen).y
 		if s <= 1.01 and h >= 2000:
 			s = 1.5
-	get_window().content_scale_factor = clampf(s, 0.75, 3.0)
+	var physical := Vector2(get_window().size)
+	var fitting := minf(physical.x / 1000.0, physical.y / 640.0)
+	get_window().content_scale_factor = clampf(minf(s, fitting), 0.75, 3.0)
 
 
 func _build_scene() -> void:
@@ -230,11 +243,18 @@ func _build_scene() -> void:
 	hud.year_requested.connect(set_year)
 	hud.advance_requested.connect(func(n: int):
 		if source.can_advance():
+			hud.stop_playing()
 			_following_live = true
 			source.advance(n))
 	hud.play_toggled.connect(func(on: bool):
-		_play_accum = 0.0
-		if not on and source is BridgeSource: (source as BridgeSource).pause())
+		if source is BridgeSource:
+			if on:
+				_following_live = true
+				(source as BridgeSource).start_live(hud.speed())
+			else:
+				(source as BridgeSource).pause())
+	hud.playback_rate_changed.connect(func(rate: int):
+		if source is BridgeSource: (source as BridgeSource).set_live_rate(rate))
 	hud.fly_to.connect(func(c: int): select_entity("cell", c, true))
 	hud.entity_requested.connect(func(kind: String, id: int): select_entity(kind, id, true))
 	hud.world_requested.connect(_generate_world)
@@ -303,13 +323,22 @@ func _on_frames_changed() -> void:
 
 
 func set_year(y: int) -> void:
+	if hud.playing():
+		hud.stop_playing()
+		if source is BridgeSource: (source as BridgeSource).pause()
 	_following_live = false
 	current_year = y
 	_load_frame()
 
 
 func _load_frame() -> void:
-	current_frame = source.frame_at(current_year) if source != null else null
+	var next_frame: HistoryFrame = source.frame_at(current_year) if source != null else null
+	if current_frame != null and next_frame != null and current_frame.year == next_frame.year and current_frame.state_digest == next_frame.state_digest:
+		_refresh_ui()
+		if not hud.playing() and selection.get("kind") == "cell":
+			_request_province_details(int(selection["id"]))
+		return
+	current_frame = next_frame
 	if current_frame != null:
 		current_year = current_frame.year
 	current_layer = requested_layer if MapLayers.available(requested_layer, source, current_frame) else "terrain"
@@ -391,22 +420,11 @@ func _on_toggle(key: String, on: bool) -> void:
 	_apply_layer_style()
 
 
-func _process(dt: float) -> void:
+func _process(_dt: float) -> void:
 	if source is BridgeSource:
 		(source as BridgeSource).poll()
-	if hud != null and hud.playing():
-		_play_accum += dt * hud.speed()
-		if _play_accum >= 1.0:
-			_play_accum = 0.0
-			var ys := source.years()
-			var idx := ys.bsearch(current_year)
-			if idx + 1 < ys.size():
-				set_year(ys[idx + 1])
-			elif source.can_advance():
-				_following_live = true
-				source.advance(10)
-			elif not (source is BridgeSource and (source as BridgeSource).busy):
-				hud.stop_playing()
+		if hud != null and hud.playing() and not (source as BridgeSource).is_live():
+			hud.stop_playing()
 
 
 # ---------------------------------------------------------------- selection & panels
@@ -520,9 +538,9 @@ func _show_cell(c: int) -> void:
 		if d >= 0:
 			var dp := world.cell_xy(d)
 			geo.append(["Drena hacia", "%d,%d%s" % [dp.x, dp.y, " (mar)" if not world.is_land(d) else ""]])
-	var sections := [["Geografía (motor)", geo]]
+	var sections := [["Geografía", geo]]
 	if land:
-		sections.append(["Recursos y aptitudes (motor)", [
+		sections.append(["Territorio", [
 			["Aptitud agrícola", "%.2f" % world.farming[c]],
 			["Aptitud pastoral", "%.2f" % world.herding[c]],
 			["Nómada", "Sí" if world.nomad[c] == 1 else "No"],
@@ -575,20 +593,23 @@ func _show_cell(c: int) -> void:
 			here.append(["Asentamientos", null if f == null or not source.has_system("settlements") else "Ninguno", _need("settlements")])
 		here.append(["Infraestructura", null, _need("infrastructure")])
 		here.append(["Construcciones", null, _need("buildings")])
-		here.append(["Historia territorial", "Observaciones decenales del motor" if source.has_system("cellHistory") else null, _need("cellHistory")])
+		here.append(["Historia territorial", "Observaciones cada diez años" if source.has_system("cellHistory") else null, _need("cellHistory")])
 		sections.append(["Ocupación", here])
 	if land and int(_province_details.get("year", -999999)) == current_year and int(_province_details.get("id", -1)) == c:
 		var details: Dictionary = _province_details.get("data", {})
 		var rows := []
-		for key in ["carryingCapacity","fortification","integration","cohesion","forest","fertility","salinity","malariaAdaptation","immunity","infection","caravanActivity"]:
-			rows.append([str(key), str(details.get(key, "No disponible"))])
+		for spec in [["fortification","Fortificación"],["integration","Integración"],["cohesion","Cohesión"],["forest","Cobertura forestal"],["fertility","Fertilidad"],["salinity","Salinidad"],["malariaAdaptation","Adaptación a malaria"],["immunity","Inmunidad"],["infection","Infección"],["caravanActivity","Actividad de caravanas"]]:
+			var number: Variant = details.get(spec[0])
+			if number is int or number is float: rows.append([spec[1], "%.2f" % float(number)])
+		sections.append(["Sociedad y entorno", rows])
+		var technologies := []
 		var levels: Array = details.get("technology", [])
 		for k in levels.size():
 			var name := "Técnica %d" % k
 			if source is BridgeSource and k < (source as BridgeSource).tech_catalog.size():
 				name = str((source as BridgeSource).tech_catalog[k].get("name", name))
-			rows.append([name, "%.1f %%" % (float(levels[k]) * 100.0)])
-		sections.append(["Consulta provincial directa a Go", rows])
+			technologies.append([name, "%.1f %%" % (float(levels[k]) * 100.0)])
+		sections.append(["Tecnologías", technologies])
 	if not _province_history.is_empty():
 		var changes := []
 		for item: Dictionary in _province_history:
@@ -664,7 +685,7 @@ func _show_people(id: int) -> void:
 	var rows := [
 		["Lengua", p.get("language"), "el motor no la envía"],
 		["Familia", p.get("familyName", p.get("family")), "el motor no la envía"],
-		["Índice cultural", p.get("culture"), "el motor no lo envía"],
+		["Vector cultural (6 componentes)", p.get("culture"), "el motor no lo envía"],
 		["Tierra natal", p.get("homeland"), "el motor no la envía"],
 		["Territorio", "%d provincias" % cells],
 	]
@@ -698,6 +719,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	elif k.keycode == KEY_F1:
 		hud.help_panel.visible = not hud.help_panel.visible
 	elif k.keycode == KEY_ESCAPE:
+		if hud.dismiss_popovers(): return
 		if hud.help_panel.visible:
 			hud.help_panel.visible = false
 		else:
@@ -765,6 +787,7 @@ func _fatal(msg: String) -> void:
 
 func _request_province_details(id: int) -> void:
 	if not source is BridgeSource or not (source as BridgeSource).connected or (source as BridgeSource).busy: return
+	if (source as BridgeSource).is_live(): return
 	var expected_year := current_year
 	var latest := source.years()
 	if latest.is_empty() or latest[latest.size() - 1] != expected_year: return
@@ -790,7 +813,7 @@ func _show_engine_entity(kind_name: String, id: int) -> void:
 				value = item
 				break
 	var query_key := "%s:%d:%d" % [kind_name, id, current_year]
-	if kind_name != "event" and source is BridgeSource and (source as BridgeSource).connected and not (source as BridgeSource).busy:
+	if kind_name != "event" and source is BridgeSource and (source as BridgeSource).connected and not (source as BridgeSource).busy and not (source as BridgeSource).is_live():
 		var ys := source.years()
 		if not ys.is_empty() and ys[ys.size() - 1] == current_year and _entity_query_key != query_key:
 			_entity_query_key = query_key
@@ -804,13 +827,73 @@ func _show_engine_entity(kind_name: String, id: int) -> void:
 	if value.is_empty():
 		hud.set_status("No hay datos de esa entidad en la publicación seleccionada.")
 		return
+	var names := {"polity":"Estado","people":"Pueblo","ruler":"Gobernante","figure":"Figura histórica","city":"Asentamiento","religion":"Religión","war":"Guerra","route":"Ruta comercial","migration":"Migración","outbreak":"Epidemia","omen":"Presagio","cataclysm":"Cataclismo","event":"Acontecimiento"}
+	var label: String = names.get(kind_name, "Historia")
+	var sections := _entity_sections(kind_name, value)
+	hud.show_info(str(value.get("name", "%s #%d" % [label, id])),
+		"%s · %s" % [label, Hud.fmt_year(current_year)], sections)
+
+
+func _entity_sections(kind_name: String, value: Dictionary) -> Array:
+	# Human-facing facts and relationships; never expose a dump of transport
+	# fields or long JSON arrays in the observer's inspector.
+	var common := [["born","Fundación","year"],["alive","Activa","bool"]]
+	var layouts := {
+		"polity":common + [["cellsAtLastCensus","Provincias del último censo","count"],["peakCells","Extensión máxima","count"],["dynastyLabel","Dinastía","text"]],
+		"people":common + [["languageStyle","Lengua","text"],["populationAtLastCensus","Población del último censo","count"],["cellsAtLastCensus","Provincias del último censo","count"]],
+		"ruler":[["born","Nacimiento","year"],["since","Gobierna desde","year"],["competence","Competencia","number"],["charisma","Carisma","number"],["piety","Piedad","number"],["aggression","Agresividad","number"],["conquests","Conquistas","count"]],
+		"figure":[["title","Título","text"],["born","Nacimiento","year"],["conquests","Conquistas","count"],["works","Obras","count"]],
+		"city":[["born","Fundación","year"],["population","Población provincial","count"],["holy","Lugar sagrado","bool"]],
+		"religion":common + [["populationAtLastCensus","Población del último censo","count"],["cellsAtLastCensus","Provincias del último censo","count"],["centralization","Centralización","number"]],
+		"war":[["start","Inicio","year"],["active","Activa","bool"],["civil","Guerra civil","bool"],["holy","Guerra religiosa","bool"],["gainsAttackers","Ganancias atacantes","count"],["gainsDefenders","Ganancias defensores","count"]],
+		"route":[["born","Apertura","year"],["last","Última actividad","year"],["active","Activa","bool"]],
+		"migration":[["start","Inicio","year"],["population","Población","count"],["done","Concluida","bool"]],
+		"outbreak":[["start","Inicio","year"],["deaths","Muertes","count"],["done","Concluida","bool"]],
+		"omen":[["year","Año","year"],["place","Lugar","text"],["radiusKM","Radio (km)","number"]],
+		"cataclysm":[["year","Año","year"],["place","Lugar","text"],["deaths","Muertes","count"],["radiusKM","Radio (km)","number"]],
+		"event":[["year","Año","year"]]
+	}
 	var rows := []
-	for key: String in value:
-		var field: Variant = value[key]
-		var text := JSON.stringify(field) if field is Array or field is Dictionary else str(field)
-		if field == null: text = "No disponible en el motor"
-		if text.length() > 800: text = text.substr(0, 800) + "…"
-		rows.append([key, text])
-	hud.show_info(str(value.get("name", value.get("text", "%s #%d" % [kind_name, id]))),
-		"%s #%d · publicación %s" % [kind_name, id, Hud.fmt_year(current_year)],
-		[["Datos del motor", rows]])
+	for spec: Array in layouts.get(kind_name, common):
+		var field: Variant = value.get(spec[0])
+		if field == null: continue
+		var text := str(field)
+		match spec[2]:
+			"year": text = Hud.fmt_year(int(field))
+			"bool": text = "Sí" if field else "No"
+			"count": text = Hud._fmt_int(float(field))
+			"number": text = "%.2f" % float(field)
+		rows.append([spec[1], text])
+	if kind_name == "war" and not value.get("active", false) and value.has("end"):
+		rows.append(["Final", Hud.fmt_year(int(value["end"]))])
+	var relations := [
+		["capitalId","Capital","cell"],["cellId","Provincia","cell"],
+		["originCellId","Origen","cell"],["holyCellId","Lugar sagrado","cell"],
+		["fromCellId","Origen","cell"],["toCellId","Destino","cell"],
+		["rulerId","Gobernante","ruler"],["peopleId","Pueblo","people"],
+		["religionId","Religión","religion"],["ownerPolityId","Estado","polity"],
+		["polityId","Estado","polity"],["founderFigureId","Fundador","figure"],
+		["attackers","Atacante","polity"],["defenders","Defensor","polity"]
+	]
+	for relation: Array in relations:
+		var raw: Variant = value.get(relation[0])
+		if raw == null: continue
+		var ids: Array = raw if raw is Array else [raw]
+		for target_id: Variant in ids:
+			if not (target_id is int or target_id is float): continue
+			var ident := int(target_id)
+			var target_kind: String = relation[2]
+			if ident < 0 or (target_kind == "polity" and ident == 0): continue
+			var entity_name := "#%d" % ident
+			if target_kind == "cell":
+				if ident >= world.cell_count(): continue
+				var xy := world.cell_xy(ident)
+				entity_name = "%d, %d" % [xy.x, xy.y]
+			else:
+				entity_name = str(current_frame.entity_records.get(target_kind, {}).get(ident, {}).get("name", entity_name))
+			rows.append([relation[1], func(): select_entity("cell" if target_kind == "cell" else "engine:" + target_kind, ident, target_kind == "cell"), entity_name])
+	var sections := [["Información", rows]]
+	for spec in [["text","Crónica"],["why","Contexto"],["outcome","Resultado"],["followText","Consecuencias"]]:
+		if value.get(spec[0]) is String and value[spec[0]] != "":
+			sections.append([spec[1], [UiTheme.muted(str(value[spec[0]]), 14)]])
+	return sections
