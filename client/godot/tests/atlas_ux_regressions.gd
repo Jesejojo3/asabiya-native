@@ -128,6 +128,43 @@ func _run() -> void:
 	hud._on_figure_activated(0)
 	check(not hud.figures_panel.visible and figure_intents == [["engine:figure",42]], "figure index opens Go entity via intent")
 	check(observer.source._outgoing.is_empty(), "figure browser does not mutate causal engine")
+	# Fiches must show real Go fields without interpreting them as new mechanics.
+	var app_script: Script = load("res://scripts/app/main.gd")
+	var inspector: Variant = app_script.new()
+	inspector.world = observer.world
+	inspector.current_frame = observer.current_frame
+	var people_sections: Array = inspector._entity_sections("people", {
+		"languageStyle":"Celtic", "lexicon":["root","rio","dios","sol","mar","monte","madre","grano"],
+		"soundChanges":["t>d"], "parentId":9, "children":[9, 8]
+	})
+	var found_river := false
+	var found_parent := false
+	for row: Array in people_sections[0][1]:
+		if row[0] == "Río" and row[1] == "rio": found_river = true
+		if row[0] == "Pueblo ancestral" and row[1] is Callable: found_parent = true
+	check(found_river and found_parent, "people sheet exposes language lexicon and navigable ancestry")
+	var faith_sections: Array = inspector._entity_sections("religion", {
+		"parentId":11, "children":[12], "stateIds":[7], "missionary":0.5, "councils":2
+	})
+	var found_schism := false
+	for row: Array in faith_sections[0][1]:
+		if row[0] == "Cismas y ramas" and row[1] is Callable: found_schism = true
+	check(found_schism, "faith sheet shows native schism descendants as links")
+	var polity_sections: Array = inspector._entity_sections("polity", {
+		"rulerId":10, "allies":[7], "warIds":[4], "metrics":{"cohesion":0.7,"treasury":25.0}
+	})
+	var found_allies := false
+	for row: Array in polity_sections[0][1]:
+		if row[0] == "Aliados" and row[1] is Callable: found_allies = true
+	check(found_allies, "state sheet shows political ties without calculating alliances in Godot")
+	var figure_sections: Array = inspector._entity_sections("figure", {
+		"name":"Astrónoma", "deeds":[{"Year":-92,"Text":"Registró las estrellas"},{"Year":-86,"Text":"Enseñó navegación"}]
+	})
+	check(figure_sections.size() == 2 and figure_sections[1][0] == "Hazañas"
+		and figure_sections[1][1].size() == 2
+		and str(figure_sections[1][1][0][1]) == "Registró las estrellas",
+		"figure sheet shows Go deeds as chronological records")
+	inspector.free()
 	var many_figures := {}
 	for i in 100:
 		many_figures[1000 + i] = {"name":"Muchos exploradores %d" % i}
