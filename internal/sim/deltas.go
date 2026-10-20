@@ -1,8 +1,9 @@
 package sim
 
 import (
-	"github.com/Jesejojo3/asabiya-native/internal/rng"
 	"slices"
+
+	"github.com/Jesejojo3/asabiya-native/internal/rng"
 )
 
 type AnnualDelta struct {
@@ -29,12 +30,23 @@ type AnnualDelta struct {
 // Entity upserts include the current entity records (not just births), so clients
 // can apply them by stable ID without understanding the engine's internal census.
 func (s *Simulation) AdvanceYearWithDelta() AnnualDelta {
+	delta, _ := s.advanceYearWithDelta(false)
+	return delta
+}
+
+func (s *Simulation) advanceYearWithDelta(mapOnly bool) (AnnualDelta, []MapProvinceView) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	h := s.h
-	before := make([]ProvinceView, s.world.Len())
-	for i := range before {
-		before[i] = s.provinceLocked(CellID(i))
+	var before []ProvinceView
+	var mapBefore []MapProvinceView
+	if mapOnly {
+		mapBefore = s.mapProvincesLocked()
+	} else {
+		before = make([]ProvinceView, s.world.Len())
+		for i := range before {
+			before[i] = s.provinceLocked(CellID(i))
+		}
 	}
 	alive := make([]bool, len(h.polities))
 	for k, o := range h.polities {
@@ -53,6 +65,13 @@ func (s *Simulation) AdvanceYearWithDelta() AnnualDelta {
 	}
 	if len(h.events) > 0 {
 		delta.FirstRetainedEventID = h.events[0].ID
+	}
+	var mapChanges []MapProvinceView
+	for i, p := range mapBefore {
+		current := s.mapProvinceLocked(CellID(i))
+		if !sameMapProvinceView(p, current) {
+			mapChanges = append(mapChanges, current)
+		}
 	}
 	for i, p := range before {
 		current := s.provinceLocked(CellID(i))
@@ -81,5 +100,5 @@ func (s *Simulation) AdvanceYearWithDelta() AnnualDelta {
 			delta.Narrative = append(delta.Narrative, h.eventText[k])
 		}
 	}
-	return delta
+	return delta, mapChanges
 }

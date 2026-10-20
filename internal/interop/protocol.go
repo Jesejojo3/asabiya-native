@@ -134,7 +134,7 @@ func (s *Session) Handle(req Request) Response {
 		s.generation++
 		response.Session = s.generation
 		if payload.View == "map" {
-			response.Data = s.projectMapState(s.simulation.Snapshot())
+			response.Data = s.cacheMapState(s.simulation.MapSnapshot())
 		} else {
 			response.Data = s.simulation.Snapshot()
 		}
@@ -188,11 +188,10 @@ func (s *Session) Handle(req Request) Response {
 			if payload.View != "" && payload.View != "map" {
 				return fail("invalid_arguments", fmt.Errorf("unknown state view"))
 			}
-			view := s.simulation.Snapshot()
 			if payload.View == "map" {
-				response.Data = s.projectMapState(view)
+				response.Data = s.cacheMapState(s.simulation.MapSnapshot())
 			} else {
-				response.Data = view
+				response.Data = s.simulation.Snapshot()
 			}
 		case "get_status":
 			response.Data = map[string]any{"status": s.simulation.Status(), "nextSequence": s.simulation.NextSequence(), "rulesSHA256": s.simulation.RulesDigest()}
@@ -213,12 +212,11 @@ func (s *Session) Handle(req Request) Response {
 				status := s.simulation.Status()
 				response.Data = map[string]any{"schema": "asabiya/advance-status-v1", "year": status.Year, "rng": status.HistoryRNG}
 			} else {
-				delta := s.simulation.AdvanceYearWithDelta()
 				if payload.View == "map" {
-					response.Data = s.projectMapDelta(delta)
+					response.Data = s.filterMapDelta(s.simulation.AdvanceYearWithMapDelta())
 				} else {
 					s.mapCache = nil
-					response.Data = delta
+					response.Data = s.simulation.AdvanceYearWithDelta()
 				}
 			}
 		case "apply_command":

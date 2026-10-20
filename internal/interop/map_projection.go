@@ -10,16 +10,7 @@ import (
 // A renderer publication omits detailed epidemiology and the 32 technique
 // values per cell. Those remain queryable through get_province. This is one
 // optional view on the existing local protocol, never a second simulation.
-type mapProvince struct {
-	ID            sim.CellID `json:"id"`
-	Owner         int        `json:"ownerPolityId"`
-	People        int        `json:"peopleId"`
-	Religion      int        `json:"religionId"`
-	Population    float32    `json:"population"`
-	Capacity      float32    `json:"carryingCapacity"`
-	Fortification float32    `json:"fortification"`
-	Era           int        `json:"era"`
-}
+type mapProvince = sim.MapProvinceView
 
 func projectProvinces(provinces []sim.ProvinceView) []mapProvince {
 	out := make([]mapProvince, len(provinces))
@@ -29,14 +20,8 @@ func projectProvinces(provinces []sim.ProvinceView) []mapProvince {
 	return out
 }
 
-type mapState struct {
-	sim.StateView
-	Provinces []mapProvince `json:"provinces"`
-}
-type mapDelta struct {
-	sim.AnnualDelta
-	Provinces []mapProvince `json:"provinces"`
-}
+type mapState = sim.MapStateView
+type mapDelta = sim.MapAnnualDelta
 
 func projectState(view sim.StateView) mapState {
 	p := projectProvinces(view.Provinces)
@@ -55,7 +40,10 @@ func projectDelta(view sim.AnnualDelta) mapDelta {
 // in detailed weather/technology need not resend an identical map record.
 // Session.Handle holds the session lock. No returned publication is mutated.
 func (s *Session) projectMapState(view sim.StateView) mapState {
-	state := projectState(view)
+	return s.cacheMapState(projectState(view))
+}
+
+func (s *Session) cacheMapState(state mapState) mapState {
 	s.mapCache = slices.Clone(state.Provinces)
 	s.mapCacheYear = state.Year
 	return state
@@ -69,7 +57,10 @@ func sameMapProvince(a, b mapProvince) bool {
 }
 
 func (s *Session) projectMapDelta(view sim.AnnualDelta) mapDelta {
-	delta := projectDelta(view)
+	return s.filterMapDelta(projectDelta(view))
+}
+
+func (s *Session) filterMapDelta(delta mapDelta) mapDelta {
 	if len(s.mapCache) == 0 || s.mapCacheYear != delta.FromYear {
 		s.mapCache = nil
 		return delta

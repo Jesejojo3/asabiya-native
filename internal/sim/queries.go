@@ -92,14 +92,22 @@ func (s *Simulation) Snapshot() StateView {
 	return s.snapshotLocked()
 }
 func (s *Simulation) snapshotLocked() StateView {
+	v := s.snapshotMetadataLocked()
+	v.Provinces = make([]ProvinceView, s.world.Len())
+	for i := range v.Provinces {
+		v.Provinces[i] = s.provinceLocked(CellID(i))
+	}
+	return v
+}
+
+// snapshotMetadataLocked deliberately omits provincial arrays. Compact consumers
+// can publish the same annual metadata without allocating detailed provinces.
+func (s *Simulation) snapshotMetadataLocked() StateView {
 	h := s.h
-	v := StateView{Schema: StateViewSchema, Engine: EngineVersion, WorldSHA256: s.world.Digest(), StateSHA256: s.stateDigestLocked(), Year: h.year, StartYear: h.start, RNG: h.r.Position(), Rules: h.rules.clone(), Favor: h.favor, Entities: make(map[string][]EntityRecord), Provinces: make([]ProvinceView, s.world.Len()), Events: cloneEvents(h.events), Narrative: slices.Clone(h.eventText), Stats: slices.Clone(h.stats)}
+	v := StateView{Schema: StateViewSchema, Engine: EngineVersion, WorldSHA256: s.world.Digest(), StateSHA256: s.stateDigestLocked(), Year: h.year, StartYear: h.start, RNG: h.r.Position(), Rules: h.rules.clone(), Favor: h.favor, Entities: make(map[string][]EntityRecord), Events: cloneEvents(h.events), Narrative: slices.Clone(h.eventText), Stats: slices.Clone(h.stats)}
 	v.Earth = h.earthView()
 	for k := range v.Stats {
 		v.Stats[k].EraShare = slices.Clone(h.stats[k].EraShare)
-	}
-	for i := range v.Provinces {
-		v.Provinces[i] = s.provinceLocked(CellID(i))
 	}
 	for _, kind := range entityKinds {
 		v.Entities[kind] = s.entitiesLocked(kind)
