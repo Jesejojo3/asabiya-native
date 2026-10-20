@@ -46,6 +46,7 @@ func (s *Session) projectMapState(view sim.StateView) mapState {
 func (s *Session) cacheMapState(state mapState) mapState {
 	s.mapCache = slices.Clone(state.Provinces)
 	s.mapCacheYear = state.Year
+	s.cacheEntityState(state.Year, state.Entities)
 	return state
 }
 
