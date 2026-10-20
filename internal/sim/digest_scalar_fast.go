@@ -21,12 +21,13 @@ func (e *canonicalState) fastScalarSequence(v reflect.Value, kind reflect.Kind) 
 	case reflect.Float32:
 		values := unsafe.Slice((*float32)(data), n)
 		for len(values) > 0 {
-			block, count := e.scalarBlock(kind, len(values))
+			block, count := e.scalarBlock(len(values))
 			for i, value := range values[:count] {
 				bits := math.Float32bits(value)
 				if bits&0x7f800000 == 0x7f800000 && bits&0x007fffff != 0 {
 					bits = 0x7fc00000
 				}
+				binary.LittleEndian.PutUint64(block[i*16:], uint64(kind))
 				binary.LittleEndian.PutUint64(block[i*16+8:], uint64(bits))
 			}
 			values = values[count:]
@@ -34,12 +35,13 @@ func (e *canonicalState) fastScalarSequence(v reflect.Value, kind reflect.Kind) 
 	case reflect.Float64:
 		values := unsafe.Slice((*float64)(data), n)
 		for len(values) > 0 {
-			block, count := e.scalarBlock(kind, len(values))
+			block, count := e.scalarBlock(len(values))
 			for i, value := range values[:count] {
 				bits := math.Float64bits(value)
 				if bits&0x7ff0000000000000 == 0x7ff0000000000000 && bits&0x000fffffffffffff != 0 {
 					bits = 0x7ff8000000000000
 				}
+				binary.LittleEndian.PutUint64(block[i*16:], uint64(kind))
 				binary.LittleEndian.PutUint64(block[i*16+8:], bits)
 			}
 			values = values[count:]
@@ -72,7 +74,7 @@ func (e *canonicalState) fastScalarSequence(v reflect.Value, kind reflect.Kind) 
 
 // Reserve many canonical pairs at once. Capacity/flush checks run once per
 // block rather than once per scalar; kind tags and numeric bits stay unchanged.
-func (e *canonicalState) scalarBlock(kind reflect.Kind, remaining int) ([]byte, int) {
+func (e *canonicalState) scalarBlock(remaining int) ([]byte, int) {
 	if cap(e.buffer)-len(e.buffer) < 16 {
 		e.flush()
 	}
@@ -80,9 +82,6 @@ func (e *canonicalState) scalarBlock(kind reflect.Kind, remaining int) ([]byte, 
 	start := len(e.buffer)
 	e.buffer = e.buffer[:start+count*16]
 	block := e.buffer[start:]
-	for i := 0; i < count; i++ {
-		binary.LittleEndian.PutUint64(block[i*16:], uint64(kind))
-	}
 	return block, count
 }
 
@@ -92,8 +91,9 @@ type digestInteger interface {
 
 func appendIntegerScalars[T digestInteger](e *canonicalState, kind reflect.Kind, values []T) {
 	for len(values) > 0 {
-		block, count := e.scalarBlock(kind, len(values))
+		block, count := e.scalarBlock(len(values))
 		for i, value := range values[:count] {
+			binary.LittleEndian.PutUint64(block[i*16:], uint64(kind))
 			binary.LittleEndian.PutUint64(block[i*16+8:], uint64(value))
 		}
 		values = values[count:]

@@ -1,0 +1,18 @@
+goos: linux
+goarch: amd64
+pkg: github.com/Jesejojo3/asabiya-native/internal/interop
+cpu: AMD EPYC 7763 64-Core Processor                
+BenchmarkAnnualThroughput/400x200/columns-3         	      40	  81234860 ns/op	        81.23 ms/year	    716275 wire-B/year	        12.31 years/s	 4196739 B/op	    7929 allocs/op
+--- BENCH: BenchmarkAnnualThroughput/400x200/columns-3
+    throughput_test.go:40: PROFILE stages=[climate-weather-hearth carrying demography migration technology disease-contact politics-omens people-religion events-statistics-snapshots map-before digest map-after entities-metadata] data={"years":1,"nanoseconds":[1258832,3612150,559135,538206,140,3356,1191677,171,70,3063645,81193500,3806604,185947]} digest=7dc185f814d2b9690b8babddc7db67975324019e0d9ea5ddc16d34b7f22a708d rng={Seed:58464154 Calls:25902}
+    throughput_test.go:40: PROFILE stages=[climate-weather-hearth carrying demography migration technology disease-contact politics-omens people-religion events-statistics-snapshots map-before digest map-after entities-metadata] data={"years":40,"nanoseconds":[41286549,133971323,26240578,18701564,31873093,513360,94005751,1112489,1949980,115143598,2382196407,157458197,6306457]} digest=9ecde205aabeef5815ee375e58aa21e1ddc0daa6fb5e4563e40d1f4317ac7de0 rng={Seed:58464154 Calls:623216}
+BenchmarkAnnualThroughput/400x200/columns-3         	      40	  81664743 ns/op	        81.66 ms/year	    716275 wire-B/year	        12.25 years/s	 4403153 B/op	    7931 allocs/op
+--- BENCH: BenchmarkAnnualThroughput/400x200/columns-3
+    throughput_test.go:40: PROFILE stages=[climate-weather-hearth carrying demography migration technology disease-contact politics-omens people-religion events-statistics-snapshots map-before digest map-after entities-metadata] data={"years":1,"nanoseconds":[975413,3209869,542373,522407,120,2845,1115214,101,70,3186375,59804497,4036594,143037]} digest=7dc185f814d2b9690b8babddc7db67975324019e0d9ea5ddc16d34b7f22a708d rng={Seed:58464154 Calls:25902}
+    throughput_test.go:40: PROFILE stages=[climate-weather-hearth carrying demography migration technology disease-contact politics-omens people-religion events-statistics-snapshots map-before digest map-after entities-metadata] data={"years":40,"nanoseconds":[41450597,134426658,28112116,19356956,31887643,555161,100420578,1189985,1891221,121206923,2389752846,154257461,6575220]} digest=9ecde205aabeef5815ee375e58aa21e1ddc0daa6fb5e4563e40d1f4317ac7de0 rng={Seed:58464154 Calls:623216}
+BenchmarkAnnualThroughput/400x200/columns-3         	      40	  78656875 ns/op	        78.66 ms/year	    716275 wire-B/year	        12.71 years/s	 3857612 B/op	    7928 allocs/op
+--- BENCH: BenchmarkAnnualThroughput/400x200/columns-3
+    throughput_test.go:40: PROFILE stages=[climate-weather-hearth carrying demography migration technology disease-contact politics-omens people-religion events-statistics-snapshots map-before digest map-after entities-metadata] data={"years":1,"nanoseconds":[1093383,3351494,725947,629216,310,3487,1311020,140,70,3051393,56450043,3683334,155230]} digest=7dc185f814d2b9690b8babddc7db67975324019e0d9ea5ddc16d34b7f22a708d rng={Seed:58464154 Calls:25902}
+    throughput_test.go:40: PROFILE stages=[climate-weather-hearth carrying demography migration technology disease-contact politics-omens people-religion events-statistics-snapshots map-before digest map-after entities-metadata] data={"years":40,"nanoseconds":[40245203,124606022,22504300,19166328,31024229,482815,85971832,1202985,1814183,110139946,2317109445,151703137,6305698]} digest=9ecde205aabeef5815ee375e58aa21e1ddc0daa6fb5e4563e40d1f4317ac7de0 rng={Seed:58464154 Calls:623216}
+PASS
+ok  	github.com/Jesejojo3/asabiya-native/internal/interop	16.520s

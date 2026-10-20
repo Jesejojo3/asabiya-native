@@ -1,0 +1,24 @@
+Local Linux amd64 / Go 1.27.2
+
+go test -count=1 ./...
+ok  	github.com/Jesejojo3/asabiya-native/client/exporter	0.187s
+ok  	github.com/Jesejojo3/asabiya-native/cmd/asabiya-headless	0.263s
+?   	github.com/Jesejojo3/asabiya-native/cmd/asabiya-server	[no test files]
+?   	github.com/Jesejojo3/asabiya-native/internal/app	[no test files]
+ok  	github.com/Jesejojo3/asabiya-native/internal/interop	29.839s
+?   	github.com/Jesejojo3/asabiya-native/internal/mapsource	[no test files]
+?   	github.com/Jesejojo3/asabiya-native/internal/presentation/terrain	[no test files]
+ok  	github.com/Jesejojo3/asabiya-native/internal/rng	0.002s
+ok  	github.com/Jesejojo3/asabiya-native/internal/sim	8.807s
+?   	github.com/Jesejojo3/asabiya-native/internal/telemetry	[no test files]
+
+go vet ./...
+PASS (exit 0, no diagnostics)
+
+go test -race -count=1 ./internal/sim -run '^(TestDigestPipelinePreservesCanonicalBytes|TestConcurrentDigestPipelines)$'
+ok  	github.com/Jesejojo3/asabiya-native/internal/sim	13.293s
+
+Windows amd64 server cross-build: PASS, CGO_ENABLED=0, GOAMD64=v1
+Server SHA256: d04e0c71f6ccd00a660baa6d5c25d8b442efb2e705b5967bf89fcc71516d9bd0
+Windows execution and graphical validation: pending
+HTML SHA256 verified unchanged: 988ce360e70d2d034a3898f60b9a4c38d40b0ab56dd7a147329740f15fa8e9e9

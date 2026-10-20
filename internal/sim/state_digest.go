@@ -7,6 +7,7 @@ import (
 	"hash"
 	"math"
 	"reflect"
+	"runtime"
 	"sort"
 )
 
@@ -27,7 +28,15 @@ func (s *Simulation) stateDigestLocked() string {
 	clock := startWork(s.workProfile)
 	defer clock.mark(10)
 	d := sha256.New()
-	e := canonicalState{hash: d, buffer: make([]byte, 0, 65536)}
+	e := canonicalState{hash: d}
+	// Encoding and SHA consume independent CPU resources. Only owned encoded
+	// bytes cross to the worker; history remains locked on this goroutine.
+	if s.world.Len() >= 10000 && runtime.GOMAXPROCS(0) > 1 {
+		e.pipeline, e.buffer = newPooledDigestPipeline(d)
+		defer e.pipeline.finish()
+	} else {
+		e.buffer = make([]byte, 0, 65536)
+	}
 	e.text(StateDigestVersion)
 	e.text(s.worldDigestLocked())
 	p := s.h.r.Position()
@@ -37,18 +46,26 @@ func (s *Simulation) stateDigestLocked() string {
 	value := reflect.ValueOf(s.h).Elem()
 	e.history(value)
 	e.flush()
+	if e.pipeline != nil {
+		e.pipeline.finish()
+	}
 	return hex.EncodeToString(d.Sum(nil))
 }
 
 type canonicalState struct {
-	hash   hash.Hash
-	buffer []byte
+	hash     hash.Hash
+	buffer   []byte
+	pipeline *digestPipeline
 }
 
 func (e *canonicalState) flush() {
 	if len(e.buffer) > 0 {
-		e.hash.Write(e.buffer)
-		e.buffer = e.buffer[:0]
+		if e.pipeline != nil {
+			e.buffer = e.pipeline.submit(e.buffer)
+		} else {
+			e.hash.Write(e.buffer)
+			e.buffer = e.buffer[:0]
+		}
 	}
 }
 func (e *canonicalState) u64(n uint64) {
@@ -138,7 +155,9 @@ func (e *canonicalState) value(v reflect.Value) {
 		}
 	case reflect.Array, reflect.Slice:
 		e.u64(uint64(v.Len()))
-		if e.scalarSequence(v) { return }
+		if e.scalarSequence(v) {
+			return
+		}
 		for k := 0; k < v.Len(); k++ {
 			e.value(v.Index(k))
 		}
@@ -171,26 +190,45 @@ func (e *canonicalState) value(v reflect.Value) {
 	}
 }
 
- // scalarSequence preserves every kind tag and bit pattern of value(), but
- // batches primitive encoding instead of recursively dispatching per element.
+// scalarSequence preserves every kind tag and bit pattern of value(), but
+// batches primitive encoding instead of recursively dispatching per element.
 func (e *canonicalState) scalarSequence(v reflect.Value) bool {
- kind:=v.Type().Elem().Kind()
- switch kind {case reflect.Int,reflect.Int8,reflect.Int16,reflect.Int32,reflect.Int64,reflect.Uint,reflect.Uint8,reflect.Uint16,reflect.Uint32,reflect.Uint64,reflect.Float32,reflect.Float64:default:return false}
- if e.fastScalarSequence(v, kind) { return true }
- for i:=0;i<v.Len();i++ {
-  x:=v.Index(i);var bits uint64
-  switch kind {
-  case reflect.Int,reflect.Int8,reflect.Int16,reflect.Int32,reflect.Int64:bits=uint64(x.Int())
-  case reflect.Uint,reflect.Uint8,reflect.Uint16,reflect.Uint32,reflect.Uint64:bits=x.Uint()
-  case reflect.Float32:
-   b:=math.Float32bits(float32(x.Float()));if b&0x7f800000==0x7f800000 && b&0x007fffff!=0 {b=0x7fc00000};bits=uint64(b)
-  case reflect.Float64:
-   bits=math.Float64bits(x.Float());if bits&0x7ff0000000000000==0x7ff0000000000000 && bits&0x000fffffffffffff!=0 {bits=0x7ff8000000000000}
-  }
-  if cap(e.buffer)-len(e.buffer)<16 {e.flush()}
-  offset:=len(e.buffer);e.buffer=e.buffer[:offset+16]
-  binary.LittleEndian.PutUint64(e.buffer[offset:],uint64(kind))
-  binary.LittleEndian.PutUint64(e.buffer[offset+8:],bits)
- }
- return true
+	kind := v.Type().Elem().Kind()
+	switch kind {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64:
+	default:
+		return false
+	}
+	if e.fastScalarSequence(v, kind) {
+		return true
+	}
+	for i := 0; i < v.Len(); i++ {
+		x := v.Index(i)
+		var bits uint64
+		switch kind {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			bits = uint64(x.Int())
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			bits = x.Uint()
+		case reflect.Float32:
+			b := math.Float32bits(float32(x.Float()))
+			if b&0x7f800000 == 0x7f800000 && b&0x007fffff != 0 {
+				b = 0x7fc00000
+			}
+			bits = uint64(b)
+		case reflect.Float64:
+			bits = math.Float64bits(x.Float())
+			if bits&0x7ff0000000000000 == 0x7ff0000000000000 && bits&0x000fffffffffffff != 0 {
+				bits = 0x7ff8000000000000
+			}
+		}
+		if cap(e.buffer)-len(e.buffer) < 16 {
+			e.flush()
+		}
+		offset := len(e.buffer)
+		e.buffer = e.buffer[:offset+16]
+		binary.LittleEndian.PutUint64(e.buffer[offset:], uint64(kind))
+		binary.LittleEndian.PutUint64(e.buffer[offset+8:], bits)
+	}
+	return true
 }
