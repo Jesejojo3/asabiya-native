@@ -310,6 +310,38 @@ func _run() -> void:
 	check(camera._goal_distance > 80 and camera._goal_distance < 200, "regional camera target")
 	check(camera.wheel_ratio(0.2) > 1.0, "precision wheel remains monotonic")
 	camera.free()
+	# The command UI must be a pure intent emitter with engine-owned catalogs.
+	check(hud.command_panel != null and not hud.command_panel.visible, "intervention editor is initially hidden")
+	hud.set_command_catalog({
+		"omens":[{"Key":"fixture-omen","Name":"Presagio","Cost":3,"KM":120,"Needs":"none","desc":"Ejemplo"}],
+		"parameters":[
+			{"key":"fixture-live","label":"Editable","min":0.0,"max":1.0,"step":0.1,"default":0.2,"newWorld":false},
+			{"key":"fixture-new","label":"Mundo nuevo","min":0.0,"max":2.0,"step":1.0,"default":1.0,"newWorld":true}
+		]
+	})
+	hud.set_command_context({
+		"year":-100,"nextSequence":5,"rulesSHA256":"go-hash","favor":4.0,
+		"rules":{"sandbox":true,"values":{"fixture-live":0.2,"fixture-new":1.0}}
+	})
+	check(hud.command_panel._sandbox.button_pressed, "sandbox reflects effective Go rule without local toggle")
+	check(not (hud.command_panel._controls["fixture-new"] as SpinBox).editable, "new-world parameter remains locked")
+	var commands_sent: Array = []
+	hud.command_requested.connect(func(kind_name: String, payload: Dictionary):
+		commands_sent.append({"kind":kind_name,"payload":payload}))
+	(hud.command_panel._controls["fixture-live"] as SpinBox).value = 0.6
+	hud.command_panel._submit_rules()
+	check(commands_sent.size() == 1 and commands_sent[0]["kind"] == "change_rules", "rule edits generate an intent")
+	check(commands_sent[0]["payload"]["values"].has("fixture-live") and not commands_sent[0]["payload"]["values"].has("fixture-new"), "rule payload excludes new-world values")
+	hud.command_panel._arm_omen()
+	var targeted := hud.consume_omen_target(2)
+	check(targeted == {"omen":"fixture-omen","cell":2}, "one map click consumes armed Go omen intent")
+	check(hud.consume_omen_target(2).is_empty(), "omen cannot fire twice from a single arm")
+	hud.set_command_pending(true)
+	check(hud.command_panel._apply.disabled and hud.command_panel._sandbox.disabled, "UI blocks edits while command is in flight")
+	hud.set_command_pending(false)
+	hud.set_command_outcome({"accepted":false,"error":"sequence stale"})
+	check(hud.command_panel._status.text.contains("sequence stale"), "Go rejection is visible to player")
+
 	observer.source.close()
 	launch.queue_free()
 	hud.queue_free()
