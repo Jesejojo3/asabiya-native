@@ -92,6 +92,28 @@ func _run() -> void:
 	check(hud._search_targets == [["engine:religion",11]], "religion search uses engine entity")
 	hud._on_search_pick(0)
 	check(observer.selection == {"kind":"engine:religion","id":11}, "search opens entity without moving camera")
+	var historical_kinds := ["figure","ruler","war","migration","route","outbreak","omen","cataclysm","polity","people"]
+	for i in historical_kinds.size():
+		var records := {}
+		records[100 + i] = {"name":"Archivo histórico %d" % i, "title":"Astrónoma" if i == 0 else "", "alive":false}
+		observer.current_frame.entity_records[historical_kinds[i]] = records
+	hud._on_search("archivo histórico")
+	check(hud._search_targets.size() == historical_kinds.size(), "all HTML historic inspector kinds are discoverable")
+	for i in historical_kinds.size():
+		check(hud._search_targets.has(["engine:" + historical_kinds[i], 100 + i]),
+			"search navigates archived " + historical_kinds[i])
+	hud._on_search("astrónoma")
+	check(hud._search_targets == [["engine:figure",100]], "figure titles are searchable as in HTML v0.6")
+	hud._on_search("archivo histórico")
+	hud._on_search_pick(0)
+	check(observer.selection == {"kind":"engine:figure","id":100}, "figure search opens a Go-backed record")
+	var many_figures := {}
+	for i in 100:
+		many_figures[1000 + i] = {"name":"Muchos exploradores %d" % i}
+	observer.current_frame.entity_records["figure"] = many_figures
+	hud._on_search("muchos exploradores")
+	check(hud.search_results.item_count == 40 and hud._search_targets.size() == 40,
+		"search results stay bounded despite large figure archives")
 	hud._on_search("1,2")
 	check(hud._search_targets == [["cell",9]], "coordinate search")
 	hud._on_search("unknown")
