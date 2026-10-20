@@ -18,6 +18,8 @@ extends Node
 static var pending_world: Dictionary = {}
 static var pending_source: Dictionary = {}
 
+var _launch: LaunchScreen
+var _last_session_error := ""
 var _startup: CanvasLayer
 var _loading_label: Label
 var _retry_button: Button
@@ -97,7 +99,7 @@ func _ready() -> void:
 		for asset: Dictionary in bridge.source_config.get("assets", []):
 			if not str(asset.get("path", "")).is_absolute_path():
 				asset["path"] = OS.get_executable_path().get_base_dir().path_join(str(asset["path"]))
-	_show_loading("Iniciando Asabiya Native…")
+	_show_loading("Explora continentes, pueblos y ciudades. La historia comienza cuando tú decidas.")
 	bridge.world_ready.connect(_accept_world)
 	bridge.frames_changed.connect(_on_frames_changed)
 	bridge.status_changed.connect(func(text: String) -> void:
@@ -107,46 +109,40 @@ func _ready() -> void:
 			_refresh_ui()
 		elif _loading_label != null:
 			_loading_label.text = text
-			if _retry_button != null: _retry_button.visible = bridge.last_error != "")
-	if not bridge.start():
-		_loading_label.text = bridge.last_error
-		_retry_button.show()
+			if _launch != null: _launch.update_message(text, bridge.last_error != ""))
+	bridge.request_failed.connect(func(op: String, code: String, message: String):
+		if hud != null: hud.show_request_error(op, code, message))
+	_launch.session_requested.connect(func(seed_text: String):
+		if world == null: bridge.world_config["seed"] = seed_text
+		if not bridge.start(): _launch.update_message(bridge.last_error, true))
+	if args.has("capture") or args.has("autostart"):
+		_launch.show_progress("Iniciando Asabiya Native…")
+		if not bridge.start(): _launch.update_message(bridge.last_error, true)
 
 
 func _show_loading(text: String) -> void:
 	_startup = CanvasLayer.new()
 	add_child(_startup)
-	var backdrop := ColorRect.new()
-	backdrop.color = UiTheme.BG
-	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_startup.add_child(backdrop)
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	center.theme = UiTheme.build()
-	_startup.add_child(center)
-	var box := VBoxContainer.new()
-	box.custom_minimum_size.x = 420
-	box.add_theme_constant_override("separation", 20)
-	center.add_child(box)
-	var title := UiTheme.heading("Asabiya", 28)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(title)
-	_loading_label = UiTheme.muted(text, 14)
-	_loading_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(_loading_label)
-	_retry_button = Button.new()
-	_retry_button.text = "Reintentar"
-	_retry_button.visible = false
-	_retry_button.pressed.connect(func():
+	_launch = LaunchScreen.new()
+	_startup.add_child(_launch)
+	var seed_text := "Asabiya"
+	if source is BridgeSource: seed_text = str((source as BridgeSource).world_config.get("seed", seed_text))
+	_launch.build(seed_text)
+	_launch.message.text = text
+	_launch.retry_requested.connect(func():
 		if source != null: source.close()
 		get_tree().reload_current_scene())
-	box.add_child(_retry_button)
+	_launch.quit_requested.connect(_request_close)
+	_loading_label = _launch.message
+	_retry_button = _launch.retry
+
 
 func _accept_world(value: WorldData) -> void:
 	world = value
 	if _startup != null:
 		_startup.queue_free()
 		_startup = null
+		_launch = null
 		_loading_label = null
 		_retry_button = null
 	current_year = int(world.header.get("session", {}).get("year", -9000))
@@ -257,7 +253,7 @@ func _build_scene() -> void:
 	hud.playback_rate_changed.connect(func(rate: int):
 		if source is BridgeSource: (source as BridgeSource).set_live_rate(rate))
 	hud.fly_to.connect(func(c: int): select_entity("cell", c, true))
-	hud.entity_requested.connect(func(kind: String, id: int): select_entity(kind, id, true))
+	hud.entity_requested.connect(func(kind: String, id: int): select_entity(kind, id, false))
 	hud.world_requested.connect(_generate_world)
 	hud.deselect_requested.connect(_deselect)
 	hud.setting_changed.connect(func(k: String, v: Variant):
@@ -391,6 +387,7 @@ func _apply_layer_style() -> void:
 
 
 func _update_zoom_style(z: float) -> void:
+	if hud != null: hud.set_view_scale(z, map_view.camera.yaw)
 	var d := MapLayers.def(current_layer)
 	var op := 0.0 if current_layer in ["terrain", "provinces"] else overlay_opacity
 	var prov := 0.0
@@ -428,6 +425,10 @@ func _process(_dt: float) -> void:
 		(source as BridgeSource).poll()
 		if hud != null and hud.playing() and not (source as BridgeSource).is_live():
 			hud.stop_playing()
+		var bridge := source as BridgeSource
+		if hud != null and not bridge.connected and bridge.last_error != "" and _last_session_error != bridge.last_error:
+			_last_session_error = bridge.last_error
+			hud.show_session_error(bridge.last_error)
 
 
 # ---------------------------------------------------------------- selection & panels
@@ -454,6 +455,8 @@ func _deselect() -> void:
 
 
 func select_entity(kind: String, id: int, fly: bool) -> void:
+	if kind == "cell" and (id < 0 or id >= world.cell_count()): return
+	hud.remember_selection(kind, id)
 	selection = {"kind": kind, "id": id}
 	if kind.begins_with("engine:"):
 		_show_engine_entity(kind.trim_prefix("engine:"), id)
@@ -462,7 +465,7 @@ func select_entity(kind: String, id: int, fly: bool) -> void:
 		"cell":
 			map_view.select_cell(id, -2.0)
 			if fly:
-				map_view.camera.focus_on(world.cell_center(id), minf(map_view.camera.distance, 60.0))
+				map_view.camera.focus_on(world.cell_center(id), minf(map_view.camera.distance, 18.0))
 			_province_details.clear()
 			_province_history.clear()
 			_show_cell(id)
@@ -502,14 +505,14 @@ func _fly_to_group(ids: PackedInt32Array, g: int) -> void:
 	for i in world.land_cells:
 		if ids[i] == g:
 			var c := world.cell_center(i)
-			var a := c.x / world.fine_width * TAU
+			var a := c.x / map_view.mm.map_w * TAU
 			sx += sin(a)
 			cx += cos(a)
 			z += c.y
 			n += 1
 	if n == 0:
 		return
-	var x := fposmod(atan2(sx, cx) / TAU * world.fine_width, world.fine_width)
+	var x := fposmod(atan2(sx, cx) / TAU * map_view.mm.map_w, map_view.mm.map_w)
 	map_view.camera.focus_on(Vector2(x, z / n), clampf(sqrt(n) * 9.0, 60.0, 600.0))
 
 
@@ -560,7 +563,7 @@ func _show_cell(c: int) -> void:
 			var s := f.owner[c]
 			if s >= 0 and f.states.has(s):
 				var sid := s
-				pol.append(["Estado", func(): select_entity("state", sid, true), str(f.states[s].get("name", "#%d" % s))])
+				pol.append(["Estado", func(): select_entity("state", sid, false), str(f.states[s].get("name", "#%d" % s))])
 				ruler = f.states[s].get("ruler")
 				pol.append(["Autoridad", ruler if ruler != null else null, "el motor no envía gobernante"])
 			else:
@@ -572,26 +575,29 @@ func _show_cell(c: int) -> void:
 			var e := f.people[c]
 			if e >= 0 and f.peoples.has(e):
 				var pid := e
-				pol.append(["Pueblo predominante", func(): select_entity("people", pid, true), str(f.peoples[e].get("name", "#%d" % e))])
+				pol.append(["Pueblo predominante", func(): select_entity("people", pid, false), str(f.peoples[e].get("name", "#%d" % e))])
 			else:
 				pol.append(["Pueblo predominante", "Deshabitada"])
 		else:
 			pol.append(["Pueblo predominante", null, _need("peoples")])
 		if f != null and f.has_layer("religion"):
 			var r := f.religion[c]
-			pol.append(["Religión", str(f.religions[r].get("name", "#%d" % r)) if r >= 0 and f.religions.has(r) else "Ninguna"])
+			if r >= 0 and f.religions.has(r):
+				var rid := r
+				pol.append(["Religión", func(): select_entity("engine:religion", rid, false), str(f.religions[r].get("name", "#%d" % r))])
+			else: pol.append(["Religión", "Ninguna"])
 		else:
 			pol.append(["Religión", null, _need("religions")])
 		pol.append(["Población", Hud._fmt_int(f.population[c]) if f != null and f.has_layer("population") else null, _need("population")])
 		pol.append(["Capacidad de carga", Hud._fmt_int(f.carrying[c]) if f != null and f.has_layer("carrying") else null, _need("carrying")])
 		pol.append(["Era tecnológica", ("%d de 7" % int(round(f.technology[c] * 7.0))) if f != null and f.has_layer("technology") else null, _need("technology")])
-		sections.append(["Historia y sociedad", pol])
+		sections.push_front(["Historia y sociedad", pol])
 		var here := []
 		if f != null:
 			for s2 in f.settlements:
 				if int(s2["cell"]) == c:
 					var sid2 := int(s2["id"])
-					here.append([SettlementLayer.TIER_NAMES[SettlementLayer.tier_of(s2)], func(): select_entity("settlement", sid2, true), str(s2.get("name", "#%d" % sid2))])
+					here.append([SettlementLayer.TIER_NAMES[SettlementLayer.tier_of(s2)], func(): select_entity("settlement", sid2, false), str(s2.get("name", "#%d" % sid2))])
 		if here.is_empty():
 			here.append(["Asentamientos", null if f == null or not source.has_system("settlements") else "Ninguno", _need("settlements")])
 		here.append(["Infraestructura", null, _need("infrastructure")])
@@ -632,15 +638,15 @@ func _show_settlement(s: Dictionary) -> void:
 	]
 	var st := int(s.get("state", -1))
 	if st >= 0 and f != null and f.states.has(st):
-		rows.append(["Estado", func(): select_entity("state", st, true), str(f.states[st].get("name", ""))])
+		rows.append(["Estado", func(): select_entity("state", st, false), str(f.states[st].get("name", ""))])
 	var cell := int(s["cell"])
-	rows.append(["Provincia", func(): select_entity("cell", cell, true), "%d,%d" % [world.cell_xy(cell).x, world.cell_xy(cell).y]])
+	rows.append(["Provincia", func(): select_entity("cell", cell, false), "%d,%d" % [world.cell_xy(cell).x, world.cell_xy(cell).y]])
 	var feats := []
 	var fd := SettlementLayer.features(s)
 	for k in fd:
 		if fd[k]:
 			feats.append({"walls": "Murallas", "castle": "Fortaleza", "temple": "Templo", "port": "Puerto", "market": "Mercado"}.get(k, str(k)))
-	rows.append(["Construcciones", ", ".join(feats) if not feats.is_empty() else "Ninguna registrada"])
+	rows.append(["Elementos de presentación", ", ".join(feats) if not feats.is_empty() else "Sin elementos destacados"])
 	hud.show_info(str(s.get("name", "Asentamiento")), "Asentamiento del motor · %s" % Hud.fmt_year(current_year), [["Asentamiento", rows],
 		["Representación", [UiTheme.muted("La disposición interna de edificios es una representación visual; la ciudad existe en Go; el tamaño visual usa población provincial y las murallas son un proxy de fortificación. No son entidades nuevas de edificios.", 11)]]])
 
@@ -713,9 +719,14 @@ func _show_people(id: int) -> void:
 func _unhandled_key_input(event: InputEvent) -> void:
 	var k := event as InputEventKey
 	if hud == null: return
+	if get_viewport().gui_get_focus_owner() is LineEdit or get_viewport().gui_get_focus_owner() is TextEdit: return
 	if k == null or not k.pressed or k.echo:
 		return
-	if k.ctrl_pressed and k.keycode == KEY_F:
+	if k.keycode == KEY_SPACE:
+		if not hud.sim_buttons["play"].disabled: hud.sim_buttons["play"].pressed.emit()
+	elif k.alt_pressed and k.keycode in [KEY_LEFT, KEY_RIGHT]:
+		hud._navigate(-1 if k.keycode == KEY_LEFT else 1)
+	elif k.ctrl_pressed and k.keycode == KEY_F:
 		hud.focus_search()
 	elif k.ctrl_pressed and k.keycode == KEY_Q:
 		_request_close()
@@ -777,15 +788,10 @@ func _capture(path: String) -> void:
 
 func _fatal(msg: String) -> void:
 	push_error(msg)
-	var layer := CanvasLayer.new()
-	add_child(layer)
-	var p := PanelContainer.new()
-	p.theme = UiTheme.build()
-	p.set_anchors_preset(Control.PRESET_CENTER)
-	layer.add_child(p)
-	var l := Label.new()
-	l.text = msg
-	p.add_child(l)
+	if _startup == null: _show_loading(msg)
+	_launch.launch.hide()
+	_launch.seed_edit.hide()
+	_launch.update_message(msg, true)
 
 
 func _request_province_details(id: int) -> void:
@@ -894,9 +900,27 @@ func _entity_sections(kind_name: String, value: Dictionary) -> Array:
 				entity_name = "%d, %d" % [xy.x, xy.y]
 			else:
 				entity_name = str(current_frame.entity_records.get(target_kind, {}).get(ident, {}).get("name", entity_name))
-			rows.append([relation[1], func(): select_entity("cell" if target_kind == "cell" else "engine:" + target_kind, ident, target_kind == "cell"), entity_name])
+			rows.append([relation[1], func(): select_entity("cell" if target_kind == "cell" else "engine:" + target_kind, ident, false), entity_name])
 	var sections := [["Información", rows]]
 	for spec in [["text","Crónica"],["why","Contexto"],["outcome","Resultado"],["followText","Consecuencias"]]:
 		if value.get(spec[0]) is String and value[spec[0]] != "":
 			sections.append([spec[1], [UiTheme.muted(str(value[spec[0]]), 14)]])
 	return sections
+
+## Explicit locate action, separate from opening linked entity sheets.
+func focus_selection() -> void:
+	var kind := str(selection.get("kind", ""))
+	var id := int(selection.get("id", -1))
+	if kind == "": return
+	if kind == "cell":
+		map_view.camera.focus_on(world.cell_center(id), 16.0)
+	elif kind == "settlement" and current_frame != null:
+		var place := current_frame.settlement_by_id(id)
+		if not place.is_empty(): map_view.camera.focus_on(world.cell_center(int(place["cell"])), 14.0)
+	elif kind == "state" and current_frame != null: _fly_to_group(current_frame.owner, id)
+	elif kind == "people" and current_frame != null: _fly_to_group(current_frame.people, id)
+	elif kind.begins_with("engine:") and current_frame != null:
+		var record: Dictionary = current_frame.entity_records.get(kind.trim_prefix("engine:"), {}).get(id, {})
+		if record.has("cellId"): map_view.camera.focus_on(world.cell_center(int(record["cellId"])), 16.0)
+		elif record.has("capitalId"): map_view.camera.focus_on(world.cell_center(int(record["capitalId"])), 30.0)
+		elif kind == "engine:religion": _fly_to_group(current_frame.religion, id)

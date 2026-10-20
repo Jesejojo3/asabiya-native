@@ -250,7 +250,9 @@ func update_view(cam: Camera3D, zoom: float) -> void:
 		var a: Vector3 = l.get_meta("anchor")
 		l.position = Vector3(mm.wrap_x_near(a.x, cx), a.y, a.z)
 		# names belong to the world/regional views
-		l.visible = zoom > 0.42
+		var fade := smoothstep(0.40, 0.56, zoom)
+		l.visible = fade > 0.01
+		l.modulate.a = fade * 0.95
 	for m in _markers:
 		var a2: Vector3 = m.get_meta("anchor")
 		m.position = Vector3(mm.wrap_x_near(a2.x, cx), a2.y, a2.z)

@@ -1,0 +1,129 @@
+extends SceneTree
+## Headless presentation contracts; no graphical or historical validation.
+var checks := 0
+var failures := 0
+
+class ObserverStub extends Node:
+	var world := WorldData.new()
+	var current_frame := HistoryFrame.new()
+	var current_year := -100
+	var selection := {"kind":"", "id":-1}
+	var source := BridgeSource.new()
+	var picked: Array = []
+	var located := 0
+	func select_entity(kind: String, id: int, _fly: bool) -> void:
+		selection = {"kind":kind, "id":id}
+		picked.append(selection)
+	func focus_selection() -> void: located += 1
+	func _request_close() -> void: pass
+
+func check(ok: bool, label: String) -> void:
+	checks += 1
+	if not ok:
+		failures += 1
+		printerr("FAIL ", label)
+
+func _initialize() -> void: call_deferred("_run")
+
+func _run() -> void:
+	var observer := ObserverStub.new()
+	root.add_child(observer)
+	observer.world.width = 4
+	observer.world.height = 3
+	observer.world.world_seed = "UX fixture"
+	observer.current_frame.year = -100
+	observer.current_frame.states = {7:{"name":"Estado de prueba"}}
+	observer.current_frame.peoples = {9:{"name":"Pueblo de prueba"}}
+	observer.current_frame.religions = {11:{"name":"Religión de prueba"}}
+	observer.current_frame.settlements = [{"id":13,"cell":1,"name":"Ciudad de prueba"}]
+	observer.source.connected = true
+	var hud := Hud.new()
+	root.add_child(hud)
+	hud.build(observer)
+	hud.set_session(observer.source, observer.world)
+	hud.set_frame_stats(observer.current_frame, -100)
+	await process_frame
+	check(hud.top_year.text == Hud.fmt_year(-100), "engine year is formatted")
+	check(hud.top_stats["states"].text == "1", "real state count")
+	check(hud.speed() == 10, "previous live pacing default preserved")
+	for icon in ["atlas","search","chronicle","home","focus","back","forward","close","play","pause","step","menu","people","state","city"]:
+		check(AtlasIcons.get_icon(icon) != null, "original icon " + icon)
+	check(AtlasIcons.get_icon("search") == AtlasIcons.get_icon("search"), "icon texture cached")
+	var sections := [["Sociedad", [["Estado", func(): observer.select_entity("state", 7, false), "Estado de prueba"], ["Población", "12 000"]]], ["Geografía", [["Bioma", "Pradera"]]]]
+	hud.show_info("Provincia 1,0", "Año observado", sections)
+	var original := hud.info_body.get_child(0).get_instance_id()
+	hud.show_info("Provincia 1,0", "Año observado", sections)
+	check(hud.info_body.get_child(0).get_instance_id() == original, "unchanged inspector is not rebuilt")
+	check(hud._section_tabs.tab_count == 2, "context sections become tabs")
+	hud._section_tabs.current_tab = 1
+	check(not hud._section_nodes[0].visible and hud._section_nodes[1].visible, "section tab changes visible facts")
+	hud.show_info("Provincia 1,0", "Año observado", [["Sociedad", [["Población", "12 001"]]], ["Geografía", [["Bioma", "Pradera"]]]])
+	check(hud._section_tabs.current_tab == 1, "detail refresh preserves selected section")
+	hud.remember_selection("cell", 1)
+	hud.remember_selection("state", 7)
+	hud.remember_selection("state", 7)
+	check(hud._nav.size() == 2, "duplicate selection not added")
+	hud._navigate(-1)
+	check(observer.selection == {"kind":"cell","id":1}, "back restores contextual entity")
+	hud._navigate(1)
+	check(observer.selection == {"kind":"state","id":7}, "forward restores contextual entity")
+	hud._navigate(-1)
+	hud.remember_selection("people", 9)
+	check(hud._nav.size() == 2 and hud._nav[1]["kind"] == "people", "new branch truncates forward history")
+	for i in 50: hud.remember_selection("cell", i)
+	check(hud._nav.size() == 32, "navigation memory bounded")
+	hud._on_search("prueba")
+	check(hud.search_results.item_count == 4, "states peoples religions and cities searchable")
+	hud._on_search("religión")
+	check(hud._search_targets == [["engine:religion",11]], "religion search uses engine entity")
+	hud._on_search_pick(0)
+	check(observer.selection == {"kind":"engine:religion","id":11}, "search opens entity without moving camera")
+	hud._on_search("1,2")
+	check(hud._search_targets == [["cell",9]], "coordinate search")
+	hud._on_search("unknown")
+	check(hud._search_targets.is_empty(), "empty search has no actionable synthetic results")
+	hud.show_request_error("get_entity", "not_found", "Entidad no disponible")
+	check(hud._notice.visible and not hud._notice_recover.visible, "recoverable query has nonterminal notice")
+	check(observer.source.connected, "UI query notice does not end session")
+	check(observer.source._outgoing.is_empty(), "UI query notice sends no requests")
+	hud.show_session_error("Transporte interrumpido")
+	check(hud._notice_recover.visible, "terminal notice offers new session")
+	check(observer.source._outgoing.is_empty(), "UI never retries uncertain advance")
+	hud.set_view_scale(0.9, 0.0)
+	check(hud._scale_buttons[0].button_pressed, "continental scale highlighted")
+	hud.set_view_scale(0.6, 0.0)
+	check(hud._scale_buttons[1].button_pressed, "regional scale highlighted")
+	hud.set_view_scale(0.3, 0.0)
+	check(hud._scale_buttons[2].button_pressed, "province scale highlighted")
+	for dimensions in [Vector2(1000,640),Vector2(1280,720),Vector2(1600,900),Vector2(2560,1440)]:
+		root.size = Vector2i(dimensions)
+		hud.size = dimensions
+		hud._fit_layout()
+		await process_frame
+		check(hud.info_panel.offset_right < dimensions.x - 300, "inspector leaves map space " + str(dimensions))
+		check(hud.info_panel.get_global_rect().end.y <= hud.timeline_panel.get_global_rect().position.y, "inspector clears timeline " + str(dimensions))
+		check(hud._rail.get_parent().get_global_rect().end.x < hud.info_panel.get_global_rect().position.x, "rail clears inspector " + str(dimensions))
+	var launch := LaunchScreen.new()
+	root.add_child(launch)
+	launch.build("Test")
+	check(launch.launch.visible and not launch.progress.visible, "initial start screen waits for user")
+	launch.launch.pressed.emit()
+	check(not launch.launch.visible and launch.progress.visible, "launch enters progress state")
+	launch.update_message("failure", true)
+	check(launch.retry.visible and not launch.progress.visible, "startup failure permits explicit new session")
+	var camera := StrategyCamera.new()
+	camera.min_distance = 3.5
+	camera.max_distance = 1000
+	camera.set_scale_view(2)
+	check(camera._goal_distance > camera.min_distance and camera._goal_distance < 30, "provincial camera target")
+	camera.set_scale_view(1)
+	check(camera._goal_distance > 80 and camera._goal_distance < 200, "regional camera target")
+	check(camera.wheel_ratio(0.2) > 1.0, "precision wheel remains monotonic")
+	camera.free()
+	observer.source.close()
+	launch.queue_free()
+	hud.queue_free()
+	observer.queue_free()
+	await process_frame
+	print("Atlas UX regressions: %d checks, %d failures" % [checks, failures])
+	quit(1 if failures else 0)

@@ -14,7 +14,7 @@ env:
   GOTOOLCHAIN: local
 jobs:
   native:
-    if: github.event_name != 'pull_request' || github.head_ref != 'mission/performance-stability'
+    if: github.event_name != 'pull_request' || (github.head_ref != 'mission/performance-stability' && github.head_ref != 'ux/ck3-experience-overhaul')
     runs-on: windows-2022
     timeout-minutes: 15
     steps:

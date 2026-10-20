@@ -12,7 +12,7 @@ env:
   GOTOOLCHAIN: local
 jobs:
   tests:
-    if: github.event_name != 'pull_request' || github.head_ref != 'mission/performance-stability'
+    if: github.event_name != 'pull_request' || (github.head_ref != 'mission/performance-stability' && github.head_ref != 'ux/ck3-experience-overhaul')
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:

@@ -323,3 +323,15 @@ func _correct_zoom_anchor() -> void:
 		_goal_target.z += next_z - target.z
 		target.z = next_z
 		_apply()
+
+## Presentation-only scales; all share the same eased camera and wrap logic.
+func set_scale_view(scale_index: int) -> void:
+	_zoom_anchored = false
+	if scale_index <= 0:
+		reset_view()
+		return
+	var level := 0.61 if scale_index == 1 else 0.31
+	_goal_distance = min_distance * pow(max_distance / min_distance, level)
+	_goal_tilt = 0.0
+	_dragging = false
+	_rotating = false

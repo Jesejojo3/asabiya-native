@@ -58,6 +58,27 @@ var stats_body: VBoxContainer
 var _search_targets: Array = []
 var _chronicle_events: Array = []
 var _playing := false
+var _nav: Array[Dictionary] = []
+var _nav_index := -1
+var _navigating := false
+var _info_signature: Array = []
+var _section_tabs: TabBar
+var _section_nodes: Array[Control] = []
+var _info_scroll: ScrollContainer
+var _section_key := ""
+var _notice: PanelContainer
+var _notice_text: Label
+var _notice_recover: Button
+var _scale_label: Label
+var _scale_buttons: Array[Button] = []
+var _layer_signature: Array = []
+var _top_bar: PanelContainer
+var _rail: VBoxContainer
+var _scale_bar: PanelContainer
+var _welcome: PanelContainer
+var _reduced_motion := false
+var _fade: Tween
+var _search_timer: Timer
 
 
 func build(application: Node) -> void:
@@ -75,28 +96,35 @@ func build(application: Node) -> void:
 	_build_help()
 	_build_world_dialog()
 	_build_stats()
+	_build_atlas_navigation()
+	_build_notice()
 	resized.connect(_fit_layout)
 	_fit_layout()
 
 
 func _fit_layout() -> void:
 	if top_stats.has("peoples"):
-		top_stats["peoples"].get_parent().visible = size.x >= 1100.0
-	top_seed.visible = size.x >= 1000.0
-
-
-# ---------------------------------------------------------------- top bar
+		top_stats["peoples"].get_parent().visible = size.x >= 1250.0
+		top_stats["population"].get_parent().visible = size.x >= 1050.0
+	top_seed.visible = size.x >= 1380.0
+	var inspector_width := clampf(size.x * 0.27, 320.0, 390.0)
+	info_panel.offset_right = 76.0 + inspector_width
+	_search_panel.offset_left = -minf(390.0, size.x - 100.0)
+	help_panel.custom_minimum_size.x = minf(520.0, size.x - 48.0)
+	if _welcome != null:
+		_welcome.visible = size.x >= 1250.0 and not info_panel.visible
 
 func _build_top_bar() -> void:
 	var bar := PanelContainer.new()
+	_top_bar = bar
 	bar.add_theme_stylebox_override("panel", UiTheme.panel_style(UiTheme.BG, 0, false))
 	bar.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	bar.offset_bottom = 54
+	bar.offset_bottom = 68
 	add_child(bar)
 	var h := HBoxContainer.new()
-	h.add_theme_constant_override("separation", 18)
+	h.add_theme_constant_override("separation", 12)
 	bar.add_child(h)
-	h.add_child(UiTheme.heading("Asabiya", 19))
+	h.add_child(UiTheme.heading("ASABIYA", 23))
 	top_seed = Label.new()
 	top_seed.custom_minimum_size.x = 80
 	top_seed.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -105,12 +133,13 @@ func _build_top_bar() -> void:
 	top_seed.add_theme_color_override("font_color", UiTheme.MUTED)
 	h.add_child(top_seed)
 	for spec in [["population", "Población"], ["states", "Estados"], ["peoples", "Pueblos"]]:
-		var metric := HBoxContainer.new()
-		metric.add_theme_constant_override("separation", 6)
+		var metric := VBoxContainer.new()
+		metric.add_theme_constant_override("separation", 0)
 		var caption := UiTheme.muted(spec[1], 12)
 		caption.autowrap_mode = TextServer.AUTOWRAP_OFF
 		metric.add_child(caption)
 		var value := Label.new()
+		value.add_theme_font_size_override("font_size", 17)
 		metric.add_child(value)
 		top_stats[spec[0]] = value
 		h.add_child(metric)
@@ -122,23 +151,28 @@ func _build_top_bar() -> void:
 	session_badge_box.visible = false
 	h.add_child(session_badge_box)
 	_map_button = Button.new()
-	_map_button.text = "Mapa: Terreno"
+	_map_button.text = "Terreno"
+	_map_button.icon = AtlasIcons.get_icon("atlas")
 	_map_button.toggle_mode = true
 	_map_button.focus_mode = Control.FOCUS_NONE
 	_map_button.toggled.connect(_toggle_maps)
 	h.add_child(_map_button)
 	var search := Button.new()
 	search.text = "Buscar"
+	search.icon = AtlasIcons.get_icon("search")
 	search.tooltip_text = "Buscar provincias y entidades (Ctrl+F)"
 	search.focus_mode = Control.FOCUS_NONE
 	search.pressed.connect(focus_search)
 	h.add_child(search)
 	var menu := MenuButton.new()
-	menu.text = "Mundo"
+	menu.text = "Menú"
+	menu.icon = AtlasIcons.get_icon("menu")
 	var pm := menu.get_popup()
 	pm.add_item("Generar mundo…", 0)
 	pm.add_item("Estadísticas", 1)
 	pm.add_item("Centrar mapa (Inicio)", 2)
+	pm.add_separator("Interfaz")
+	pm.add_item("Reducir animaciones", 30)
 	pm.add_separator("Calidad gráfica")
 	pm.add_radio_check_item("Alta", 10)
 	pm.add_radio_check_item("Media", 11)
@@ -173,6 +207,10 @@ func _on_menu(id: int) -> void:
 		setting_changed.emit("relief", id - 20)
 		return
 	match id:
+		30:
+			_reduced_motion = not _reduced_motion
+			if _reduced_motion and _fade != null: _fade.kill()
+			info_panel.modulate.a = 1.0
 		0: world_dialog.popup_centered(Vector2i(420, 160))
 		1: toggle_stats()
 		2: app.map_view.camera.reset_view()
@@ -203,6 +241,7 @@ func speed() -> int:
 func stop_playing() -> void:
 	_playing = false
 	sim_buttons["play"].text = "Continuar"
+	sim_buttons["play"].icon = AtlasIcons.get_icon("play")
 
 
 # ---------------------------------------------------------------- layers
@@ -211,11 +250,11 @@ func _build_layer_panel() -> void:
 	var p := PanelContainer.new()
 	_layer_panel = p
 	p.visible = false
-	p.set_anchors_preset(Control.PRESET_LEFT_WIDE)
-	p.offset_left = 12
-	p.offset_right = 252
-	p.offset_top = 64
-	p.offset_bottom = -126
+	p.set_anchors_preset(Control.PRESET_RIGHT_WIDE)
+	p.offset_left = -310
+	p.offset_right = -16
+	p.offset_top = 130
+	p.offset_bottom = -154
 	add_child(p)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -269,11 +308,11 @@ func _build_layer_panel() -> void:
 			cb.tooltip_text = "Árboles y rocas derivados del bioma y del bosque inicial del motor.\nSon decoración: no representan entidades ni cambios históricos."
 		v.add_child(cb)
 	_legend_panel = PanelContainer.new()
-	_legend_panel.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	_legend_panel.offset_left = 12
-	_legend_panel.offset_right = 252
-	_legend_panel.offset_top = -300
-	_legend_panel.offset_bottom = -126
+	_legend_panel.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_legend_panel.offset_left = -276
+	_legend_panel.offset_right = -16
+	_legend_panel.offset_top = -338
+	_legend_panel.offset_bottom = -154
 	_legend_panel.visible = false
 	add_child(_legend_panel)
 	var legend_scroll := ScrollContainer.new()
@@ -286,6 +325,9 @@ func _build_layer_panel() -> void:
 
 
 func refresh_layers(source: HistorySource, frame: HistoryFrame, current: String) -> void:
+	var signature := [source, frame, current]
+	if signature == _layer_signature: return
+	_layer_signature = signature
 	for id in layer_buttons:
 		var b: Button = layer_buttons[id]
 		var ok := MapLayers.available(id, source, frame)
@@ -300,13 +342,17 @@ func refresh_layers(source: HistorySource, frame: HistoryFrame, current: String)
 
 
 func _toggle_maps(on: bool) -> void:
+	if on:
+		chronicle_panel.hide()
+		sim_buttons["chronicle"].set_pressed_no_signal(false)
+		_search_panel.hide()
 	_layer_panel.visible = on
 	_map_button.set_pressed_no_signal(on)
 	_legend_panel.visible = not on and _legend_signature.get("legend", {}).get("kind", "none") != "none"
 
 
 func set_legend(title: String, legend: Dictionary) -> void:
-	_map_button.text = "Mapa: " + title
+	_map_button.text = title
 	var signature := {"title":title, "legend":legend}
 	if signature == _legend_signature: return
 	_legend_signature = signature.duplicate(true)
@@ -358,101 +404,142 @@ func set_legend(title: String, legend: Dictionary) -> void:
 
 func _build_info_panel() -> void:
 	info_panel = PanelContainer.new()
-	info_panel.set_anchors_preset(Control.PRESET_RIGHT_WIDE)
-	info_panel.offset_left = -364
-	info_panel.offset_right = -12
-	info_panel.offset_top = 64
-	info_panel.offset_bottom = -126
+	info_panel.set_anchors_preset(Control.PRESET_LEFT_WIDE)
+	info_panel.offset_left = 76
+	info_panel.offset_right = 426
+	info_panel.offset_top = 130
+	info_panel.offset_bottom = -154
 	info_panel.visible = false
 	add_child(info_panel)
 	var v := VBoxContainer.new()
 	info_panel.add_child(v)
-	var head := HBoxContainer.new()
-	var tv := VBoxContainer.new()
-	tv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	tv.add_theme_constant_override("separation", 0)
-	info_title = UiTheme.heading("", 18)
-	info_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	info_subtitle = UiTheme.muted("", 12)
-	tv.add_child(info_title)
-	tv.add_child(info_subtitle)
-	head.add_child(tv)
+	var navigation := HBoxContainer.new()
+	v.add_child(navigation)
+	for spec in [["back", "Ficha anterior"], ["forward", "Ficha siguiente"], ["focus", "Localizar en el mapa"]]:
+		var b := Button.new()
+		b.icon = AtlasIcons.get_icon(spec[0])
+		b.tooltip_text = spec[1]
+		b.custom_minimum_size = Vector2(32, 32)
+		var key: String = spec[0]
+		b.pressed.connect(func():
+			if key == "focus": app.focus_selection()
+			else: _navigate(-1 if key == "back" else 1))
+		sim_buttons["nav_" + key] = b
+		navigation.add_child(b)
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	navigation.add_child(spacer)
 	var close := Button.new()
-	close.text = "✕"
-	close.flat = true
-	close.focus_mode = Control.FOCUS_NONE
+	close.icon = AtlasIcons.get_icon("close")
+	close.tooltip_text = "Cerrar ficha (Esc)"
 	close.pressed.connect(func(): deselect_requested.emit())
-	head.add_child(close)
-	v.add_child(head)
-	v.add_child(HSeparator.new())
-	var sc := ScrollContainer.new()
-	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	v.add_child(sc)
+	navigation.add_child(close)
+	info_title = UiTheme.heading("", 23)
+	info_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(info_title)
+	info_subtitle = UiTheme.muted("", 12)
+	v.add_child(info_subtitle)
+	_section_tabs = TabBar.new()
+	_section_tabs.scrolling_enabled = true
+	_section_tabs.clip_tabs = true
+	_section_tabs.tab_changed.connect(_show_section)
+	v.add_child(_section_tabs)
+	_info_scroll = ScrollContainer.new()
+	_info_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_info_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	v.add_child(_info_scroll)
 	info_body = VBoxContainer.new()
 	info_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sc.add_child(info_body)
-
+	_info_scroll.add_child(info_body)
+	v.add_child(UiTheme.muted("Observaciones del motor Go · sin intervención causal", 10))
 
 func hide_info() -> void:
-	info_panel.visible = false
+	info_panel.hide()
+	if _welcome != null: _welcome.visible = size.x >= 1250.0
 
-
-## sections: Array of [title, rows]; rows: Array of [key, value-or-null, opts]
-## Missing facts are omitted instead of filling the panel with placeholders.
 func show_info(title: String, subtitle: String, sections: Array) -> void:
+	# A detail reply or status refresh need not rebuild an unchanged inspector.
+	var signature := [title, subtitle]
+	for sec: Array in sections:
+		var values := [sec[0]]
+		for row: Variant in sec[1]:
+			if row is Label: values.append(row.text)
+			elif row is Array and row.size() > 1 and row[1] != null:
+				values.append([row[0], str(row[2]) if row[1] is Callable and row.size() > 2 else str(row[1])])
+		signature.append(values)
+	if signature == _info_signature:
+		for sec: Array in sections:
+			for row: Variant in sec[1]:
+				if row is Control and not row.is_inside_tree(): row.free()
+		info_panel.visible = true
+		if _welcome != null: _welcome.hide()
+		return
+	var changed_entity := info_title.text != title
+	_info_signature = signature
 	info_title.text = title
 	info_subtitle.text = subtitle
 	for c in info_body.get_children():
+		info_body.remove_child(c)
 		c.queue_free()
-	for sec in sections:
+	_section_nodes.clear()
+	_section_tabs.clear_tabs()
+	for sec: Array in sections:
 		var present := []
-		for row in sec[1]:
+		for row: Variant in sec[1]:
 			if row is Control or (row is Array and row.size() > 1 and row[1] != null): present.append(row)
 		if present.is_empty(): continue
-		info_body.add_child(UiTheme.heading(str(sec[0]), 13))
-		var grid := GridContainer.new()
-		grid.columns = 2
-		grid.add_theme_constant_override("h_separation", 12)
-		grid.add_theme_constant_override("v_separation", 3)
-		info_body.add_child(grid)
-		for row in present:
+		var section := VBoxContainer.new()
+		section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		info_body.add_child(section)
+		_section_nodes.append(section)
+		_section_tabs.add_tab(str(sec[0]))
+		section.add_child(UiTheme.heading(str(sec[0]), 17))
+		for row: Variant in present:
 			if row is Control:
-				info_body.add_child(row)
+				section.add_child(row)
 				continue
-			var k := UiTheme.muted(str(row[0]), 12)
-			k.custom_minimum_size.x = 108
-			grid.add_child(k)
+			var fact := VBoxContainer.new()
+			fact.add_theme_constant_override("separation", 2)
+			section.add_child(fact)
+			fact.add_child(UiTheme.muted(str(row[0]).to_upper(), 10))
 			var val: Variant = row[1]
 			if val is Callable:
 				var b := Button.new()
-				b.flat = true
 				b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-				b.clip_text = true
-				b.custom_minimum_size.x = 152
 				b.text = str(row[2]) if row.size() > 2 else "Ver"
-				b.tooltip_text = b.text
+				b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+				b.tooltip_text = b.text + " · abrir ficha sin mover el mapa"
+				b.icon = AtlasIcons.get_icon("forward")
 				b.pressed.connect(val)
-				grid.add_child(b)
-				continue
-			var l := Label.new()
-			l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			l.custom_minimum_size = Vector2(152, 0)
-			l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			l.add_theme_font_size_override("font_size", 13)
-			l.text = str(val)
-			grid.add_child(l)
-	info_panel.visible = not _search_panel.visible
-
-
-# ---------------------------------------------------------------- timeline
+				fact.add_child(b)
+			else:
+				var l := Label.new()
+				l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+				l.text = str(val)
+				fact.add_child(l)
+			section.add_child(HSeparator.new())
+	var selected := 0
+	if not changed_entity:
+		for i in _section_tabs.tab_count:
+			if _section_tabs.get_tab_title(i) == _section_key: selected = i
+	_section_tabs.current_tab = selected
+	_show_section(selected)
+	info_panel.show()
+	if _welcome != null: _welcome.hide()
+	if changed_entity and not _reduced_motion:
+		if _fade != null: _fade.kill()
+		info_panel.modulate.a = 0.35
+		_fade = create_tween()
+		_fade.tween_property(info_panel, "modulate:a", 1.0, 0.16)
 
 func _build_timeline() -> void:
 	timeline_panel = PanelContainer.new()
 	timeline_panel.add_theme_stylebox_override("panel", UiTheme.panel_style(UiTheme.BG, 0, false))
 	timeline_panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	timeline_panel.offset_top = -116
-	timeline_panel.offset_bottom = 0
+	timeline_panel.offset_left = 16
+	timeline_panel.offset_right = -16
+	timeline_panel.offset_top = -138
+	timeline_panel.offset_bottom = -16
 	add_child(timeline_panel)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 4)
@@ -462,12 +549,14 @@ func _build_timeline() -> void:
 	v.add_child(transport)
 	var play := Button.new()
 	play.text = "Continuar"
+	play.icon = AtlasIcons.get_icon("play")
 	play.custom_minimum_size.x = 104
 	play.tooltip_text = "Simulación continua. Pausar termina el año en curso."
 	play.focus_mode = Control.FOCUS_NONE
 	play.pressed.connect(func():
 		_playing = not _playing
 		play.text = "Pausar" if _playing else "Continuar"
+		play.icon = AtlasIcons.get_icon("pause" if _playing else "play")
 		play_toggled.emit(_playing))
 	transport.add_child(play)
 	sim_buttons["play"] = play
@@ -481,6 +570,7 @@ func _build_timeline() -> void:
 	transport.add_child(speed_option)
 	var step := Button.new()
 	step.text = "1 año"
+	step.icon = AtlasIcons.get_icon("step")
 	step.tooltip_text = "Avanzar un año y permanecer en pausa"
 	step.focus_mode = Control.FOCUS_NONE
 	step.pressed.connect(func(): advance_requested.emit(1))
@@ -500,12 +590,13 @@ func _build_timeline() -> void:
 	transport.add_child(right_space)
 	var chron := Button.new()
 	chron.text = "Crónica"
+	chron.icon = AtlasIcons.get_icon("chronicle")
 	chron.toggle_mode = true
 	chron.focus_mode = Control.FOCUS_NONE
 	chron.toggled.connect(func(on: bool):
-		chronicle_panel.visible = on
-		if on: _fill_chronicle())
+		_toggle_chronicle(on))
 	transport.add_child(chron)
+	sim_buttons["chronicle"] = chron
 	for zoom_spec in [["−", -2.0, "Alejar"], ["+", 2.0, "Acercar"]]:
 		var zoom := Button.new()
 		zoom.text = zoom_spec[0]
@@ -565,7 +656,8 @@ func refresh_timeline(source: HistorySource, year: int) -> void:
 		timeline_slider.max_value = maxi(1, ys.size() - 1)
 		timeline_slider.step = 1
 		timeline_slider.set_value_no_signal(maxi(0, ys.bsearch(year) if ys.has(year) else ys.bsearch(year) - 1))
-		timeline_label.text = "En directo" if _playing else ("Pausa" if year == ys[ys.size() - 1] else "Historial")
+		timeline_label.text = "EN DIRECTO" if _playing else ("PAUSA" if year == ys[ys.size() - 1] else "ARCHIVO")
+		timeline_slider.tooltip_text = "Años recibidos: %s — %s. Caché limitada; no es un archivo completo." % [fmt_year(ys[0]), fmt_year(ys[ys.size() - 1])]
 		timeline_hint.visible = false
 	sim_buttons["advance"].disabled = not source.can_advance() or _playing
 	# Pausing must remain possible during the first year in flight.
@@ -583,11 +675,11 @@ static func fmt_year(y: int) -> String:
 
 func _build_chronicle() -> void:
 	chronicle_panel = PanelContainer.new()
-	chronicle_panel.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	chronicle_panel.offset_left = 12
-	chronicle_panel.offset_right = 512
-	chronicle_panel.offset_top = -414
-	chronicle_panel.offset_bottom = -126
+	chronicle_panel.set_anchors_preset(Control.PRESET_RIGHT_WIDE)
+	chronicle_panel.offset_left = -460
+	chronicle_panel.offset_right = -16
+	chronicle_panel.offset_top = 130
+	chronicle_panel.offset_bottom = -154
 	chronicle_panel.visible = false
 	add_child(chronicle_panel)
 	var v := VBoxContainer.new()
@@ -651,22 +743,30 @@ func _build_search() -> void:
 	_search_panel = p
 	p.visible = false
 	p.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	p.offset_left = -364
-	p.offset_right = -12
-	p.offset_top = 64
+	p.offset_left = -390
+	p.offset_right = -16
+	p.offset_top = 130
 	add_child(p)
 	var v := VBoxContainer.new()
 	p.add_child(v)
 	search_edit = LineEdit.new()
-	search_edit.placeholder_text = "Estado, pueblo, ciudad o x,y"
+	v.add_child(UiTheme.heading("Explorar el atlas", 21))
+	search_edit.placeholder_text = "Estado, pueblo, religión, ciudad o x,y"
 	search_edit.clear_button_enabled = true
-	search_edit.text_changed.connect(_on_search)
+	_search_timer = Timer.new()
+	_search_timer.one_shot = true
+	_search_timer.wait_time = 0.14
+	add_child(_search_timer)
+	_search_timer.timeout.connect(func(): _on_search(search_edit.text))
+	search_edit.text_changed.connect(func(_text: String): _search_timer.start())
 	search_edit.text_submitted.connect(func(_t: String):
+		_search_timer.stop()
+		_on_search(search_edit.text)
 		if search_results.item_count > 0:
 			_on_search_pick(0))
 	v.add_child(search_edit)
 	search_results = ItemList.new()
-	search_results.custom_minimum_size = Vector2(0, 160)
+	search_results.custom_minimum_size = Vector2(0, 220)
 	search_results.visible = false
 	search_results.item_clicked.connect(func(i: int, _p: Vector2, _b: int): _on_search_pick(i))
 	v.add_child(search_results)
@@ -684,7 +784,8 @@ func dismiss_popovers() -> bool:
 
 func focus_search() -> void:
 	_search_panel.show()
-	info_panel.hide()
+	_toggle_maps(false)
+	_toggle_chronicle(false)
 	search_edit.grab_focus()
 	search_edit.select_all()
 
@@ -709,6 +810,9 @@ func _on_search(text: String) -> void:
 		for id in f.peoples:
 			if str(f.peoples[id].get("name", "")).to_lower().contains(t):
 				_add_result("Pueblo · %s" % f.peoples[id]["name"], "people", id)
+		for id in f.religions:
+			if str(f.religions[id].get("name", "")).to_lower().contains(t):
+				_add_result("Religión · %s" % f.religions[id]["name"], "engine:religion", id)
 		for s in f.settlements:
 			if str(s.get("name", "")).to_lower().contains(t):
 				_add_result("Asentamiento · %s" % s["name"], "settlement", int(s["id"]))
@@ -729,7 +833,7 @@ func _on_search_pick(i: int) -> void:
 		return
 	var tg: Array = _search_targets[i]
 	_search_panel.hide()
-	entity_requested.emit(tg[0], tg[1])
+	app.select_entity(tg[0], tg[1], false)
 	search_results.visible = false
 	search_edit.release_focus()
 
@@ -776,7 +880,7 @@ func _build_help() -> void:
 		["Arrastrar (izq.)", "Desplazar el mapa"], ["Rueda", "Acercar / alejar hacia el cursor"],
 		["Arrastrar (der./central)", "Girar e inclinar"], ["W A S D / flechas", "Desplazar"],
 		["Q / E · R / F", "Girar · inclinar"], ["Clic", "Seleccionar provincia o asentamiento"],
-		["Inicio", "Vista mundial"], ["Ctrl+F", "Buscar"], ["1 – 9", "Mapas rápidos"],
+		["Inicio", "Vista continental"], ["Espacio", "Continuar / pausar"], ["Alt + ← / →", "Ficha anterior / siguiente"], ["Ctrl+F", "Buscar"], ["1 – 9", "Mapas rápidos"],
 		["Esc", "Quitar selección"], ["F1", "Esta ayuda"], ["Ctrl+Q", "Salir"]]:
 		var h := HBoxContainer.new()
 		var k := Label.new()
@@ -797,12 +901,12 @@ func _build_help() -> void:
 
 func _build_world_dialog() -> void:
 	world_dialog = ConfirmationDialog.new()
-	world_dialog.title = "Generar mundo"
+	world_dialog.title = "Iniciar una nueva sesión"
 	world_dialog.ok_button_text = "Generar"
 	var v := VBoxContainer.new()
-	v.add_child(UiTheme.muted("Elige una semilla. Se generará un mundo y comenzará una historia nueva:", 12))
+	v.add_child(UiTheme.muted("La sesión actual se cerrará; no se guarda ni se recupera su historia. Elige una semilla para comenzar un mundo nuevo:", 12))
 	world_seed_edit = LineEdit.new()
-	world_seed_edit.text = "Asabiya"
+	world_seed_edit.text = app.world.world_seed
 	v.add_child(world_seed_edit)
 	world_dialog.add_child(v)
 	world_dialog.confirmed.connect(func(): world_requested.emit(world_seed_edit.text))
@@ -906,6 +1010,7 @@ static func _fmt_int(v: float) -> String:
 
 
 func set_status(text: String) -> void:
+	if status_label.text == text: return
 	status_label.text = text
 	status_label.tooltip_text = text
 	status_label.visible = text != ""
@@ -940,3 +1045,153 @@ func set_frame_stats(frame: HistoryFrame, start_year: int) -> void:
 	top_stats["population"].text = _fmt_int(frame.world_population) if frame.world_population > 0.0 else "—"
 	top_stats["states"].text = str(frame.state_count())
 	top_stats["peoples"].text = str(frame.peoples.size())
+
+func _icon_button(icon: String, hint: String, action: Callable) -> Button:
+	var button := Button.new()
+	button.icon = AtlasIcons.get_icon(icon)
+	button.tooltip_text = hint
+	button.custom_minimum_size = Vector2(42, 42)
+	button.pressed.connect(action)
+	return button
+
+
+func _build_atlas_navigation() -> void:
+	var rail := PanelContainer.new()
+	rail.position = Vector2(16, 130)
+	var rail_style := UiTheme.panel_style(UiTheme.BG, 4)
+	rail_style.set_content_margin_all(6)
+	rail.add_theme_stylebox_override("panel", rail_style)
+	add_child(rail)
+	_rail = VBoxContainer.new()
+	rail.add_child(_rail)
+	_rail.add_child(_icon_button("atlas", "Mapas temáticos", func(): _toggle_maps(not _layer_panel.visible)))
+	_rail.add_child(_icon_button("search", "Buscar entidades · Ctrl+F", focus_search))
+	_rail.add_child(_icon_button("chronicle", "Crónica histórica", func(): _toggle_chronicle(not chronicle_panel.visible)))
+	_rail.add_child(HSeparator.new())
+	_rail.add_child(_icon_button("home", "Vista continental · Inicio", func(): app.map_view.camera.set_scale_view(0)))
+	_scale_bar = PanelContainer.new()
+	_scale_bar.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_scale_bar.offset_left = -434
+	_scale_bar.offset_right = -16
+	_scale_bar.offset_top = 76
+	var scale_style := UiTheme.panel_style(UiTheme.BG, 4)
+	scale_style.set_content_margin_all(6)
+	_scale_bar.add_theme_stylebox_override("panel", scale_style)
+	add_child(_scale_bar)
+	var scales := HBoxContainer.new()
+	_scale_bar.add_child(scales)
+	for i in 3:
+		var b := Button.new()
+		b.text = ["Continente", "Región", "Provincia"][i]
+		b.tooltip_text = ["Visión global del mundo", "Territorios y relieve", "Acercar al foco actual; selecciona una provincia para localizarla"][i]
+		b.toggle_mode = true
+		b.pressed.connect(func(): app.map_view.camera.set_scale_view(i))
+		scales.add_child(b)
+		_scale_buttons.append(b)
+	_scale_label = UiTheme.muted("N ↑", 11)
+	scales.add_child(_scale_label)
+	_welcome = PanelContainer.new()
+	_welcome.position = Vector2(92, 130)
+	_welcome.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_welcome)
+	var welcome_text := VBoxContainer.new()
+	welcome_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_welcome.add_child(welcome_text)
+	welcome_text.add_child(UiTheme.heading("Un mundo por descubrir", 20))
+	welcome_text.add_child(UiTheme.muted("Selecciona una provincia · rueda para acercarte\nCtrl+F para buscar · Espacio para pausar", 12))
+	sim_buttons["nav_back"].disabled = true
+	sim_buttons["nav_forward"].disabled = true
+
+
+func set_view_scale(zoom: float, yaw: float) -> void:
+	var scale_index := 0 if zoom >= 0.78 else (1 if zoom >= 0.45 else 2)
+	for i in _scale_buttons.size():
+		_scale_buttons[i].set_pressed_no_signal(i == scale_index)
+	_scale_label.text = "N %+.0f°" % rad_to_deg(yaw)
+
+
+func remember_selection(kind: String, id: int) -> void:
+	if _navigating: return
+	var entry := {"kind":kind, "id":id}
+	if _nav_index >= 0 and _nav[_nav_index] == entry: return
+	_nav.resize(_nav_index + 1)
+	_nav.append(entry)
+	if _nav.size() > 32: _nav.pop_front()
+	_nav_index = _nav.size() - 1
+	_update_nav()
+
+
+func _update_nav() -> void:
+	sim_buttons["nav_back"].disabled = _nav_index <= 0
+	sim_buttons["nav_forward"].disabled = _nav_index >= _nav.size() - 1
+
+
+func _navigate(delta: int) -> void:
+	var index := _nav_index + delta
+	if index < 0 or index >= _nav.size(): return
+	_nav_index = index
+	_navigating = true
+	var entry: Dictionary = _nav[index]
+	app.select_entity(entry["kind"], entry["id"], false)
+	_navigating = false
+	_update_nav()
+
+
+func _show_section(index: int) -> void:
+	for i in _section_nodes.size(): _section_nodes[i].visible = i == index
+	if index >= 0 and index < _section_tabs.tab_count:
+		_section_key = _section_tabs.get_tab_title(index)
+	_info_scroll.scroll_vertical = 0
+
+
+func _toggle_chronicle(on: bool) -> void:
+	chronicle_panel.visible = on
+	sim_buttons["chronicle"].set_pressed_no_signal(on)
+	if on:
+		_toggle_maps(false)
+		_search_panel.hide()
+		_legend_panel.hide()
+		_fill_chronicle()
+	else:
+		_legend_panel.visible = not _layer_panel.visible and _legend_signature.get("legend", {}).get("kind", "none") != "none"
+
+
+func _build_notice() -> void:
+	_notice = PanelContainer.new()
+	_notice.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_notice.offset_left = -300
+	_notice.offset_right = 300
+	_notice.offset_top = 76
+	_notice.visible = false
+	add_child(_notice)
+	var v := VBoxContainer.new()
+	_notice.add_child(v)
+	_notice_text = UiTheme.muted("", 13)
+	_notice_text.add_theme_color_override("font_color", UiTheme.WARN)
+	v.add_child(_notice_text)
+	var actions := HBoxContainer.new()
+	v.add_child(actions)
+	_notice_recover = Button.new()
+	_notice_recover.text = "Nueva sesión…"
+	_notice_recover.pressed.connect(func():
+		world_seed_edit.text = app.world.world_seed
+		world_dialog.popup_centered(Vector2i(460, 200)))
+	actions.add_child(_notice_recover)
+	var close := Button.new()
+	close.text = "Entendido"
+	close.pressed.connect(func(): _notice.hide())
+	actions.add_child(close)
+
+
+func show_request_error(op: String, code: String, message: String) -> void:
+	_notice_text.text = "Consulta no disponible · %s\n%s\nLa simulación continúa. Puedes seguir explorando." % [code, message]
+	_notice_text.tooltip_text = op
+	_notice_recover.hide()
+	_notice.show()
+
+
+func show_session_error(message: String) -> void:
+	stop_playing()
+	_notice_text.text = "Sesión interrumpida\n%s\nSe conserva la última vista. No se repetirá ningún avance incierto." % message
+	_notice_recover.show()
+	_notice.show()

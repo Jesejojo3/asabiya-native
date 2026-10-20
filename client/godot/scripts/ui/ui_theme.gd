@@ -1,35 +1,35 @@
 class_name UiTheme
 extends RefCounted
-## Restrained map interface: opaque charcoal, quiet separators, no card shadows.
+## Modern historical atlas: ink, parchment and brass. Shared visual tokens.
 
-const BG := Color(0.075, 0.085, 0.09, 0.98)
-const BG_SOFT := Color(0.11, 0.125, 0.13, 0.98)
-const LINE := Color(0.24, 0.27, 0.28, 1.0)
-const GOLD := Color(0.75, 0.78, 0.73)
-const TEXT := Color(0.88, 0.89, 0.86)
-const MUTED := Color(0.59, 0.63, 0.63)
+const BG := Color(0.035, 0.065, 0.09, 0.98)
+const BG_SOFT := Color(0.065, 0.105, 0.135, 0.98)
+const LINE := Color(0.23, 0.30, 0.33, 1.0)
+const GOLD := Color(0.84, 0.73, 0.50)
+const TEXT := Color(0.92, 0.91, 0.85)
+const MUTED := Color(0.62, 0.70, 0.72)
 const MISSING := Color(0.55, 0.55, 0.58)
 const OK := Color(0.45, 0.78, 0.55)
 const WARN := Color(0.93, 0.66, 0.30)
 
 
-static func panel_style(bg := BG, radius := 0, border := true) -> StyleBoxFlat:
+static func panel_style(bg := BG, radius := 4, border := true) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
 	s.bg_color = bg
 	s.set_corner_radius_all(radius)
-	s.set_content_margin_all(12)
+	s.set_content_margin_all(16)
 	if border:
 		s.border_color = LINE
 		s.set_border_width_all(1)
 	s.shadow_color = Color(0, 0, 0, 0.35)
-	s.shadow_size = 0
+	s.shadow_size = 6
 	return s
 
 
 static func build() -> Theme:
 	var t := Theme.new()
 	var body := SystemFont.new()
-	body.font_names = PackedStringArray(["Segoe UI", "Noto Sans"])
+	body.font_names = PackedStringArray(["Segoe UI", "Noto Sans", "DejaVu Sans"])
 	t.default_font = body
 	t.default_font_size = 14
 	t.set_color("font_color", "Label", TEXT)
@@ -44,15 +44,15 @@ static func build() -> Theme:
 	t.set_stylebox("panel", "PanelContainer", panel_style())
 	t.set_stylebox("panel", "Panel", panel_style())
 	var btn := StyleBoxFlat.new()
-	btn.bg_color = Color(0.13, 0.15, 0.15, 1.0)
+	btn.bg_color = BG_SOFT
 	btn.set_corner_radius_all(2)
-	btn.set_content_margin_all(7)
+	btn.set_content_margin_all(9)
 	btn.content_margin_left = 10
 	btn.content_margin_right = 10
 	var hov := btn.duplicate() as StyleBoxFlat
-	hov.bg_color = Color(0.19, 0.22, 0.22, 1.0)
+	hov.bg_color = Color(0.12, 0.19, 0.23)
 	var prs := btn.duplicate() as StyleBoxFlat
-	prs.bg_color = Color(0.23, 0.27, 0.25, 1.0)
+	prs.bg_color = Color(0.19, 0.24, 0.25)
 	prs.border_color = GOLD
 	prs.set_border_width_all(1)
 	var dis := btn.duplicate() as StyleBoxFlat
@@ -84,7 +84,7 @@ static func build() -> Theme:
 	il.set_content_margin_all(4)
 	t.set_stylebox("panel", "ItemList", il)
 	t.set_stylebox("panel", "Tree", il)
-	t.set_constant("separation", "VBoxContainer", 6)
+	t.set_constant("separation", "VBoxContainer", 8)
 	t.set_constant("separation", "HBoxContainer", 8)
 	return t
 
@@ -92,6 +92,9 @@ static func build() -> Theme:
 static func heading(text: String, size := 16) -> Label:
 	var l := Label.new()
 	l.text = text
+	var face := SystemFont.new()
+	face.font_names = PackedStringArray(["Georgia", "Noto Serif", "DejaVu Serif"])
+	l.add_theme_font_override("font", face)
 	l.add_theme_font_size_override("font_size", size)
 	l.add_theme_color_override("font_color", GOLD)
 	return l
