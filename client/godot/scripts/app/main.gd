@@ -918,7 +918,7 @@ func _entity_sections(kind_name: String, value: Dictionary) -> Array:
 					rows.append([concepts[k], str(lexicon[k])])
 		var changes: Variant = value.get("soundChanges")
 		if changes is Array and not changes.is_empty():
-			rows.append(["Cambios fonéticos", ", ".join(changes.slice(-8))])
+			rows.append(["Cambios fonéticos", ", ".join(PackedStringArray(changes.slice(maxi(0, changes.size() - 8))))])
 	if kind_name == "polity":
 		var metrics: Variant = value.get("metrics")
 		if metrics is Dictionary:
