@@ -4,12 +4,12 @@ Este archivo enumera brechas **no implementadas en esta rama**. No confundir dis
 
 | ID de matriz | Pendiente preciso | Referencia original → receptor pendiente | Siguiente paso comprobable |
 |---|---|---|---|
-| PAR-003 | Relaciones políticas ampliadas y árbol de sucesión | HTML:2702–2729 → `internal/sim/queries.go:entityLocked(polity,ruler)`; `client/godot/scripts/app/main.gd:_entity_sections` | Mostrar aliados, tributarios, dinastía/episodios como relaciones navegables, sin recalcular historia |
-| PAR-004 | Linaje y léxico de pueblos | HTML:2730–2739 → `queries.go:entityLocked(people)`; `main.gd:_entity_sections` | Panel de ancestros/hijos y palabras reales de `lexicon`; prueba headless con datos Go |
-| PAR-005 | Cismas y difusión religiosa | HTML:2740–2748 → `queries.go:entityLocked(religion)` | Conectar `parentId`, `children`, `stateIds`, sin entidades religiosas inventadas |
+| PAR-003 | Completar árbol de gobernantes y episodios políticos (relaciones de aliados/sucesores, fiscalidad ya visibles) | HTML:2702–2729 → `internal/sim/queries.go:entityLocked(polity,ruler)`; `client/godot/scripts/app/main.gd:_entity_sections` | Mostrar árbol de gobernantes y cronología política `rulerHistory`; los enlaces a aliados/rivales/sucesores ya se conectan sin recalcular historia |
+| PAR-004 | Presentación completa del linaje y evolución lingüística (lexicón, antecesores/hijos y reglas sonoras ya visibles) | HTML:2730–2739 → `queries.go:entityLocked(people)`; `main.gd:_entity_sections` | Ampliar genealogía visual e historia de cambios fonéticos; hay prueba headless para los enlaces y el léxico actual |
+| PAR-005 | Cartografía completa de cismas y adopción (enlaces, concilios y cifras ya visibles) | HTML:2740–2748 → `queries.go:entityLocked(religion)` | Visualizar distribución religiosa histórica sobre el mapa; los enlaces `parentId`, `children`, `stateIds` ya funcionan |
 | PAR-007 | Resumen de coaliciones y contexto bélico | HTML:2709–2714,2760–2788 → `queries.go:entityLocked(war)` | Mostrar participantes, razones y resultados conservando IDs nativos |
 | PAR-008 | Ruta de migraciones en el mapa | HTML:2819–2824 → `queries.go:entityLocked(migration)`; `map_view.gd` | Renderizar de manera temporal `path` del motor, sin activar tick/polling |
-| PAR-011 | Hazañas y relaciones de figuras | HTML:2749–2755 → `queries.go:entityLocked(figure)`; `main.gd:_entity_sections` | Transformar `deeds` en cronología legible y enlaces existentes |
+| PAR-011 | Referencias internas y puntuación detallada de hazañas (cronología básica ya visible) | HTML:2749–2755 → `queries.go:entityLocked(figure)`; `main.gd:_entity_sections` | La cronología `deeds` ya se muestra; enlazar solo referencias que el motor preserve y exponer desglose de renombre |
 | PAR-013 | Índice epidemiológico ordenado | HTML:2873–2889 → `queries.go:entityLocked(outbreak)`; `hud.gd` | Lista 100 primeras por muertes/fecha y ficha sin copiar epidemias a estado local causal |
 | PAR-014 | Índice/cartografía de cataclismos | HTML:2793–2802,2876–2889 → `queries.go:entityLocked(cataclysm)` | Historial filtrado por año y zoom al `cellId` validado |
 | PAR-015 | Búsqueda textual de crónicas | HTML:2834–2856 → `hud.gd:_fill_chronicle` | Campo de búsqueda por texto/contexto y filtro tipo, con límite de resultados |
