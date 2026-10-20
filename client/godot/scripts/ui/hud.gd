@@ -41,6 +41,10 @@ var timeline_hint: Label
 var chronicle_panel: PanelContainer
 var chronicle_list: ItemList
 var chronicle_filter: OptionButton
+var figures_panel: PanelContainer
+var figure_filter: OptionButton
+var figure_query: LineEdit
+var figure_list: ItemList
 var search_edit: LineEdit
 var search_results: ItemList
 var hover_tip: PanelContainer
@@ -103,6 +107,7 @@ func build(application: Node) -> void:
 	_build_info_panel()
 	_build_timeline()
 	_build_chronicle()
+	_build_figures()
 	_build_search()
 	_build_hover_tip()
 	_build_help()
@@ -189,6 +194,7 @@ func _build_top_bar() -> void:
 	var pm := menu.get_popup()
 	pm.add_item("Generar mundo…", 0)
 	pm.add_item("Estadísticas", 1)
+	pm.add_item("Figuras históricas", 6)
 	pm.add_item("Simulación rápida…", 5)
 	pm.add_item("Centrar mapa (Inicio)", 2)
 	pm.add_separator("Interfaz")
@@ -235,6 +241,7 @@ func _on_menu(id: int) -> void:
 			info_panel.modulate.a = 1.0
 		0: world_dialog.popup_centered(Vector2i(420, 160))
 		1: toggle_stats()
+		6: _toggle_figures(not figures_panel.visible)
 		5:
 			if app.source.can_advance(): fast_dialog.popup_centered_clamped(Vector2i(440, 260), 0.75)
 		2: app.map_view.camera.reset_view()
@@ -369,10 +376,11 @@ func _toggle_maps(on: bool) -> void:
 	if on:
 		chronicle_panel.hide()
 		sim_buttons["chronicle"].set_pressed_no_signal(false)
+		figures_panel.hide()
 		_search_panel.hide()
 	_layer_panel.visible = on
 	_map_button.set_pressed_no_signal(on)
-	_legend_panel.visible = not on and not chronicle_panel.visible and not _search_panel.visible and _legend_signature.get("legend", {}).get("kind", "none") != "none"
+	_legend_panel.visible = not on and not chronicle_panel.visible and not figures_panel.visible and not _search_panel.visible and _legend_signature.get("legend", {}).get("kind", "none") != "none"
 
 
 func set_legend(title: String, legend: Dictionary) -> void:
@@ -380,7 +388,7 @@ func set_legend(title: String, legend: Dictionary) -> void:
 	var signature := {"title":title, "legend":legend}
 	if signature == _legend_signature: return
 	_legend_signature = signature.duplicate(true)
-	_legend_panel.visible = not _layer_panel.visible and not chronicle_panel.visible and not _search_panel.visible and legend.get("kind", "none") != "none"
+	_legend_panel.visible = not _layer_panel.visible and not chronicle_panel.visible and not figures_panel.visible and not _search_panel.visible and legend.get("kind", "none") != "none"
 	for c in legend_box.get_children():
 		c.queue_free()
 	legend_box.add_child(UiTheme.heading(title, 13))
@@ -766,6 +774,118 @@ func _on_chronicle_activated(i: int) -> void:
 		if int(value.get("event", -1)) >= 0: entity_requested.emit("engine:event", int(value["event"]))
 
 
+# ---------------------------------------------------------------- historical figures (HTML v0.6 figures pane)
+
+func _build_figures() -> void:
+	figures_panel = PanelContainer.new()
+	figures_panel.set_anchors_preset(Control.PRESET_RIGHT_WIDE)
+	figures_panel.offset_left = -460
+	figures_panel.offset_right = -16
+	figures_panel.offset_top = 130
+	figures_panel.offset_bottom = -154
+	figures_panel.visible = false
+	add_child(figures_panel)
+	var v := VBoxContainer.new()
+	figures_panel.add_child(v)
+	v.add_child(UiTheme.heading("Figuras históricas", 17))
+	figure_filter = OptionButton.new()
+	for label in ["Todas", "Gobernantes", "Profetas y reformadores", "Fundadores y usurpadores", "Sabios y estudiosos"]:
+		figure_filter.add_item(label)
+	figure_filter.item_selected.connect(func(_index: int): _fill_figures())
+	v.add_child(figure_filter)
+	figure_query = LineEdit.new()
+	figure_query.placeholder_text = "Buscar por nombre o título"
+	figure_query.clear_button_enabled = true
+	figure_query.text_changed.connect(func(_text: String): _fill_figures())
+	v.add_child(figure_query)
+	figure_list = ItemList.new()
+	figure_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	figure_list.item_activated.connect(_on_figure_activated)
+	figure_list.item_clicked.connect(func(i: int, _p: Vector2, _b: int): _on_figure_activated(i))
+	v.add_child(figure_list)
+
+
+static func _figure_score(f: Dictionary, religions: Dictionary) -> float:
+	# Display ranking from v0.6 figScore: no changes to simulation state.
+	var deeds: Array = f.get("deeds", [])
+	var score := float(f.get("conquests", 0)) * 1.5 + float(f.get("realmCells", 0))
+	score += deeds.size() * 4.0 + float(f.get("works", 0)) * 12.0
+	if bool(f.get("exceptional", false)):
+		score += 5.0
+	var religion_id := int(f.get("religionId", -1))
+	if religion_id >= 0 and religions.has(religion_id):
+		var religion: Dictionary = religions[religion_id]
+		score += 10.0 * sqrt(maxf(0.0, float(religion.get("peakCells", 0))))
+		var states: Array = religion.get("stateIds", [])
+		score += minf(100.0, float(states.size())) * 0.5
+	return score
+
+
+func _fill_figures() -> void:
+	figure_list.clear()
+	var f: HistoryFrame = app.current_frame
+	if f == null:
+		figure_list.add_item("Inicia una historia para consultar figuras.", null, false)
+		return
+	var query := figure_query.text.strip_edges().to_lower()
+	var filter_id := figure_filter.selected
+	var ranked := []
+	var religions: Dictionary = f.entity_records.get("religion", {})
+	var records: Dictionary = f.entity_records.get("figure", {})
+	for id in records:
+		var fields: Dictionary = records[id]
+		var kind := str(fields.get("kind", ""))
+		var accepted := filter_id == 0 or (filter_id == 1 and kind == "ruler") \
+			or (filter_id == 2 and kind in ["prophet", "reformer"]) \
+			or (filter_id == 3 and kind in ["founder", "usurper"]) \
+			or (filter_id == 4 and kind in ["sage", "scholar"])
+		if not accepted:
+			continue
+		var name := str(fields.get("name", ""))
+		var title := str(fields.get("title", ""))
+		if not query.is_empty() and not name.to_lower().contains(query) and not title.to_lower().contains(query):
+			continue
+		ranked.append({"id":int(id), "fields":fields, "score":_figure_score(fields, religions)})
+	ranked.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if float(a["score"]) == float(b["score"]):
+			return int(a["id"]) < int(b["id"])
+		return float(a["score"]) > float(b["score"]))
+	for i in mini(120, ranked.size()):
+		var item: Dictionary = ranked[i]
+		var fields: Dictionary = item["fields"]
+		var label := str(fields.get("name", ""))
+		if fields.has("born"):
+			label += " · " + fmt_year(int(fields["born"]))
+		if str(fields.get("title", "")) != "":
+			label += " · " + str(fields["title"])
+		var row := figure_list.add_item(label)
+		figure_list.set_item_metadata(row, int(item["id"]))
+	if figure_list.item_count == 0:
+		figure_list.add_item("No hay figuras que coincidan con este filtro.", null, false)
+
+
+func _on_figure_activated(index: int) -> void:
+	if index < 0 or index >= figure_list.item_count or figure_list.is_item_disabled(index):
+		return
+	var id: Variant = figure_list.get_item_metadata(index)
+	if id == null:
+		return
+	figures_panel.hide()
+	entity_requested.emit("engine:figure", int(id))
+
+
+func _toggle_figures(on: bool) -> void:
+	figures_panel.visible = on
+	if on:
+		_toggle_maps(false)
+		_toggle_chronicle(false)
+		_search_panel.hide()
+		_legend_panel.hide()
+		_fill_figures()
+	else:
+		_legend_panel.visible = not _layer_panel.visible and not chronicle_panel.visible and not _search_panel.visible and _legend_signature.get("legend", {}).get("kind", "none") != "none"
+
+
 # ---------------------------------------------------------------- search
 
 func _build_search() -> void:
@@ -803,7 +923,8 @@ func _build_search() -> void:
 
 
 func dismiss_popovers() -> bool:
-	var had_popup := _search_panel.visible or _layer_panel.visible or chronicle_panel.visible or _notice.visible
+	var had_popup := _search_panel.visible or _layer_panel.visible or chronicle_panel.visible or figures_panel.visible or _notice.visible
+	figures_panel.hide()
 	_toggle_chronicle(false)
 	_notice.hide()
 	_search_panel.hide()
@@ -814,6 +935,7 @@ func dismiss_popovers() -> bool:
 
 func focus_search() -> void:
 	_search_panel.show()
+	figures_panel.hide()
 	_toggle_maps(false)
 	_toggle_chronicle(false)
 	_on_search(search_edit.text)
@@ -1146,6 +1268,7 @@ func _build_atlas_navigation() -> void:
 	_rail.add_child(_icon_button("atlas", "Mapas temáticos", func(): _toggle_maps(not _layer_panel.visible)))
 	_rail.add_child(_icon_button("search", "Buscar entidades · Ctrl+F", focus_search))
 	_rail.add_child(_icon_button("chronicle", "Crónica histórica", func(): _toggle_chronicle(not chronicle_panel.visible)))
+	_rail.add_child(_icon_button("people", "Figuras históricas del mundo", func(): _toggle_figures(not figures_panel.visible)))
 	_rail.add_child(HSeparator.new())
 	_rail.add_child(_icon_button("home", "Vista continental · Inicio", func(): app.map_view.camera.set_scale_view(0)))
 	_scale_bar = PanelContainer.new()
@@ -1229,12 +1352,13 @@ func _toggle_chronicle(on: bool) -> void:
 	chronicle_panel.visible = on
 	sim_buttons["chronicle"].set_pressed_no_signal(on)
 	if on:
+		figures_panel.hide()
 		_toggle_maps(false)
 		_search_panel.hide()
 		_legend_panel.hide()
 		_fill_chronicle()
 	else:
-		_legend_panel.visible = not _layer_panel.visible and not chronicle_panel.visible and not _search_panel.visible and _legend_signature.get("legend", {}).get("kind", "none") != "none"
+		_legend_panel.visible = not _layer_panel.visible and not chronicle_panel.visible and not figures_panel.visible and not _search_panel.visible and _legend_signature.get("legend", {}).get("kind", "none") != "none"
 
 
 func _build_notice() -> void:
