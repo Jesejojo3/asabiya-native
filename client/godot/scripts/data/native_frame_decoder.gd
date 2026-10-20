@@ -40,6 +40,11 @@ func consume(data: Dictionary, delta: bool) -> HistoryFrame:
 	if world == null:
 		return null
 	var schema: String = data.get("schema", "")
+	var digest_mode: String = str(data.get("digestMode", ""))
+	# Only a complete-year delta may defer its expensive cryptographic SHA.
+	# An empty digest is never presented as an actual SHA-256 fingerprint.
+	if digest_mode != "" and (not delta or digest_mode != "deferred-v1" or str(data.get("stateSHA256", "")) != ""):
+		return null
 	var columnar := schema in ["asabiya/map-columns-state-v1", "asabiya/map-columns-delta-v1"]
 	if columnar: schema = "asabiya/map-delta-v1" if schema.ends_with("delta-v1") else "asabiya/map-state-v1"
 	if not schema in (["asabiya/annual-delta-v1","asabiya/map-delta-v1"] if delta else ["asabiya/state-v1","asabiya/map-state-v1"]):
