@@ -847,6 +847,46 @@ func _on_search(text: String) -> void:
 		for s in f.settlements:
 			if str(s.get("name", "")).to_lower().contains(t):
 				_add_result("Asentamiento · %s" % s["name"], "settlement", int(s["id"]))
+		# The HTML v0.6 inspector exposes historical figures, rulers, wars,
+		# migrations, routes, epidemics, omens and cataclysms. The Go bridge
+		# already publishes them, but they were not discoverable from the atlas.
+		# Search cached entity records only on a user query, never each frame.
+		for spec in [
+			["figure", "Figura histórica"], ["ruler", "Gobernante"],
+			["war", "Guerra"], ["migration", "Migración"],
+			["route", "Ruta comercial"], ["outbreak", "Epidemia"],
+			["omen", "Presagio"], ["cataclysm", "Cataclismo"]
+		]:
+			if search_results.item_count >= 40:
+				break
+			var entity_kind: String = spec[0]
+			var records: Dictionary = f.entity_records.get(entity_kind, {})
+			for entity_id in records:
+				if search_results.item_count >= 40:
+					break
+				var fields: Dictionary = records[entity_id]
+				var name := str(fields.get("name", ""))
+				if name.is_empty():
+					continue
+				var title := str(fields.get("title", "")) if entity_kind == "figure" else ""
+				if name.to_lower().contains(t) or title.to_lower().contains(t):
+					_add_result("%s · %s" % [spec[1], name], "engine:" + entity_kind, int(entity_id))
+		# Extinct polities and peoples no longer appear on the live map,
+		# but remain valid historical entities exposed by the Go catalog.
+		for spec in [["polity", "Estado histórico"], ["people", "Pueblo histórico"]]:
+			if search_results.item_count >= 40:
+				break
+			var entity_kind: String = spec[0]
+			var records: Dictionary = f.entity_records.get(entity_kind, {})
+			for entity_id in records:
+				if search_results.item_count >= 40:
+					break
+				var fields: Dictionary = records[entity_id]
+				if fields.get("alive", true):
+					continue
+				var name := str(fields.get("name", ""))
+				if not name.is_empty() and name.to_lower().contains(t):
+					_add_result("%s · %s" % [spec[1], name], "engine:" + entity_kind, int(entity_id))
 	if search_results.item_count == 0:
 		search_results.add_item("Sin resultados" + ("" if f != null else " (no hay entidades históricas en esta sesión; prueba x,y)"), null, false)
 	search_results.visible = true
