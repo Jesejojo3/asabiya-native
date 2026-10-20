@@ -483,7 +483,7 @@ func _worker() -> void:
 					elif op == "get_state" or op == "start_history" or (op == "advance" and data.get("schema", "") != "asabiya/advance-status-v1"):
 						response["_frame"] = decoder.consume(data, op == "advance")
 						response.erase("data") # Do not retain large raw provincial dictionaries.
-				var terminal := not response["ok"] and not _is_recoverable_request_error(op, str(response.get("error", {}).get("code", "")))
+				var terminal: bool = not response["ok"] and not _is_recoverable_request_error(op, str(response.get("error", {}).get("code", "")))
 				_push(response)
 				inflight = {}
 				if terminal: break

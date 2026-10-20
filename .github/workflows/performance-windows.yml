@@ -61,6 +61,14 @@ jobs:
           path: build/AsabiyaNative-Windows-x64-performance.zip
           if-no-files-found: error
           retention-days: 14
+      - name: Show compilation errors
+        if: failure()
+        run: |
+          foreach ($file in @('build/godot-import.log','build/godot-export.log')) {
+            if (Test-Path -LiteralPath $file) {
+              Select-String -LiteralPath $file -Pattern 'SCRIPT ERROR|Parse Error|Compilation failed|ERROR:' -Context 0,2
+            }
+          }
       - name: Publish validation and compilation evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

@@ -207,6 +207,7 @@ func _test_real_sessions(server: String) -> void:
 	if ready:
 		bridge.start_live(0)
 		bridge.poll()
+		bridge._live_due_us = Time.get_ticks_usec() + 60000000
 		var pid: int = bridge._pid
 		var next_id: int = bridge._next_id
 		OS.kill(pid)
