@@ -26,7 +26,6 @@ func check(ok: bool, label: String) -> void:
 func _initialize() -> void: call_deferred("_run")
 
 func _run() -> void:
-	print("ATLAS TRACE: starting")
 	var observer := ObserverStub.new()
 	root.add_child(observer)
 	observer.world.width = 4
@@ -41,7 +40,6 @@ func _run() -> void:
 	var hud := Hud.new()
 	root.add_child(hud)
 	hud.build(observer)
-	print("ATLAS TRACE: HUD built")
 	hud.set_session(observer.source, observer.world)
 	hud.set_frame_stats(observer.current_frame, -100)
 	await process_frame
@@ -136,7 +134,6 @@ func _run() -> void:
 	hud._on_figure_activated(0)
 	check(not hud.figures_panel.visible and figure_intents == [["engine:figure",42]], "figure index opens Go entity via intent")
 	check(observer.source._outgoing.is_empty(), "figure browser does not mutate causal engine")
-	print("ATLAS TRACE: figures passed")
 	# Historical disaster archive is computed from the published Go records only.
 	observer.current_frame.entity_records["cataclysm"] = {
 		5:{"name":"Gran temblor", "year":-120, "deaths":1000, "cellId":2},
@@ -181,7 +178,6 @@ func _run() -> void:
 		"invalid epidemic cell is not used for camera focus; record still opens")
 	check(observer.source._outgoing.is_empty(),
 		"disaster archive is a read-only projection of Go publications")
-	print("ATLAS TRACE: disasters passed")
 	# Fiches must show real Go fields without interpreting them as new mechanics.
 	var app_script: Script = load("res://scripts/app/main.gd")
 	var inspector: Variant = app_script.new()
@@ -263,7 +259,6 @@ func _run() -> void:
 	hud.chronicle_query.text = ""
 	hud._fill_chronicle()
 	check(hud.chronicle_list.item_count == 2, "chronicle shows both matching published records")
-	print("ATLAS TRACE: chronicle search passed")
 	var many_events := []
 	for i in 501:
 		many_events.append({"id":i + 10, "year":-100, "kind":"famine", "text":"Sequía original", "cell":-1})
@@ -289,7 +284,6 @@ func _run() -> void:
 	check(hud._scale_buttons[1].button_pressed, "regional scale highlighted")
 	hud.set_view_scale(0.3, 0.0)
 	check(hud._scale_buttons[2].button_pressed, "province scale highlighted")
-	print("ATLAS TRACE: before viewport layout")
 	for dimensions in [Vector2(1000,640),Vector2(1280,720),Vector2(1600,900),Vector2(2560,1440)]:
 		root.size = Vector2i(dimensions)
 		hud.size = dimensions
@@ -299,7 +293,6 @@ func _run() -> void:
 		check(hud.info_panel.offset_right < dimensions.x - 300, "inspector leaves map space " + str(dimensions))
 		check(hud.info_panel.get_global_rect().end.y <= hud.timeline_panel.get_global_rect().position.y, "inspector clears timeline " + str(dimensions))
 		check(hud._rail.get_parent().get_global_rect().end.x < hud.info_panel.get_global_rect().position.x, "rail clears inspector " + str(dimensions))
-	print("ATLAS TRACE: layout passed")
 	var launch := LaunchScreen.new()
 	root.add_child(launch)
 	launch.build("Test")
@@ -317,7 +310,6 @@ func _run() -> void:
 	check(camera._goal_distance > 80 and camera._goal_distance < 200, "regional camera target")
 	check(camera.wheel_ratio(0.2) > 1.0, "precision wheel remains monotonic")
 	camera.free()
-	print("ATLAS TRACE: cleanup")
 	observer.source.close()
 	launch.queue_free()
 	hud.queue_free()
