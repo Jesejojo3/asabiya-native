@@ -236,7 +236,7 @@ func _on_menu(id: int) -> void:
 		0: world_dialog.popup_centered(Vector2i(420, 160))
 		1: toggle_stats()
 		5:
-			if app.source.can_advance(): fast_dialog.popup_centered(Vector2i(520, 300))
+			if app.source.can_advance(): fast_dialog.popup_centered_clamped(Vector2i(440, 260), 0.75)
 		2: app.map_view.camera.reset_view()
 		3: help_panel.visible = not help_panel.visible
 		4: app._request_close()
@@ -1254,8 +1254,8 @@ func _build_fast_dialog() -> void:
 	fast_dialog.title = "Simulación rápida · años completos"
 	fast_dialog.ok_button_text = "Calcular"
 	var box := VBoxContainer.new()
-	box.custom_minimum_size.x = 470
-	box.add_child(UiTheme.muted("Go calculará cada año en orden. El mapa sólo recibirá los estados separados por el intervalo elegido; no se inventan estados intermedios. Puedes pausar al terminar el año en curso.", 13))
+	box.custom_minimum_size.x = 350
+	box.add_child(UiTheme.muted("Go calcula todos los años en orden. El mapa se actualiza al intervalo elegido. Puedes pausar al terminar el año actual.", 13))
 	box.add_child(UiTheme.muted("Años que calcular", 12))
 	fast_years = SpinBox.new()
 	fast_years.min_value = 1
