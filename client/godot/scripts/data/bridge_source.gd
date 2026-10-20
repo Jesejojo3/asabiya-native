@@ -5,6 +5,7 @@ extends HistorySource
 ## Scene nodes and callbacks are touched only by poll() on the graphics thread.
 
 signal world_ready(value: WorldData)
+signal request_failed(op: String, code: String, message: String)
 
 const PROTOCOL := "asabiya/local-v1"
 const EXE_WIN := "asabiya-server.exe"
@@ -33,6 +34,7 @@ var _stop := false
 var _outgoing: Array = []
 var _received: Array = []
 var _pending := {}
+var _pending_ops := {}
 var _next_id := 1
 var _session := 0
 var _frames := {}
@@ -94,8 +96,17 @@ func start(_extra_args := PackedStringArray()) -> bool:
 		return false
 	_closing = false
 	_stop = false
+	connected = false
+	busy = false
+	_live_running = false
+	_live_advance_pending = false
+	_remaining = 0
+	_since_publication = 0
+	_paused = false
+	_live_due_us = 0
 	last_error = ""
 	_pending.clear()
+	_pending_ops.clear()
 	_outgoing.clear()
 	_received.clear()
 	_session = 0
@@ -258,15 +269,17 @@ func query_history(id: int, callback: Callable) -> void:
 	request("get_province_history", {"id":id}, callback)
 
 func request(op: String, payload: Dictionary = {}, callback := Callable()) -> void:
-	if _closing and op != "shutdown": return
+	if _stop or (_closing and op != "shutdown"): return
 	var id := str(_next_id)
 	_next_id += 1
 	if callback.is_valid(): _pending[id] = callback
+	_pending_ops[id] = op
 	_mutex.lock()
 	_outgoing.append({"schema":PROTOCOL,"id":id,"op":op,"payload":payload})
 	_mutex.unlock()
 
 func poll() -> void:
+	if _closing or _stopped(): return
 	_mutex.lock()
 	var replies: Array = _received
 	_received = []
@@ -275,19 +288,31 @@ func poll() -> void:
 		if response.has("_error"):
 			connected = false
 			_fail(str(response["_error"]))
-			continue
+			break
 		if response.has("_connected"):
 			_on_connected(response)
 			continue
 		_session = int(response.get("session", _session))
 		var id := str(response.get("id", ""))
+		if not _pending_ops.has(id):
+			_fail("El motor respondió a una petición que ya no pertenece a esta sesión.")
+			break
+		var op: String = _pending_ops[id]
 		var callback: Callable = _pending.get(id, Callable())
 		_pending.erase(id)
+		_pending_ops.erase(id)
 		if not response.get("ok", false):
 			var detail: Dictionary = response.get("error", {})
-			_fail(str(detail.get("message", "El motor rechazó la petición.")))
-			continue
+			var code := str(detail.get("code", ""))
+			var message := str(detail.get("message", "El motor rechazó la petición."))
+			if _is_recoverable_request_error(op, code):
+				_report_request_error(op, code, message)
+				if _closing or _stopped(): break
+				continue
+			_fail(message)
+			break
 		if callback.is_valid(): callback.call(response)
+		if _closing or _stopped(): break
 	# Continuous play is wall-clock paced, with at most one complete year in
 	# flight. Publish every year, never replay cached frames or batch 10/50-year
 	# jumps. A slow calculation lowers the achieved rate; it never queues a burst.
@@ -299,6 +324,21 @@ func poll() -> void:
 			_live_advance_pending = false
 			_on_frame(response))
 
+static func _is_query(op: String) -> bool:
+	return op in ["get_province", "get_province_history", "get_entity",
+		"list_entities", "get_historical_layer", "get_replay", "get_status"]
+
+
+static func _is_recoverable_request_error(op: String, code: String) -> bool:
+	return _is_query(op) and code in ["not_found", "invalid_arguments", "not_ready", "unknown_operation"]
+
+
+func _report_request_error(op: String, code: String, message: String) -> void:
+	last_error = "No se pudo completar la consulta (%s): %s" % [code, message]
+	status_changed.emit(last_error)
+	request_failed.emit(op, code, message)
+
+
 func _fail(message: String) -> void:
 	stop_live()
 	_live_advance_pending = false
@@ -307,6 +347,7 @@ func _fail(message: String) -> void:
 	_remaining = 0
 	last_error = message
 	_pending.clear()
+	_pending_ops.clear()
 	_mutex.lock()
 	_outgoing.clear()
 	_stop = true
@@ -327,6 +368,23 @@ func _stopped() -> bool:
 	var value := _stop
 	_mutex.unlock()
 	return value
+
+static func _response_integrity_error(response: Dictionary, inflight: Dictionary, session: int) -> String:
+	if inflight.is_empty() or response.get("schema", "") != PROTOCOL or str(response.get("id", "")) != str(inflight.get("id", "")):
+		return "La respuesta no corresponde a la sesión o petición enviada."
+	if not response.get("ok") is bool:
+		return "El motor envió una respuesta sin resultado válido."
+	var op: String = inflight.get("op", "")
+	var expected_session := session + 1 if op in ["create_world", "start_history"] and response["ok"] else session
+	var generation: Variant = response.get("session")
+	if not (generation is int or generation is float) or generation != expected_session:
+		return "La respuesta pertenece a otra sesión del motor."
+	if not response["ok"]:
+		var detail: Variant = response.get("error")
+		if not detail is Dictionary or not detail.get("code") is String or not detail.get("message") is String:
+			return "El motor envió un error de protocolo incompleto."
+	return ""
+
 
 func _worker() -> void:
 	var deadline := Time.get_ticks_msec() + 15000
@@ -410,16 +468,12 @@ func _worker() -> void:
 					_push({"_error":"El motor envió JSON inválido."})
 					break
 				var response: Dictionary = value
-				if response.get("schema", "") != PROTOCOL or str(response.get("id", "")) != str(inflight.get("id", "")):
-					_push({"_error":"La respuesta no corresponde a la sesión o petición enviada."})
+				var integrity_error := _response_integrity_error(response, inflight, session)
+				if integrity_error != "":
+					_push({"_error":integrity_error})
 					break
 				var op: String = inflight.get("op", "")
-				var response_session := int(response.get("session", -1))
-				var expected_session := session + 1 if op in ["create_world", "start_history"] and response.get("ok", false) else session
-				if response_session != expected_session:
-					_push({"_error":"La respuesta pertenece a otra sesión del motor."})
-					break
-				session = response_session
+				session = int(response["session"])
 				if response.get("ok", false):
 					var data: Dictionary = response.get("data", {})
 					if op == "export_geography":
@@ -429,8 +483,10 @@ func _worker() -> void:
 					elif op == "get_state" or op == "start_history" or (op == "advance" and data.get("schema", "") != "asabiya/advance-status-v1"):
 						response["_frame"] = decoder.consume(data, op == "advance")
 						response.erase("data") # Do not retain large raw provincial dictionaries.
+				var terminal := not response["ok"] and not _is_recoverable_request_error(op, str(response.get("error", {}).get("code", "")))
 				_push(response)
 				inflight = {}
+				if terminal: break
 		else:
 			OS.delay_msec(2)
 	peer.disconnect_from_host()
@@ -440,6 +496,7 @@ func shutdown() -> void:
 	stop_live()
 	_remaining = 0
 	_pending.clear()
+	_pending_ops.clear()
 	_mutex.lock()
 	_outgoing.clear()
 	_mutex.unlock()
@@ -452,7 +509,12 @@ func shutdown() -> void:
 	close()
 
 func close() -> void:
+	_closing = true
 	stop_live()
+	_remaining = 0
+	_since_publication = 0
+	_paused = true
+	_live_due_us = 0
 	_live_advance_pending = false
 	_mutex.lock()
 	_stop = true
@@ -465,6 +527,7 @@ func close() -> void:
 	_thread = null
 	_pid = -1
 	_pending.clear()
+	_pending_ops.clear()
 	_received.clear()
 	_frames.clear()
 	_years.clear()

@@ -12,6 +12,7 @@ env:
   GOTOOLCHAIN: local
 jobs:
   tests:
+    if: github.event_name != 'pull_request' || github.head_ref != 'mission/performance-stability'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:

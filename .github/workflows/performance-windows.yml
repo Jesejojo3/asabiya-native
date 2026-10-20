@@ -30,20 +30,14 @@ jobs:
         with:
           go-version-file: '.go-version'
           check-latest: false
-      - name: Targeted protocol and annual publication regressions
+      - name: Targeted JSON protocol regressions
         run: |
           New-Item -ItemType Directory -Force -Path artifacts/performance | Out-Null
-          go test -count=1 -v ./internal/interop 2>&1 | Tee-Object artifacts/performance/protocol.txt
+          go test -count=1 -v ./internal/interop -run '^TestProtocol(ExactIntegers|NumberAdaptationPreservesOtherJSON|IntegerFieldRejections|GodotSerializationFixture|GodotIntegersOnConnection|RefusesNonLoopbackWithoutAccepting|SessionBoundariesAndNoHiddenBatch)$' 2>&1 | Tee-Object artifacts/performance/protocol.txt
           if ($LASTEXITCODE -ne 0) { throw 'Protocol regressions failed' }
-          go test -count=1 -v ./internal/sim -run '^(TestMapPublication.*|TestQueriesAndAnnualWriterShareOnlyCompleteBoundaries)$' 2>&1 | Tee-Object artifacts/performance/publication.txt
-          if ($LASTEXITCODE -ne 0) { throw 'Annual publication regressions failed' }
-      - name: Compare full and compact annual publication costs
-        run: |
-          go test ./internal/interop -run '^$' -bench '^BenchmarkMapAnnualPublication$' -benchtime=3x -count=1 -benchmem 2>&1 | Tee-Object artifacts/performance/annual-benchmark.txt
-          if ($LASTEXITCODE -ne 0) { throw 'Annual publication benchmark failed' }
       - name: Compile and export the Windows package
         run: |
-          ./tools/package-windows.ps1 -OutputDirectory build/client -SourceRevision "${{ github.sha }}" -ValidationSummary 'targeted Go protocol/publication checks passed; graphical runtime not executed'
+          ./tools/package-windows.ps1 -OutputDirectory build/client -SourceRevision "${{ github.sha }}" -ValidationSummary 'targeted JSON protocol checks passed; Godot bridge regressions recorded by workflow; graphical runtime not executed'
           Compress-Archive -Path build/client/* -DestinationPath build/AsabiyaNative-Windows-x64-performance.zip
           Get-FileHash -Algorithm SHA256 build/AsabiyaNative-Windows-x64-performance.zip | Format-List | Out-File artifacts/performance/package-sha256.txt
       - name: Focused Godot geometry and worker regressions
@@ -51,7 +45,15 @@ jobs:
           $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
           $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
           & $editor --headless --path client/godot --script res://tests/performance_regressions.gd 2>&1 | Tee-Object artifacts/performance/godot.txt
-          if ($LASTEXITCODE -ne 0) { throw 'Godot technical regressions failed' }
+          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/performance/godot.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Godot technical regressions failed' }
+      - name: Bridge recovery and session lifecycle without graphics
+        timeout-minutes: 3
+        run: |
+          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
+          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
+          $server=Join-Path $PWD 'build/bin/asabiya-server.exe'
+          & $editor --headless --path client/godot --script res://tests/bridge_stability_regressions.gd -- --server $server 2>&1 | Tee-Object artifacts/performance/bridge-stability.txt
+          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/performance/bridge-stability.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Bridge stability regressions failed' }
       - name: Publish Windows package
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:

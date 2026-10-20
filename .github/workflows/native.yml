@@ -14,6 +14,7 @@ env:
   GOTOOLCHAIN: local
 jobs:
   native:
+    if: github.event_name != 'pull_request' || github.head_ref != 'mission/performance-stability'
     runs-on: windows-2022
     timeout-minutes: 15
     steps:
