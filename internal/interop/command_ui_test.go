@@ -77,6 +77,67 @@ func TestGodotCommandContextAndReplay(t *testing.T) {
 	if s.simulation.NextSequence() != updated.NextSequence {
 		t.Fatal("rejected command consumed an accepted sequence")
 	}
+
+	var land sim.CellID = -1
+	for i := 0; i < s.world.Len(); i++ {
+		if province, ok := s.simulation.Province(sim.CellID(i)); ok && province.Land {
+			land = sim.CellID(i)
+			break
+		}
+	}
+	if land < 0 {
+		t.Fatal("fixture produced no land province")
+	}
+	omenCtx := getContext()
+	omen := sim.Command{
+		Schema: sim.CommandSchema, Profile: sim.NativeProfile,
+		Kind: "cast_omen", Omen: "kindle", Cell: land,
+		TargetYear: omenCtx.Year, Sequence: omenCtx.NextSequence,
+		ExpectedRulesSHA256: omenCtx.RulesSHA256,
+	}
+	omenReply := call("apply_command_status", omen)
+	if !omenReply.OK {
+		t.Fatalf("omen protocol error: %+v", omenReply.Error)
+	}
+	omenResult := omenReply.Data.(map[string]any)["result"].(sim.CommandResult)
+	if !omenResult.Accepted || omenResult.OmenID == nil {
+		t.Fatalf("validated land omen rejected: %+v", omenResult)
+	}
+
+	ruleCtx := getContext()
+	var editable *sim.ParameterDef
+	var newValue float64
+	for _, definition := range sim.ParameterDefs() {
+		if definition.NewWorld {
+			continue
+		}
+		value := ruleCtx.Rules.Values[definition.Key] + definition.Step
+		if value > definition.Max {
+			value = ruleCtx.Rules.Values[definition.Key] - definition.Step
+		}
+		if value >= definition.Min && value <= definition.Max && value != ruleCtx.Rules.Values[definition.Key] {
+			copy := definition
+			editable = &copy
+			newValue = value
+			break
+		}
+	}
+	if editable == nil {
+		t.Fatal("no editable rule available for command test")
+	}
+	ruleReply := call("apply_command_status", sim.Command{
+		Schema: sim.CommandSchema, Profile: sim.NativeProfile,
+		Kind: "change_rules", Values: map[string]float64{editable.Key: newValue},
+		TargetYear: ruleCtx.Year, Sequence: ruleCtx.NextSequence,
+		ExpectedRulesSHA256: ruleCtx.RulesSHA256,
+	})
+	if !ruleReply.OK || !ruleReply.Data.(map[string]any)["result"].(sim.CommandResult).Accepted {
+		t.Fatalf("editable rule was not applied by Go: %+v", ruleReply)
+	}
+	if s.simulation.CommandContext().Rules.Values[editable.Key] != newValue {
+		t.Fatal("rules change was not reflected in authoritative context")
+	}
+
 	replay := s.simulation.Replay()
 	reproduced, err := sim.ReplayOnWorld(s.world, replay)
 	if err != nil || reproduced.StateDigest() != s.simulation.StateDigest() {
