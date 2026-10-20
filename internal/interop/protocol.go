@@ -48,7 +48,11 @@ func decodePayload(raw json.RawMessage, target any) error {
 	if len(raw) == 0 {
 		raw = []byte("{}")
 	}
-	decoder := json.NewDecoder(bytes.NewReader(raw))
+	// A payload is one JSON value, including when Handle is called directly.
+	if !json.Valid(raw) {
+		return fmt.Errorf("payload must contain one valid JSON value")
+	}
+	decoder := json.NewDecoder(bytes.NewReader(normalizeJSONIntegers(raw)))
 	decoder.DisallowUnknownFields()
 	return decoder.Decode(target)
 }

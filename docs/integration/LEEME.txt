@@ -23,7 +23,12 @@ Por defecto se genera Asabiya. Para Tierra, copia asabiya-earth.json sobre
 asabiya.json antes de abrir. El HTML de resources/ se conserva íntegro.
 También se puede iniciar con -- --world-source RUTA.json (documentación del repo).
 
-Se compiló/exportó esta entrega, pero NO se abrió el juego ni se ejecutaron
-las pruebas finales, por indicación del usuario. El testeo funcional, visual,
-de integración, reproducibilidad y rendimiento queda a su cargo.
+Corrección r3: el protocolo acepta enteros JSON escritos como 4.0, 400.0 y
+200.0 sin redondear fracciones. Incluye configuración, sesión, comandos,
+años e identificadores. Conserva los límites y la validación del motor.
+Se ejecutaron las pruebas específicas del protocolo solicitadas por el usuario.
+Se compiló/exportó esta entrega, pero NO se abrió el juego. El testeo visual,
+de juego, reproducibilidad histórica y rendimiento queda a su cargo.
+Descomprime todo el ZIP r3 en una carpeta nueva y abre AsabiyaNative.exe.
+Evita mezclar el cliente o el servidor con los de r2.
 No se ha integrado nada en main.

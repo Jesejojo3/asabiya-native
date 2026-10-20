@@ -1,6 +1,6 @@
 # Entrega para el testeo del usuario
 
-Por instrucción expresa del usuario no se ejecutan más suites, oráculos, simulaciones de comprobación, pruebas de integración ni validación visual. Compilar Go, importar recursos y exportar Godot son pasos de producción del artefacto y no se presentan como una prueba funcional.
+Actualización r3: el usuario solicitó corregir los enteros JSON del protocolo y autorizó sus pruebas específicas. Se ejecutó esa cobertura y las dos regresiones esenciales previas del protocolo; ver [evidencia y contrato](JSON_INTEGER_FIX.md). El testeo visual y de juego sigue a su cargo. No se ejecutaron suites históricas extensas, oráculos, CI ni el juego exportado. Compilar Go, importar recursos y exportar Godot son pasos de producción del artefacto y no se presentan como aprobación visual.
 
 ## Evidencia anterior a la detención
 
