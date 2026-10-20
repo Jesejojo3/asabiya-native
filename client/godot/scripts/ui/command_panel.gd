@@ -115,6 +115,8 @@ func configure(catalog: Dictionary) -> void:
 	for i in range(omens.size()):
 		var definition: Dictionary = omens[i]
 		_omen_choice.add_item("%s · favor %s" % [str(definition.get("Name", "?")), str(definition.get("Cost", "?"))], i)
+	if not omens.is_empty():
+		_omen_choice.select(0)
 	_refresh_omen()
 	for child in _rules_body.get_children():
 		child.queue_free()
