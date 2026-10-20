@@ -41,7 +41,7 @@ jobs:
           ./godot --headless --path client/godot --script res://tests/run_tests.gd -- --snapshot "$PWD/build/worlds/Asabiya.asw"
       - name: Atlas historical explorer regression contracts (headless)
         timeout-minutes: 2
-        run: ./godot --headless --path client/godot --script res://tests/atlas_ux_regressions.gd
+        run: timeout --signal=TERM 40s ./godot --headless --path client/godot --script res://tests/atlas_ux_regressions.gd
 
   windows:
     runs-on: windows-2022
