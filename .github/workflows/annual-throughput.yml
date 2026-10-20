@@ -41,7 +41,20 @@ jobs:
       - name: Bounded Go baseline profiles and integrity
         timeout-minutes: 5
         run: |
-          go test -count=1 ./internal/sim -run '^(TestWorkProfileNeutral|TestMapPublicationReconstructsFullState)
+          go test -count=1 ./internal/sim -run '^(TestWorkProfileNeutral|TestMapPublicationReconstructsFullState)$' 2>&1 | Tee-Object artifacts/annual-throughput/integrity.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Integrity failed' }
+          go test -run '^$' -bench '^BenchmarkAnnualThroughput$' -benchtime=6x -count=1 -cpuprofile artifacts/annual-throughput/cpu.pprof -memprofile artifacts/annual-throughput/memory.pprof ./internal/interop 2>&1 | Tee-Object artifacts/annual-throughput/go-benchmark.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Benchmark failed' }
+          go tool pprof -top -nodecount=30 artifacts/annual-throughput/cpu.pprof | Out-File artifacts/annual-throughput/cpu-top.txt
+          go tool pprof -top -alloc_space -nodecount=20 artifacts/annual-throughput/memory.pprof | Out-File artifacts/annual-throughput/alloc-top.txt
+      - name: Bounded first state formation measurement
+        timeout-minutes: 3
+        run: |
+          $env:ASABIYA_FIRST_STATE='1'
+          go test -count=1 -v ./internal/interop -run '^TestAnnualFirstStateWindow$' 2>&1 | Tee-Object artifacts/annual-throughput/first-state.txt
+          Remove-Item Env:ASABIYA_FIRST_STATE
+          if ($LASTEXITCODE -ne 0) { throw 'First state measurement failed' }
+      - name: Compile and export the Windows package
         run: |
           ./tools/package-windows.ps1 -OutputDirectory build/client -SourceRevision "${{ github.sha }}" -ValidationSummary 'atlas UI headless contracts, performance and bridge regressions recorded by workflow; graphical runtime not executed'
           Compress-Archive -Path build/client/* -DestinationPath build/AsabiyaNative-Windows-x64-throughput.zip
@@ -84,227 +97,6 @@ jobs:
             }
           }
           Remove-Item Env:ASABIYA_THROUGHPUT_DIR
-      - name: Publish Windows package
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: AsabiyaNative-Windows-x64-throughput
-          path: build/AsabiyaNative-Windows-x64-throughput.zip
-          if-no-files-found: error
-          retention-days: 14
-      - name: Show compilation errors
-        if: failure()
-        run: |
-          foreach ($file in @('build/godot-import.log','build/godot-export.log')) {
-            if (Test-Path -LiteralPath $file) {
-              Select-String -LiteralPath $file -Pattern 'SCRIPT ERROR|Parse Error|Compilation failed|ERROR:' -Context 0,2
-            }
-          }
-      - name: Publish validation and compilation evidence
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: annual-throughput-evidence
-          path: |
-            artifacts/annual-throughput/**
-            build/godot-import.log
-            build/godot-export.log
-          if-no-files-found: warn
-          retention-days: 14
- 2>&1 | Tee-Object artifacts/annual-throughput/integrity.txt
-          if ($LASTEXITCODE -ne 0) { throw 'Integrity failed' }
-          go test -run '^
-        run: |
-          ./tools/package-windows.ps1 -OutputDirectory build/client -SourceRevision "${{ github.sha }}" -ValidationSummary 'atlas UI headless contracts, performance and bridge regressions recorded by workflow; graphical runtime not executed'
-          Compress-Archive -Path build/client/* -DestinationPath build/AsabiyaNative-Windows-x64-throughput.zip
-          Get-FileHash -Algorithm SHA256 build/AsabiyaNative-Windows-x64-throughput.zip | Format-List | Out-File artifacts/annual-throughput/package-sha256.txt
-      - name: Focused Godot geometry and worker regressions
-        run: |
-          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
-          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
-          & $editor --headless --path client/godot --script res://tests/performance_regressions.gd 2>&1 | Tee-Object artifacts/annual-throughput/godot.txt
-          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/godot.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Godot technical regressions failed' }
-      - name: Bridge recovery and session lifecycle without graphics
-        timeout-minutes: 3
-        run: |
-          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
-          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
-          $server=Join-Path $PWD 'build/bin/asabiya-server.exe'
-          & $editor --headless --path client/godot --script res://tests/bridge_stability_regressions.gd -- --server $server 2>&1 | Tee-Object artifacts/annual-throughput/bridge-stability.txt
-          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/bridge-stability.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Bridge stability regressions failed' }
-      - name: Focused headless atlas interface contracts
-        timeout-minutes: 3
-        run: |
-          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
-          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
-          & $editor --headless --path client/godot --script res://tests/atlas_ux_regressions.gd 2>&1 | Tee-Object artifacts/annual-throughput/ui.txt
-          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/ui.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Atlas UI regressions failed' }
-      - name: Publish Windows package
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: AsabiyaNative-Windows-x64-throughput
-          path: build/AsabiyaNative-Windows-x64-throughput.zip
-          if-no-files-found: error
-          retention-days: 14
-      - name: Show compilation errors
-        if: failure()
-        run: |
-          foreach ($file in @('build/godot-import.log','build/godot-export.log')) {
-            if (Test-Path -LiteralPath $file) {
-              Select-String -LiteralPath $file -Pattern 'SCRIPT ERROR|Parse Error|Compilation failed|ERROR:' -Context 0,2
-            }
-          }
-      - name: Publish validation and compilation evidence
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: annual-throughput-evidence
-          path: |
-            artifacts/annual-throughput/**
-            build/godot-import.log
-            build/godot-export.log
-          if-no-files-found: warn
-          retention-days: 14
- -bench '^BenchmarkAnnualThroughput
-        run: |
-          ./tools/package-windows.ps1 -OutputDirectory build/client -SourceRevision "${{ github.sha }}" -ValidationSummary 'atlas UI headless contracts, performance and bridge regressions recorded by workflow; graphical runtime not executed'
-          Compress-Archive -Path build/client/* -DestinationPath build/AsabiyaNative-Windows-x64-throughput.zip
-          Get-FileHash -Algorithm SHA256 build/AsabiyaNative-Windows-x64-throughput.zip | Format-List | Out-File artifacts/annual-throughput/package-sha256.txt
-      - name: Focused Godot geometry and worker regressions
-        run: |
-          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
-          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
-          & $editor --headless --path client/godot --script res://tests/performance_regressions.gd 2>&1 | Tee-Object artifacts/annual-throughput/godot.txt
-          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/godot.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Godot technical regressions failed' }
-      - name: Bridge recovery and session lifecycle without graphics
-        timeout-minutes: 3
-        run: |
-          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
-          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
-          $server=Join-Path $PWD 'build/bin/asabiya-server.exe'
-          & $editor --headless --path client/godot --script res://tests/bridge_stability_regressions.gd -- --server $server 2>&1 | Tee-Object artifacts/annual-throughput/bridge-stability.txt
-          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/bridge-stability.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Bridge stability regressions failed' }
-      - name: Focused headless atlas interface contracts
-        timeout-minutes: 3
-        run: |
-          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
-          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
-          & $editor --headless --path client/godot --script res://tests/atlas_ux_regressions.gd 2>&1 | Tee-Object artifacts/annual-throughput/ui.txt
-          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/ui.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Atlas UI regressions failed' }
-      - name: Publish Windows package
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: AsabiyaNative-Windows-x64-throughput
-          path: build/AsabiyaNative-Windows-x64-throughput.zip
-          if-no-files-found: error
-          retention-days: 14
-      - name: Show compilation errors
-        if: failure()
-        run: |
-          foreach ($file in @('build/godot-import.log','build/godot-export.log')) {
-            if (Test-Path -LiteralPath $file) {
-              Select-String -LiteralPath $file -Pattern 'SCRIPT ERROR|Parse Error|Compilation failed|ERROR:' -Context 0,2
-            }
-          }
-      - name: Publish validation and compilation evidence
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: annual-throughput-evidence
-          path: |
-            artifacts/annual-throughput/**
-            build/godot-import.log
-            build/godot-export.log
-          if-no-files-found: warn
-          retention-days: 14
- -benchtime=6x -count=1 -cpuprofile artifacts/annual-throughput/cpu.pprof -memprofile artifacts/annual-throughput/memory.pprof ./internal/interop 2>&1 | Tee-Object artifacts/annual-throughput/go-benchmark.txt
-          if ($LASTEXITCODE -ne 0) { throw 'Benchmark failed' }
-          go tool pprof -top -nodecount=30 artifacts/annual-throughput/cpu.pprof | Out-File artifacts/annual-throughput/cpu-top.txt
-          go tool pprof -top -alloc_space -nodecount=20 artifacts/annual-throughput/memory.pprof | Out-File artifacts/annual-throughput/alloc-top.txt
-      - name: Bounded first state formation measurement
-        timeout-minutes: 3
-        run: |
-          $env:ASABIYA_FIRST_STATE='1'
-          go test -count=1 -v ./internal/interop -run '^TestAnnualFirstStateWindow
-        run: |
-          ./tools/package-windows.ps1 -OutputDirectory build/client -SourceRevision "${{ github.sha }}" -ValidationSummary 'atlas UI headless contracts, performance and bridge regressions recorded by workflow; graphical runtime not executed'
-          Compress-Archive -Path build/client/* -DestinationPath build/AsabiyaNative-Windows-x64-throughput.zip
-          Get-FileHash -Algorithm SHA256 build/AsabiyaNative-Windows-x64-throughput.zip | Format-List | Out-File artifacts/annual-throughput/package-sha256.txt
-      - name: Focused Godot geometry and worker regressions
-        run: |
-          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
-          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
-          & $editor --headless --path client/godot --script res://tests/performance_regressions.gd 2>&1 | Tee-Object artifacts/annual-throughput/godot.txt
-          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/godot.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Godot technical regressions failed' }
-      - name: Bridge recovery and session lifecycle without graphics
-        timeout-minutes: 3
-        run: |
-          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
-          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
-          $server=Join-Path $PWD 'build/bin/asabiya-server.exe'
-          & $editor --headless --path client/godot --script res://tests/bridge_stability_regressions.gd -- --server $server 2>&1 | Tee-Object artifacts/annual-throughput/bridge-stability.txt
-          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/bridge-stability.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Bridge stability regressions failed' }
-      - name: Focused headless atlas interface contracts
-        timeout-minutes: 3
-        run: |
-          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
-          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
-          & $editor --headless --path client/godot --script res://tests/atlas_ux_regressions.gd 2>&1 | Tee-Object artifacts/annual-throughput/ui.txt
-          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/ui.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Atlas UI regressions failed' }
-      - name: Publish Windows package
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: AsabiyaNative-Windows-x64-throughput
-          path: build/AsabiyaNative-Windows-x64-throughput.zip
-          if-no-files-found: error
-          retention-days: 14
-      - name: Show compilation errors
-        if: failure()
-        run: |
-          foreach ($file in @('build/godot-import.log','build/godot-export.log')) {
-            if (Test-Path -LiteralPath $file) {
-              Select-String -LiteralPath $file -Pattern 'SCRIPT ERROR|Parse Error|Compilation failed|ERROR:' -Context 0,2
-            }
-          }
-      - name: Publish validation and compilation evidence
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: annual-throughput-evidence
-          path: |
-            artifacts/annual-throughput/**
-            build/godot-import.log
-            build/godot-export.log
-          if-no-files-found: warn
-          retention-days: 14
- 2>&1 | Tee-Object artifacts/annual-throughput/first-state.txt
-          Remove-Item Env:ASABIYA_FIRST_STATE
-          if ($LASTEXITCODE -ne 0) { throw 'First state measurement failed' }
-      - name: Compile and export the Windows package
-        run: |
-          ./tools/package-windows.ps1 -OutputDirectory build/client -SourceRevision "${{ github.sha }}" -ValidationSummary 'atlas UI headless contracts, performance and bridge regressions recorded by workflow; graphical runtime not executed'
-          Compress-Archive -Path build/client/* -DestinationPath build/AsabiyaNative-Windows-x64-throughput.zip
-          Get-FileHash -Algorithm SHA256 build/AsabiyaNative-Windows-x64-throughput.zip | Format-List | Out-File artifacts/annual-throughput/package-sha256.txt
-      - name: Focused Godot geometry and worker regressions
-        run: |
-          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
-          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
-          & $editor --headless --path client/godot --script res://tests/performance_regressions.gd 2>&1 | Tee-Object artifacts/annual-throughput/godot.txt
-          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/godot.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Godot technical regressions failed' }
-      - name: Bridge recovery and session lifecycle without graphics
-        timeout-minutes: 3
-        run: |
-          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
-          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
-          $server=Join-Path $PWD 'build/bin/asabiya-server.exe'
-          & $editor --headless --path client/godot --script res://tests/bridge_stability_regressions.gd -- --server $server 2>&1 | Tee-Object artifacts/annual-throughput/bridge-stability.txt
-          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/bridge-stability.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Bridge stability regressions failed' }
-      - name: Focused headless atlas interface contracts
-        timeout-minutes: 3
-        run: |
-          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
-          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
-          & $editor --headless --path client/godot --script res://tests/atlas_ux_regressions.gd 2>&1 | Tee-Object artifacts/annual-throughput/ui.txt
-          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/ui.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Atlas UI regressions failed' }
       - name: Publish Windows package
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
