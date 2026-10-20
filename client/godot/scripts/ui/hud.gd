@@ -62,6 +62,7 @@ var _nav: Array[Dictionary] = []
 var _nav_index := -1
 var _navigating := false
 var _info_signature: Array = []
+var _info_entity: Dictionary = {}
 var _section_tabs: TabBar
 var _section_nodes: Array[Control] = []
 var _info_scroll: ScrollContainer
@@ -78,6 +79,9 @@ var _scale_bar: PanelContainer
 var _welcome: PanelContainer
 var _reduced_motion := false
 var _fade: Tween
+var _transport_busy := false
+var _transport_live := false
+var _transport_connected := false
 var _search_timer: Timer
 
 
@@ -111,6 +115,8 @@ func _fit_layout() -> void:
 	info_panel.offset_right = 76.0 + inspector_width
 	_search_panel.offset_left = -minf(390.0, size.x - 100.0)
 	help_panel.custom_minimum_size.x = minf(520.0, size.x - 48.0)
+	if stats_body != null:
+		(stats_body.get_parent() as ScrollContainer).custom_minimum_size.y = clampf(size.y - 260.0, 180.0, 480.0)
 	if _welcome != null:
 		_welcome.visible = size.x >= 1250.0 and not info_panel.visible
 
@@ -354,7 +360,7 @@ func _toggle_maps(on: bool) -> void:
 		_search_panel.hide()
 	_layer_panel.visible = on
 	_map_button.set_pressed_no_signal(on)
-	_legend_panel.visible = not on and _legend_signature.get("legend", {}).get("kind", "none") != "none"
+	_legend_panel.visible = not on and not chronicle_panel.visible and not _search_panel.visible and _legend_signature.get("legend", {}).get("kind", "none") != "none"
 
 
 func set_legend(title: String, legend: Dictionary) -> void:
@@ -362,7 +368,7 @@ func set_legend(title: String, legend: Dictionary) -> void:
 	var signature := {"title":title, "legend":legend}
 	if signature == _legend_signature: return
 	_legend_signature = signature.duplicate(true)
-	_legend_panel.visible = not _layer_panel.visible and legend.get("kind", "none") != "none"
+	_legend_panel.visible = not _layer_panel.visible and not chronicle_panel.visible and not _search_panel.visible and legend.get("kind", "none") != "none"
 	for c in legend_box.get_children():
 		c.queue_free()
 	legend_box.add_child(UiTheme.heading(title, 13))
@@ -465,7 +471,8 @@ func hide_info() -> void:
 
 func show_info(title: String, subtitle: String, sections: Array) -> void:
 	# A detail reply or status refresh need not rebuild an unchanged inspector.
-	var signature := [title, subtitle]
+	var entity: Dictionary = app.selection.duplicate()
+	var signature := [entity, title, subtitle]
 	for sec: Array in sections:
 		var values := [sec[0]]
 		for row: Variant in sec[1]:
@@ -480,7 +487,8 @@ func show_info(title: String, subtitle: String, sections: Array) -> void:
 		info_panel.visible = true
 		if _welcome != null: _welcome.hide()
 		return
-	var changed_entity := info_title.text != title
+	var changed_entity := entity != _info_entity or info_title.text != title
+	_info_entity = entity
 	var previous_section := _section_key
 	_info_signature = signature
 	info_title.text = title
@@ -664,6 +672,8 @@ func refresh_timeline(source: HistorySource, year: int) -> void:
 		timeline_slider.step = 1
 		timeline_slider.set_value_no_signal(maxi(0, ys.bsearch(year) if ys.has(year) else ys.bsearch(year) - 1))
 		timeline_label.text = "EN DIRECTO" if _playing else ("PAUSA" if year == ys[ys.size() - 1] else "ARCHIVO")
+		if source is BridgeSource and (source as BridgeSource).busy:
+			timeline_label.text = "CALCULANDO…" if _playing else "FINALIZANDO AÑO"
 		timeline_slider.tooltip_text = "Años recibidos: %s — %s. Caché limitada; no es un archivo completo." % [fmt_year(ys[0]), fmt_year(ys[ys.size() - 1])]
 		timeline_hint.visible = false
 	sim_buttons["advance"].disabled = not source.can_advance() or _playing
@@ -841,6 +851,7 @@ func _on_search_pick(i: int) -> void:
 		return
 	var tg: Array = _search_targets[i]
 	_search_panel.hide()
+	_toggle_maps(false)
 	app.select_entity(tg[0], tg[1], false)
 	search_results.visible = false
 	search_edit.release_focus()
@@ -866,6 +877,13 @@ func set_hover(text: String) -> void:
 
 
 func _process(_dt: float) -> void:
+	if app.source is BridgeSource:
+		var bridge := app.source as BridgeSource
+		if bridge.busy != _transport_busy or bridge.is_live() != _transport_live or bridge.connected != _transport_connected:
+			_transport_busy = bridge.busy
+			_transport_live = bridge.is_live()
+			_transport_connected = bridge.connected
+			refresh_timeline(app.source, app.current_year)
 	if hover_tip.visible:
 		var m := get_local_mouse_position()
 		var s := hover_tip.size
@@ -1097,6 +1115,8 @@ func _build_atlas_navigation() -> void:
 		scales.add_child(b)
 		_scale_buttons.append(b)
 	_scale_label = UiTheme.muted("N ↑", 11)
+	_scale_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_scale_label.custom_minimum_size.x = 46
 	scales.add_child(_scale_label)
 	_welcome = PanelContainer.new()
 	_welcome.position = Vector2(92, 130)
@@ -1161,7 +1181,7 @@ func _toggle_chronicle(on: bool) -> void:
 		_legend_panel.hide()
 		_fill_chronicle()
 	else:
-		_legend_panel.visible = not _layer_panel.visible and _legend_signature.get("legend", {}).get("kind", "none") != "none"
+		_legend_panel.visible = not _layer_panel.visible and not chronicle_panel.visible and not _search_panel.visible and _legend_signature.get("legend", {}).get("kind", "none") != "none"
 
 
 func _build_notice() -> void:

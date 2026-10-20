@@ -54,6 +54,9 @@ func _run() -> void:
 	var original := hud.info_body.get_child(0).get_instance_id()
 	hud.show_info("Provincia 1,0", "Año observado", sections)
 	check(hud.info_body.get_child(0).get_instance_id() == original, "unchanged inspector is not rebuilt")
+	observer.selection = {"kind":"cell","id":2}
+	hud.show_info("Provincia 1,0", "Año observado", sections)
+	check(hud.info_body.get_child(0).get_instance_id() != original, "different entity IDs rebind relation callbacks even with identical text")
 	check(hud._section_tabs.tab_count == 2, "context sections become tabs")
 	hud._section_tabs.current_tab = 1
 	check(not hud._section_nodes[0].visible and hud._section_nodes[1].visible, "section tab changes visible facts")
@@ -93,6 +96,14 @@ func _run() -> void:
 	hud.speed_option.item_selected.emit(6)
 	check(intents == [["play",true],["play",false],["advance",1],["rate",0]], "transport preserves pause, single year and maximum-rate intents")
 	check(observer.source._outgoing.is_empty(), "presentation emits intents without calculating years")
+	observer.source._years = PackedInt32Array([-100])
+	observer.source._frames[-100] = observer.current_frame
+	observer.source.busy = true
+	hud.refresh_timeline(observer.source, -100)
+	check(hud.timeline_label.text == "FINALIZANDO AÑO", "pause makes in-flight annual result explicit")
+	check(hud.top_year.text == Hud.fmt_year(-100), "in-flight year never replaces the published year")
+	observer.source.busy = false
+	hud.refresh_timeline(observer.source, -100)
 	hud.set_chronicle([{"id":1,"year":-100,"kind":"foundation","text":"Acontecimiento recibido","cell":1}])
 	hud._toggle_chronicle(true)
 	check(hud.chronicle_list.item_count == 1 and hud.chronicle_list.get_item_text(0).contains("Acontecimiento recibido"), "chronicle uses received event text")
@@ -120,6 +131,7 @@ func _run() -> void:
 		hud.size = dimensions
 		hud._fit_layout()
 		await process_frame
+		check(hud._scale_bar.size.y < 64, "orientation indicator stays on one line " + str(dimensions))
 		check(hud.info_panel.offset_right < dimensions.x - 300, "inspector leaves map space " + str(dimensions))
 		check(hud.info_panel.get_global_rect().end.y <= hud.timeline_panel.get_global_rect().position.y, "inspector clears timeline " + str(dimensions))
 		check(hud._rail.get_parent().get_global_rect().end.x < hud.info_panel.get_global_rect().position.x, "rail clears inspector " + str(dimensions))

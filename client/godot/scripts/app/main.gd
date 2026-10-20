@@ -101,6 +101,9 @@ func _ready() -> void:
 			if not str(asset.get("path", "")).is_absolute_path():
 				asset["path"] = OS.get_executable_path().get_base_dir().path_join(str(asset["path"]))
 	_show_loading("Explora continentes, pueblos y ciudades. La historia comienza cuando tú decidas.")
+	if world != null:
+		_launch.seed_edit.editable = false
+		_launch.launch.text = "Explorar la geografía cargada"
 	bridge.world_ready.connect(_accept_world)
 	bridge.frames_changed.connect(_on_frames_changed)
 	bridge.status_changed.connect(func(text: String) -> void:
@@ -924,6 +927,9 @@ func focus_selection() -> void:
 	elif kind == "people" and current_frame != null: _fly_to_group(current_frame.people, id)
 	elif kind.begins_with("engine:") and current_frame != null:
 		var record: Dictionary = current_frame.entity_records.get(kind.trim_prefix("engine:"), {}).get(id, {})
-		if record.has("cellId"): map_view.camera.focus_on(world.cell_center(int(record["cellId"])), 16.0)
-		elif record.has("capitalId"): map_view.camera.focus_on(world.cell_center(int(record["capitalId"])), 30.0)
+		var cell := int(record.get("cellId", record.get("capitalId", -1)))
+		if cell >= 0 and cell < world.cell_count(): map_view.camera.focus_on(world.cell_center(cell), 16.0)
 		elif kind == "engine:religion": _fly_to_group(current_frame.religion, id)
+		elif kind == "engine:polity": _fly_to_group(current_frame.owner, id)
+		elif kind == "engine:people": _fly_to_group(current_frame.people, id)
+		else: hud.set_status("Esta entidad no tiene una localización geográfica disponible.")

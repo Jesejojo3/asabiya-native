@@ -121,7 +121,7 @@ jobs:
         run: |
           mkdir -p build/atlas-preview
           ./godot --headless --path client/godot --import > build/atlas-preview/import.txt 2>&1
-          timeout 180 xvfb-run -a -s '-screen 0 1600x900x24' ./godot --path client/godot --rendering-method gl_compatibility --script res://tests/atlas_visual_smoke.gd -- --server "$PWD/build/bin/asabiya-server" --ui-scale 1 > build/atlas-preview/runtime.txt 2>&1
+          timeout 180 xvfb-run -a -s '-screen 0 1600x900x24' ./godot --path client/godot --rendering-method gl_compatibility --audio-driver Dummy --script res://tests/atlas_visual_smoke.gd -- --server "$PWD/build/bin/asabiya-server" --ui-scale 1 > build/atlas-preview/runtime.txt 2>&1
           cat build/atlas-preview/runtime.txt
           if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' build/atlas-preview/runtime.txt; then exit 1; fi
       - name: Publish software-render captures and logs

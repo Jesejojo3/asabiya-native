@@ -15,7 +15,7 @@ func _run() -> void:
 	App.pending_source = {}
 	app = App.new()
 	root.add_child(app)
-	await _settle(4)
+	await _settle(2)
 	await _capture("01-launch.png")
 	app._launch.launch.pressed.emit()
 	var deadline := Time.get_ticks_msec() + 60000
@@ -35,19 +35,23 @@ func _run() -> void:
 	var cell: int = app.world.land_cells[app.world.land_cells.size() / 2]
 	app.select_entity("cell", cell, false)
 	app.focus_selection()
-	await _settle(45)
+	app.map_view.camera._snap()
+	app.map_view.camera.moved.emit()
+	await _settle(3)
 	await _capture("02-province.png")
 	app.map_view.camera.set_scale_view(1)
 	app.set_layer("states")
-	await _settle(45)
+	app.map_view.camera._snap()
+	app.map_view.camera.moved.emit()
+	await _settle(3)
 	await _capture("03-regional.png")
 	app.hud._toggle_maps(true)
-	await _settle(4)
+	await _settle(2)
 	await _capture("04-map-dock.png")
 	app.hud.focus_search()
 	app.hud.search_edit.text = "%d,%d" % [app.world.cell_xy(cell).x, app.world.cell_xy(cell).y]
 	app.hud._on_search(app.hud.search_edit.text)
-	await _settle(4)
+	await _settle(2)
 	await _capture("05-search.png")
 	var engine_pid: int = app.source._pid
 	await app.source.shutdown()
