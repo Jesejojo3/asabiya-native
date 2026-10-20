@@ -86,6 +86,24 @@ static func build() -> Theme:
 	t.set_stylebox("panel", "Tree", il)
 	t.set_constant("separation", "VBoxContainer", 8)
 	t.set_constant("separation", "HBoxContainer", 8)
+	for cls in ["TabBar", "PopupMenu"]:
+		t.set_color("font_color", cls, TEXT)
+		t.set_color("font_selected_color", cls, GOLD)
+		t.set_color("font_unselected_color", cls, MUTED)
+		t.set_color("font_hover_color", cls, TEXT)
+	var tab := panel_style(BG_SOFT, 2)
+	tab.set_content_margin_all(9)
+	tab.border_color = GOLD
+	tab.set_border_width_all(0)
+	tab.border_width_bottom = 2
+	t.set_stylebox("tab_selected", "TabBar", tab)
+	var quiet_tab := panel_style(BG, 2, false)
+	quiet_tab.set_content_margin_all(9)
+	quiet_tab.shadow_size = 0
+	t.set_stylebox("tab_unselected", "TabBar", quiet_tab)
+	t.set_stylebox("tab_hovered", "TabBar", panel_style(BG_SOFT, 2, false))
+	t.set_stylebox("panel", "PopupMenu", panel_style())
+	t.set_stylebox("panel", "AcceptDialog", panel_style())
 	return t
 
 

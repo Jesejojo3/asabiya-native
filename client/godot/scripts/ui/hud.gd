@@ -132,6 +132,10 @@ func _build_top_bar() -> void:
 	top_seed.clip_text = true
 	top_seed.add_theme_color_override("font_color", UiTheme.MUTED)
 	h.add_child(top_seed)
+	var stretch := Control.new()
+	stretch.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stretch.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h.add_child(stretch)
 	for spec in [["population", "Población"], ["states", "Estados"], ["peoples", "Pueblos"]]:
 		var metric := VBoxContainer.new()
 		metric.add_theme_constant_override("separation", 0)
@@ -172,7 +176,7 @@ func _build_top_bar() -> void:
 	pm.add_item("Estadísticas", 1)
 	pm.add_item("Centrar mapa (Inicio)", 2)
 	pm.add_separator("Interfaz")
-	pm.add_item("Reducir animaciones", 30)
+	pm.add_check_item("Reducir animaciones", 30)
 	pm.add_separator("Calidad gráfica")
 	pm.add_radio_check_item("Alta", 10)
 	pm.add_radio_check_item("Media", 11)
@@ -209,6 +213,8 @@ func _on_menu(id: int) -> void:
 	match id:
 		30:
 			_reduced_motion = not _reduced_motion
+			var popup := (sim_buttons["menu"] as MenuButton).get_popup()
+			popup.set_item_checked(popup.get_item_index(30), _reduced_motion)
 			if _reduced_motion and _fade != null: _fade.kill()
 			info_panel.modulate.a = 1.0
 		0: world_dialog.popup_centered(Vector2i(420, 160))
@@ -475,6 +481,7 @@ func show_info(title: String, subtitle: String, sections: Array) -> void:
 		if _welcome != null: _welcome.hide()
 		return
 	var changed_entity := info_title.text != title
+	var previous_section := _section_key
 	_info_signature = signature
 	info_title.text = title
 	info_subtitle.text = subtitle
@@ -521,7 +528,7 @@ func show_info(title: String, subtitle: String, sections: Array) -> void:
 	var selected := 0
 	if not changed_entity:
 		for i in _section_tabs.tab_count:
-			if _section_tabs.get_tab_title(i) == _section_key: selected = i
+			if _section_tabs.get_tab_title(i) == previous_section: selected = i
 	_section_tabs.current_tab = selected
 	_show_section(selected)
 	info_panel.show()
@@ -773,12 +780,12 @@ func _build_search() -> void:
 
 
 func dismiss_popovers() -> bool:
-	var had_popup := _search_panel.visible or _layer_panel.visible
+	var had_popup := _search_panel.visible or _layer_panel.visible or chronicle_panel.visible or _notice.visible
+	_toggle_chronicle(false)
+	_notice.hide()
 	_search_panel.hide()
 	search_edit.release_focus()
 	_toggle_maps(false)
-	if had_popup and app.selection.get("kind", "") != "":
-		app.select_entity(app.selection["kind"], app.selection["id"], false)
 	return had_popup
 
 
@@ -786,6 +793,7 @@ func focus_search() -> void:
 	_search_panel.show()
 	_toggle_maps(false)
 	_toggle_chronicle(false)
+	_on_search(search_edit.text)
 	search_edit.grab_focus()
 	search_edit.select_all()
 

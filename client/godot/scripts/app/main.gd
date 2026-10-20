@@ -56,6 +56,7 @@ const RELIEF_SCALE := [1.0 / 650.0, 1.0 / 420.0, 1.0 / 300.0]
 func _ready() -> void:
 	args = parse_args(OS.get_cmdline_user_args())
 	_apply_ui_scale()
+	get_window().size_changed.connect(_apply_ui_scale)
 	_load_settings()
 	get_tree().auto_accept_quit = false
 	if args.has("snapshot"):
