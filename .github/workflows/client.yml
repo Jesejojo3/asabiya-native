@@ -42,6 +42,13 @@ jobs:
       - name: Atlas historical explorer regression contracts (headless)
         timeout-minutes: 2
         run: timeout --signal=TERM 40s ./godot --headless --path client/godot --script res://tests/atlas_ux_regressions.gd
+      - name: Fluid playback, annual frames and exact pause
+        timeout-minutes: 3
+        run: |
+          go build -o build/bin/asabiya-server ./cmd/asabiya-server
+          timeout --signal=TERM 60s ./godot --headless --path client/godot --script res://tests/deep_publication_regressions.gd
+          timeout --signal=TERM 60s ./godot --headless --path client/godot --script res://tests/fluid_playback_regressions.gd -- --server "$PWD/build/bin/asabiya-server"
+          timeout --signal=TERM 60s ./godot --headless --path client/godot --script res://tests/annual_throughput_regressions.gd -- --server "$PWD/build/bin/asabiya-server"
 
   windows:
     runs-on: windows-2022

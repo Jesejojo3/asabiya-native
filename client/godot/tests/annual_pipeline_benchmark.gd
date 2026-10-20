@@ -60,7 +60,12 @@ func _process(_dt: float) -> bool:
 		started = Time.get_ticks_usec()
 		initial_year = seen_year
 		if fast_mode: source.start_fast_forward(samples, 50)
-		elif not fast_mode: source.advance(1)
+		elif checkpoint_digest:
+			source.fluid_playback = true
+			source.frames_changed.connect(func():
+				if source.years()[-1] >= initial_year + samples: source.stop_live())
+			source.start_live(0)
+		else: source.advance(1)
 		phase = 2
 	elif phase == 2 and not source.busy and source.years()[-1] > seen_year:
 		count = source.years()[-1] - initial_year
@@ -68,7 +73,7 @@ func _process(_dt: float) -> bool:
 		if count >= samples:
 			phase = 0
 			_finish()
-		else: source.advance(1)
+		elif not checkpoint_digest: source.advance(1)
 	return false
 
 func _finish() -> void:

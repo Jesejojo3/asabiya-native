@@ -31,9 +31,11 @@ var era_names: Array = []
 var command_catalog: Dictionary = {}
 var _map_view := "map"
 var _sparse_entities := false
-# Exact fingerprints are required for retained observation frames. The wire
-# checkpoint mode remains supported for explicitly opted-in external consumers.
+# Fluid playback keeps all annual frames, with explicit deferred fingerprints.
+# Paused snapshots and individual steps always request an exact fingerprint.
 var _digest_checkpoints := false
+var fluid_playback := true
+var _pause_verifying := false
 var _field_changes := false
 var _fast_active := false
 var _fast_cancel := true
@@ -119,6 +121,7 @@ func start(_extra_args := PackedStringArray()) -> bool:
 	busy = false
 	_live_running = false
 	_live_advance_pending = false
+	_pause_verifying = false
 	_remaining = 0
 	_since_publication = 0
 	_paused = false
@@ -185,6 +188,7 @@ func _on_catalog(response: Dictionary) -> void:
 	_map_view = "map-columns-v1" if data.get("mapColumnsV1", false) else "map"
 	_sparse_entities = _map_view == "map-columns-v1" and bool(data.get("entityChangesV1", false))
 	_field_changes = _map_view == "map-columns-v1" and bool(data.get("mapFieldChangesV1", false))
+	_digest_checkpoints = _map_view == "map-columns-v1" and int(data.get("digestCheckpointsV1", 0)) == 25
 	request("export_geography", {"directory":_directory.path_join("world")}, _on_geography)
 
 func _on_geography(response: Dictionary) -> void:
@@ -203,12 +207,12 @@ func _on_frame(response: Dictionary) -> void:
 	if publication == null:
 		_fail("El motor devolvió un estado incompatible con la geografía o el calendario.")
 		return
-	if _remaining <= 0: busy = false
+	if _remaining <= 0 and not _pause_verifying: busy = false
 	_store(publication)
 	if _remaining > 0 and not _closing:
 		_next_advance()
 	else:
-		busy = false
+		busy = _pause_verifying
 
 func _store(publication: HistoryFrame) -> void:
 	_frames[publication.year] = publication
@@ -233,7 +237,7 @@ func set_live_rate(years_per_second: int) -> void:
 
 
 func start_live(years_per_second: int) -> void:
-	if not connected or _closing or _fast_active: return
+	if not can_advance() or _fast_active: return
 	set_live_rate(years_per_second)
 	_live_running = true
 	_paused = false
@@ -247,10 +251,12 @@ func stop_live() -> void:
 	_fast_cancel = true
 	_mutex.unlock()
 
-func fetch_frame() -> void:
+func fetch_frame(complete_pause := false) -> void:
 	if not connected: return
 	busy = true
-	request("get_state", {"view":_map_view}, _on_frame)
+	request("get_state", {"view":_map_view}, func(response: Dictionary) -> void:
+		if complete_pause: _pause_verifying = false
+		_on_frame(response))
 
 func advance(count: int) -> void:
 	if not can_advance() or count < 1: return
@@ -267,7 +273,7 @@ func _advance_payload() -> Dictionary:
 		payload["entityMode"] = "changed"
 	if _field_changes:
 		payload["provinceMode"] = "changed-fields-v1"
-	if _digest_checkpoints:
+	if _digest_checkpoints and fluid_playback and _live_running:
 		payload["digestMode"] = "checkpoint-v1"
 	return payload
 
@@ -297,8 +303,10 @@ func pause() -> void:
 	_paused = true
 	if _fast_active: return
 	if connected:
+		_pause_verifying = true
+		busy = true
 		request("pause", {}, func(_response: Dictionary) -> void:
-			fetch_frame())
+			fetch_frame(true))
 
 func refresh_command_context() -> void:
 	if not connected or _fast_active or _stop or _closing: return
@@ -458,6 +466,7 @@ func _fail(message: String) -> void:
 	_fast_active = false
 	_live_advance_pending = false
 	connected = false
+	_pause_verifying = false
 	busy = false
 	_remaining = 0
 	last_error = message

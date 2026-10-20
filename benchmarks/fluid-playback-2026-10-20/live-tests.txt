@@ -1,0 +1,7 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+{"address":"127.0.0.1:35515","protocol":"asabiya/local-v1","schema":"asabiya/local-endpoint-v1"}
+FLUID_SAMPLE {"elapsedMs":379.94,"fluid":false,"fullSize":false,"sha":"22060326478affe45ff603b66b52b06b00f76ecf87afdecb4183dea7533dcdd9","years":53,"yearsPerSecond":139.495709848924}
+{"address":"127.0.0.1:44901","protocol":"asabiya/local-v1","schema":"asabiya/local-endpoint-v1"}
+FLUID_SAMPLE {"elapsedMs":379.513,"fluid":true,"fullSize":false,"sha":"22060326478affe45ff603b66b52b06b00f76ecf87afdecb4183dea7533dcdd9","years":53,"yearsPerSecond":139.65266011968}
+Fluid playback: 135 checks, 0 failures

@@ -12,6 +12,7 @@ signal advance_requested(years: int)
 signal play_toggled(on: bool)
 signal fast_forward_requested(years_count: int, publish_every: int)
 signal playback_rate_changed(years_per_second: int)
+signal fluid_playback_changed(enabled: bool)
 signal fly_to(cell: int)
 signal focus_cell(cell: int)
 signal entity_requested(kind: String, id: int)
@@ -30,6 +31,7 @@ var top_stats: Dictionary = {}
 var session_badge_box: HBoxContainer
 var sim_buttons: Dictionary = {}
 var speed_option: OptionButton
+var fluid_option: CheckButton
 var layer_buttons: Dictionary = {}
 var layer_group := ButtonGroup.new()
 var legend_box: VBoxContainer
@@ -660,11 +662,18 @@ func _build_timeline() -> void:
 	speed_option = OptionButton.new()
 	for rate in [1, 2, 5, 10, 25, 50, 0]:
 		speed_option.add_item("Máxima" if rate == 0 else "%d año%s/s" % [rate, "" if rate == 1 else "s"], rate)
-	speed_option.select(3)
+	speed_option.select(6)
 	speed_option.tooltip_text = "Límite de observación, no rendimiento garantizado. Máxima publica cada año sin demora artificial. Para omitir estados visuales intermedios usa Menú → Simulación rápida."
 	speed_option.focus_mode = Control.FOCUS_NONE
 	speed_option.item_selected.connect(func(_index: int): playback_rate_changed.emit(speed()))
 	transport.add_child(speed_option)
+	fluid_option = CheckButton.new()
+	fluid_option.text = "Fluido"
+	fluid_option.button_pressed = true
+	fluid_option.focus_mode = Control.FOCUS_NONE
+	fluid_option.tooltip_text = "Muestra todos los años. Verifica el historial al pausar y cada 25 años. Desactiva Fluido para verificar cada año, con menor velocidad."
+	fluid_option.toggled.connect(func(enabled: bool): fluid_playback_changed.emit(enabled))
+	transport.add_child(fluid_option)
 	var step := Button.new()
 	step.text = "1 año"
 	step.icon = AtlasIcons.get_icon("step")
@@ -759,9 +768,15 @@ func refresh_timeline(source: HistorySource, year: int) -> void:
 		if source is BridgeSource and (source as BridgeSource).is_fast_forward(): timeline_label.text = "RÁPIDO" if _playing else "FINALIZANDO AÑO"
 		timeline_slider.tooltip_text = "Años recibidos: %s — %s. Caché limitada; no es un archivo completo." % [fmt_year(ys[0]), fmt_year(ys[ys.size() - 1])]
 		timeline_hint.visible = false
+		var viewed: HistoryFrame = source.frame(year)
+		if viewed != null and viewed.digest_mode == "deferred-v1":
+			timeline_hint.text = "Fluido · año sin comprobación individual. Pausar verifica el año actual."
+			timeline_hint.visible = true
 	sim_buttons["advance"].disabled = not source.can_advance() or _playing
 	# Pausing must remain possible during the first year in flight.
 	sim_buttons["play"].disabled = ys.is_empty() or not (source is BridgeSource and (source as BridgeSource).connected)
+	if source is BridgeSource and (source as BridgeSource)._pause_verifying:
+		sim_buttons["play"].disabled = true
 	sim_buttons["back"].disabled = ys.size() < 2 or year <= ys[0]
 	sim_buttons["prev"].disabled = sim_buttons["back"].disabled
 	sim_buttons["next"].disabled = ys.size() < 2 or year >= ys[ys.size() - 1]

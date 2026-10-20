@@ -1,3 +1,7 @@
+# Continuación: reproducción fluida y entrega tangible
+
+Tras la PR #19, el usuario indica «eso no es tangible para mi, continúa». Esta continuación añade un modo visible Fluido que mantiene cada año publicado, negocia checkpoints explícitos cada 25 años y verifica el snapshot al pausar. La opción de verificación anual se conserva. Los frames diferidos no tienen una huella histórica exacta y deben seguir marcados como tales. No activar diferimiento oculto ni inventar huellas para años pasados. Preparar un paquete Windows para probar; no integrar automáticamente. Esta decisión de presentación sustituye la obligatoriedad de SHA anual en el modo Fluido descrita abajo; conserva las mecánicas, referencia, fixtures, calendario y RNG.
+
 # Misión vigente: rendimiento e integridad (20 de octubre de 2026)
 
 El usuario autoriza expresamente perfilar, ejecutar pruebas Go/Godot, validar gráficamente, comprobar CI y producir un paquete Windows. Esta misión sustituye las restricciones de testeo r3–r5 de abajo. Continuar en `perf/deep-throughput-v2`; no hacer merge. Conservar referencia, fixtures, calendario, RNG y formato/valores de los digests. Las huellas diferidas requieren marcador explícito y no son huellas históricas válidas; la observación normal retiene SHA anual exacto. No afirmar validación de Windows ni rendimiento en el equipo del usuario sin evidencia de esa plataforma.

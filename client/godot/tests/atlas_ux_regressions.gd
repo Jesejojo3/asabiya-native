@@ -45,7 +45,13 @@ func _run() -> void:
 	await process_frame
 	check(hud.top_year.text == Hud.fmt_year(-100), "engine year is formatted")
 	check(hud.top_stats["states"].text == "1", "real state count")
-	check(hud.speed() == 10, "previous live pacing default preserved")
+	check(hud.speed() == 0, "fluid playback starts at the maximum available rate")
+	check(hud.fluid_option.button_pressed, "fluid playback is available and selected")
+	var fluid_intents := []
+	hud.fluid_playback_changed.connect(func(enabled: bool): fluid_intents.append(enabled))
+	hud.fluid_option.button_pressed = false
+	check(fluid_intents == [false], "verified playback remains explicitly selectable")
+	hud.fluid_option.button_pressed = true
 	# Regression: opening Fast Simulation during an in-flight year must not
 	# silently do nothing or enqueue a second conflicting advance.
 	var fast_intents := []

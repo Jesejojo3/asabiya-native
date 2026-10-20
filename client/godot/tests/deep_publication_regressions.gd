@@ -77,6 +77,18 @@ func _test_frames() -> void:
 	var bridge:=BridgeSource.new()
 	bridge._on_catalog({"data":{"mapColumnsV1":true,"entityChangesV1":true,"mapFieldChangesV1":true,"digestCheckpointsV1":25}})
 	check(bridge._advance_payload().get("provinceMode")=="changed-fields-v1" and not bridge._advance_payload().has("digestMode"),"negotiated fields retain annual SHA")
+	bridge._live_running = true
+	check(bridge._advance_payload().get("digestMode") == "checkpoint-v1", "fluid live playback explicitly requests checkpoints")
+	bridge.fluid_playback = false
+	check(not bridge._advance_payload().has("digestMode"), "verified playback restores exact annual SHA")
+	bridge.fluid_playback = true
+	bridge._live_running = false
+	check(not bridge._advance_payload().has("digestMode"), "individual steps retain exact SHA")
+	var legacy := BridgeSource.new()
+	legacy._on_catalog({"data":{"mapColumnsV1":true}})
+	legacy._live_running = true
+	check(not legacy._advance_payload().has("digestMode"), "old servers fall back to annual SHA")
+	legacy.close()
 	bridge.close()
 
 func _test_layer_inputs() -> void:

@@ -12,7 +12,7 @@ El cliente conserva el terreno 3D fino, cámara, LOD, vegetación y materiales d
 
 Abre `AsabiyaNative.exe` en la carpeta Windows entregada. No necesitas instalar Go/Godot ni configurar puertos. La historia comienza con pueblos fundadores; usa el selector de años para observar la aparición de Estados y ciudades.
 
-**El usuario se encarga del testeo.** Esta entrega se compila/exporta sin abrir el juego ni ejecutar las suites finales. No se afirma que la integración visual esté validada.
+**Reproducción Fluida:** inicia en Máxima, muestra todos los años y comprueba el estado cada 25 años y al pausar. Desactiva Fluido para conservar verificación anual. Se han ejecutado regresiones Go/Godot headless; la ejecución Windows en el equipo del usuario sigue pendiente. [Cambio y mediciones](docs/integration/FLUID_PLAYBACK.md).
 
 ## Reconstruir
 
