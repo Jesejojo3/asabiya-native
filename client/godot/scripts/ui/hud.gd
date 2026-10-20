@@ -13,6 +13,7 @@ signal play_toggled(on: bool)
 signal fast_forward_requested(years_count: int, publish_every: int)
 signal playback_rate_changed(years_per_second: int)
 signal fly_to(cell: int)
+signal focus_cell(cell: int)
 signal entity_requested(kind: String, id: int)
 signal world_requested(seed_text: String)
 signal deselect_requested
@@ -42,6 +43,13 @@ var chronicle_panel: PanelContainer
 var chronicle_list: ItemList
 var chronicle_filter: OptionButton
 var figures_panel: PanelContainer
+var disasters_panel: PanelContainer
+var disaster_query: LineEdit
+var disaster_sort: OptionButton
+var cataclysm_list: ItemList
+var outbreak_list: ItemList
+var cataclysm_title: Label
+var outbreak_title: Label
 var figure_filter: OptionButton
 var figure_query: LineEdit
 var figure_list: ItemList
@@ -108,6 +116,7 @@ func build(application: Node) -> void:
 	_build_timeline()
 	_build_chronicle()
 	_build_figures()
+	_build_disasters()
 	_build_search()
 	_build_hover_tip()
 	_build_help()
@@ -195,6 +204,7 @@ func _build_top_bar() -> void:
 	pm.add_item("Generar mundo…", 0)
 	pm.add_item("Estadísticas", 1)
 	pm.add_item("Figuras históricas", 6)
+	pm.add_item("Epidemias y cataclismos", 7)
 	pm.add_item("Simulación rápida…", 5)
 	pm.add_item("Centrar mapa (Inicio)", 2)
 	pm.add_separator("Interfaz")
@@ -242,6 +252,7 @@ func _on_menu(id: int) -> void:
 		0: world_dialog.popup_centered(Vector2i(420, 160))
 		1: toggle_stats()
 		6: _toggle_figures(not figures_panel.visible)
+		7: _toggle_disasters(not disasters_panel.visible)
 		5:
 			if app.source.can_advance(): fast_dialog.popup_centered_clamped(Vector2i(440, 260), 0.75)
 		2: app.map_view.camera.reset_view()
@@ -377,10 +388,11 @@ func _toggle_maps(on: bool) -> void:
 		chronicle_panel.hide()
 		sim_buttons["chronicle"].set_pressed_no_signal(false)
 		figures_panel.hide()
+		disasters_panel.hide()
 		_search_panel.hide()
 	_layer_panel.visible = on
 	_map_button.set_pressed_no_signal(on)
-	_legend_panel.visible = not on and not chronicle_panel.visible and not figures_panel.visible and not _search_panel.visible and _legend_signature.get("legend", {}).get("kind", "none") != "none"
+	_legend_panel.visible = not on and not chronicle_panel.visible and not figures_panel.visible and not disasters_panel.visible and not _search_panel.visible and _legend_signature.get("legend", {}).get("kind", "none") != "none"
 
 
 func set_legend(title: String, legend: Dictionary) -> void:
@@ -388,7 +400,7 @@ func set_legend(title: String, legend: Dictionary) -> void:
 	var signature := {"title":title, "legend":legend}
 	if signature == _legend_signature: return
 	_legend_signature = signature.duplicate(true)
-	_legend_panel.visible = not _layer_panel.visible and not chronicle_panel.visible and not figures_panel.visible and not _search_panel.visible and legend.get("kind", "none") != "none"
+	_legend_panel.visible = not _layer_panel.visible and not chronicle_panel.visible and not figures_panel.visible and not disasters_panel.visible and not _search_panel.visible and legend.get("kind", "none") != "none"
 	for c in legend_box.get_children():
 		c.queue_free()
 	legend_box.add_child(UiTheme.heading(title, 13))
@@ -877,6 +889,7 @@ func _on_figure_activated(index: int) -> void:
 func _toggle_figures(on: bool) -> void:
 	figures_panel.visible = on
 	if on:
+		disasters_panel.hide()
 		_toggle_maps(false)
 		_toggle_chronicle(false)
 		_search_panel.hide()
@@ -884,6 +897,132 @@ func _toggle_figures(on: bool) -> void:
 		_fill_figures()
 	else:
 		_legend_panel.visible = not _layer_panel.visible and not chronicle_panel.visible and not _search_panel.visible and _legend_signature.get("legend", {}).get("kind", "none") != "none"
+
+
+# ---------------------------------------------------------------- epidemics and cataclysms (HTML v0.6 plague pane)
+
+func _build_disasters() -> void:
+	disasters_panel = PanelContainer.new()
+	disasters_panel.set_anchors_preset(Control.PRESET_RIGHT_WIDE)
+	disasters_panel.offset_left = -460
+	disasters_panel.offset_right = -16
+	disasters_panel.offset_top = 130
+	disasters_panel.offset_bottom = -154
+	disasters_panel.visible = false
+	add_child(disasters_panel)
+	var v := VBoxContainer.new()
+	disasters_panel.add_child(v)
+	v.add_child(UiTheme.heading("Epidemias y cataclismos", 17))
+	disaster_query = LineEdit.new()
+	disaster_query.placeholder_text = "Buscar por nombre o lugar"
+	disaster_query.clear_button_enabled = true
+	disaster_query.text_changed.connect(func(_text: String): _fill_disasters())
+	v.add_child(disaster_query)
+	cataclysm_title = UiTheme.heading("Cataclismos", 13)
+	v.add_child(cataclysm_title)
+	cataclysm_list = ItemList.new()
+	cataclysm_list.custom_minimum_size.y = 115
+	cataclysm_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	cataclysm_list.item_clicked.connect(func(i: int, _p: Vector2, _b: int): _on_disaster_activated(cataclysm_list, i))
+	cataclysm_list.item_activated.connect(func(i: int): _on_disaster_activated(cataclysm_list, i))
+	v.add_child(cataclysm_list)
+	var sort_line := HBoxContainer.new()
+	outbreak_title = UiTheme.heading("Epidemias", 13)
+	sort_line.add_child(outbreak_title)
+	disaster_sort = OptionButton.new()
+	disaster_sort.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	disaster_sort.add_item("Más mortíferas")
+	disaster_sort.add_item("Más recientes")
+	disaster_sort.item_selected.connect(func(_index: int): _fill_disasters())
+	sort_line.add_child(disaster_sort)
+	v.add_child(sort_line)
+	outbreak_list = ItemList.new()
+	outbreak_list.custom_minimum_size.y = 115
+	outbreak_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	outbreak_list.item_clicked.connect(func(i: int, _p: Vector2, _b: int): _on_disaster_activated(outbreak_list, i))
+	outbreak_list.item_activated.connect(func(i: int): _on_disaster_activated(outbreak_list, i))
+	v.add_child(outbreak_list)
+
+
+func _fill_disasters() -> void:
+	cataclysm_list.clear()
+	outbreak_list.clear()
+	var frame: HistoryFrame = app.current_frame
+	if frame == null:
+		cataclysm_list.add_item("Todavía no hay historia disponible.", null, false)
+		outbreak_list.add_item("Todavía no hay historia disponible.", null, false)
+		return
+	var query := disaster_query.text.strip_edges().to_lower()
+	for kind in ["cataclysm", "outbreak"]:
+		var found := []
+		var records: Dictionary = frame.entity_records.get(kind, {})
+		for ident in records:
+			var fields: Dictionary = records[ident]
+			var year := int(fields.get("year", fields.get("start", frame.year)))
+			if year > frame.year:
+				continue
+			var name := str(fields.get("name", ""))
+			var place := str(fields.get("place", ""))
+			if not query.is_empty() and not name.to_lower().contains(query) and not place.to_lower().contains(query):
+				continue
+			found.append({"id":int(ident),"fields":fields,"year":year,"deaths":float(fields.get("deaths", 0.0))})
+		var most_deadly := kind == "outbreak" and disaster_sort.selected == 0
+		found.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+			if most_deadly and float(a["deaths"]) != float(b["deaths"]):
+				return float(a["deaths"]) > float(b["deaths"])
+			if int(a["year"]) != int(b["year"]):
+				return int(a["year"]) > int(b["year"])
+			return int(a["id"]) > int(b["id"]))
+		var target: ItemList = cataclysm_list if kind == "cataclysm" else outbreak_list
+		var limit := 80 if kind == "cataclysm" else 100
+		for i in mini(found.size(), limit):
+			var entry: Dictionary = found[i]
+			var fields: Dictionary = entry["fields"]
+			var name := str(fields.get("name", ""))
+			if name == "":
+				name = str(fields.get("kind", "Cataclismo")) if kind == "cataclysm" else "Epidemia"
+			var label := "%s · %s" % [fmt_year(entry["year"]), name]
+			if fields.has("deaths"):
+				label += " · %s muertes" % _fmt_int(float(entry["deaths"]))
+			if kind == "outbreak" and not bool(fields.get("done", true)):
+				label += " · activa"
+			var index := target.add_item(label)
+			var cell_key := "cellId" if kind == "cataclysm" else "originCellId"
+			target.set_item_metadata(index, {"kind":kind,"id":entry["id"],"cell":int(fields.get(cell_key, -1))})
+		if target.item_count == 0:
+			target.add_item("Sin registros que coincidan.", null, false)
+		if kind == "cataclysm":
+			cataclysm_title.text = "Cataclismos · %d" % found.size()
+		else:
+			outbreak_title.text = "Epidemias · %d" % found.size()
+
+
+func _on_disaster_activated(target: ItemList, index: int) -> void:
+	if index < 0 or index >= target.item_count or target.is_item_disabled(index):
+		return
+	var entry: Variant = target.get_item_metadata(index)
+	if not entry is Dictionary:
+		return
+	disasters_panel.hide()
+	var cell := int(entry.get("cell", -1))
+	if cell >= 0 and cell < app.world.cell_count():
+		# Focus the camera only; selecting a province here would race the
+		# asynchronous detail query against the disaster inspector.
+		focus_cell.emit(cell)
+	entity_requested.emit("engine:" + str(entry["kind"]), int(entry["id"]))
+
+
+func _toggle_disasters(on: bool) -> void:
+	disasters_panel.visible = on
+	if on:
+		_toggle_maps(false)
+		_toggle_chronicle(false)
+		figures_panel.hide()
+		_search_panel.hide()
+		_legend_panel.hide()
+		_fill_disasters()
+	else:
+		_legend_panel.visible = not _layer_panel.visible and not chronicle_panel.visible and not figures_panel.visible and not _search_panel.visible and _legend_signature.get("legend", {}).get("kind", "none") != "none"
 
 
 # ---------------------------------------------------------------- search
@@ -923,7 +1062,8 @@ func _build_search() -> void:
 
 
 func dismiss_popovers() -> bool:
-	var had_popup := _search_panel.visible or _layer_panel.visible or chronicle_panel.visible or figures_panel.visible or _notice.visible
+	var had_popup := _search_panel.visible or _layer_panel.visible or chronicle_panel.visible or figures_panel.visible or disasters_panel.visible or _notice.visible
+	disasters_panel.hide()
 	figures_panel.hide()
 	_toggle_chronicle(false)
 	_notice.hide()
@@ -935,6 +1075,7 @@ func dismiss_popovers() -> bool:
 
 func focus_search() -> void:
 	_search_panel.show()
+	disasters_panel.hide()
 	figures_panel.hide()
 	_toggle_maps(false)
 	_toggle_chronicle(false)
@@ -1246,6 +1387,8 @@ func set_frame_stats(frame: HistoryFrame, start_year: int) -> void:
 	top_stats["population"].text = _fmt_int(frame.world_population) if frame.world_population > 0.0 else "—"
 	top_stats["states"].text = str(frame.state_count())
 	top_stats["peoples"].text = str(frame.peoples.size())
+	if disasters_panel.visible:
+		_fill_disasters()
 
 func _icon_button(icon: String, hint: String, action: Callable) -> Button:
 	var button := Button.new()
@@ -1269,6 +1412,7 @@ func _build_atlas_navigation() -> void:
 	_rail.add_child(_icon_button("search", "Buscar entidades · Ctrl+F", focus_search))
 	_rail.add_child(_icon_button("chronicle", "Crónica histórica", func(): _toggle_chronicle(not chronicle_panel.visible)))
 	_rail.add_child(_icon_button("people", "Figuras históricas del mundo", func(): _toggle_figures(not figures_panel.visible)))
+	_rail.add_child(_icon_button("chronicle", "Epidemias y cataclismos", func(): _toggle_disasters(not disasters_panel.visible)))
 	_rail.add_child(HSeparator.new())
 	_rail.add_child(_icon_button("home", "Vista continental · Inicio", func(): app.map_view.camera.set_scale_view(0)))
 	_scale_bar = PanelContainer.new()
@@ -1352,13 +1496,14 @@ func _toggle_chronicle(on: bool) -> void:
 	chronicle_panel.visible = on
 	sim_buttons["chronicle"].set_pressed_no_signal(on)
 	if on:
+		disasters_panel.hide()
 		figures_panel.hide()
 		_toggle_maps(false)
 		_search_panel.hide()
 		_legend_panel.hide()
 		_fill_chronicle()
 	else:
-		_legend_panel.visible = not _layer_panel.visible and not chronicle_panel.visible and not figures_panel.visible and not _search_panel.visible and _legend_signature.get("legend", {}).get("kind", "none") != "none"
+		_legend_panel.visible = not _layer_panel.visible and not chronicle_panel.visible and not figures_panel.visible and not disasters_panel.visible and not _search_panel.visible and _legend_signature.get("legend", {}).get("kind", "none") != "none"
 
 
 func _build_notice() -> void:
