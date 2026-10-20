@@ -80,3 +80,33 @@ func byEntityID(input map[string][]sim.EntityRecord) map[string]map[int]sim.Enti
 	mergeEntityRecords(m, input)
 	return m
 }
+
+func BenchmarkEntityWirePublication(b *testing.B) {
+	for _, mode := range []string{"complete", "changed"} {
+		b.Run(mode, func(b *testing.B) {
+			s := throughputSession(b, 400, 200)
+			snapshot := s.Handle(Request{Schema: LocalSchema, ID: "benchmark-snapshot", Op: "get_state", Payload: json.RawMessage(`{"view":"map-columns-v1"}`)})
+			if !snapshot.OK { b.Fatal(snapshot.Error) }
+			payload := json.RawMessage(`{"view":"map-columns-v1"}`)
+			if mode == "changed" { payload = json.RawMessage(`{"view":"map-columns-v1","entityMode":"changed"}`) }
+			for i := 0; i < 20; i++ {
+				if response := s.Handle(Request{Schema: LocalSchema, ID: "warm-up", Op: "advance", Payload: payload}); !response.OK {
+					b.Fatal(response.Error)
+				}
+			}
+			b.ReportAllocs()
+			b.ResetTimer()
+			totalBytes := 0
+			for i := 0; i < b.N; i++ {
+				response := s.Handle(Request{Schema: LocalSchema, ID: "bench", Op: "advance", Payload: payload})
+				if !response.OK { b.Fatal(response.Error) }
+				data, err := json.Marshal(response.Data)
+				if err != nil { b.Fatal(err) }
+				totalBytes += len(data)
+			}
+			b.StopTimer()
+			b.ReportMetric(float64(totalBytes)/float64(b.N), "wire-B/year")
+			b.ReportMetric(float64(b.N)/b.Elapsed().Seconds(), "years/s")
+		})
+	}
+}
