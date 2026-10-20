@@ -38,6 +38,7 @@ func (s *Simulation) advanceYearWithDelta(mapOnly bool) (AnnualDelta, []MapProvi
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	h := s.h
+	clock := startWork(s.workProfile)
 	var before []ProvinceView
 	var mapBefore []MapProvinceView
 	if mapOnly {
@@ -54,7 +55,9 @@ func (s *Simulation) advanceYearWithDelta(mapOnly bool) (AnnualDelta, []MapProvi
 	}
 	eventStart := h.nextEventID
 	from := h.year
+	clock.mark(9)
 	s.applyCommandLocked(s.nextCommandLocked("advance_year"))
+	clock = startWork(s.workProfile)
 	delta := AnnualDelta{Schema: "asabiya/annual-delta-v1", FromYear: from, Year: h.year, StateSHA256: s.stateDigestLocked(), RulesSHA256: s.rulesDigestLocked(), EntityUpserts: make(map[string][]EntityRecord), Favor: h.favor}
 	delta.Earth = h.earthView()
 	delta.RNG = h.r.Position()
@@ -66,6 +69,7 @@ func (s *Simulation) advanceYearWithDelta(mapOnly bool) (AnnualDelta, []MapProvi
 	if len(h.events) > 0 {
 		delta.FirstRetainedEventID = h.events[0].ID
 	}
+	clock = startWork(s.workProfile)
 	var mapChanges []MapProvinceView
 	for i, p := range mapBefore {
 		current := s.mapProvinceLocked(CellID(i))
@@ -79,6 +83,7 @@ func (s *Simulation) advanceYearWithDelta(mapOnly bool) (AnnualDelta, []MapProvi
 			delta.Provinces = append(delta.Provinces, current)
 		}
 	}
+	clock.mark(11)
 	for _, kind := range entityKinds {
 		delta.EntityUpserts[kind] = s.entitiesLocked(kind)
 	}
@@ -100,5 +105,6 @@ func (s *Simulation) advanceYearWithDelta(mapOnly bool) (AnnualDelta, []MapProvi
 			delta.Narrative = append(delta.Narrative, h.eventText[k])
 		}
 	}
+	clock.mark(12)
 	return delta, mapChanges
 }

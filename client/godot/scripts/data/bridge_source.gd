@@ -387,6 +387,8 @@ static func _response_integrity_error(response: Dictionary, inflight: Dictionary
 
 
 func _worker() -> void:
+	var trace := AnnualTrace.new("worker")
+	var request_started := 0
 	var deadline := Time.get_ticks_msec() + 15000
 	while not FileAccess.file_exists(_endpoint) and not _stopped():
 		if not OS.is_process_running(_pid) or Time.get_ticks_msec() > deadline:
@@ -435,6 +437,7 @@ func _worker() -> void:
 			_mutex.unlock()
 			if not inflight.is_empty():
 				inflight["session"] = session
+				request_started = trace.begin()
 				pending_bytes = (JSON.stringify(inflight) + "\n").to_utf8_buffer()
 				sent = 0
 				deadline = Time.get_ticks_msec() + 180000
@@ -462,7 +465,10 @@ func _worker() -> void:
 				break
 			# Requests are serialized: one complete NDJSON record per response.
 			if not incoming.is_empty() and incoming[incoming.size() - 1] == 10:
+				var parse_started := trace.begin()
+				var response_bytes := incoming.size()
 				var value: Variant = JSON.parse_string(incoming.get_string_from_utf8())
+				trace.record("json-parse", parse_started, {"bytes":response_bytes})
 				incoming.clear()
 				if not value is Dictionary:
 					_push({"_error":"El motor envió JSON inválido."})
@@ -484,6 +490,7 @@ func _worker() -> void:
 						response["_frame"] = decoder.consume(data, op == "advance")
 						response.erase("data") # Do not retain large raw provincial dictionaries.
 				var terminal: bool = not response["ok"] and not _is_recoverable_request_error(op, str(response.get("error", {}).get("code", "")))
+				trace.record("request-decode", request_started, {"op":op,"bytes":response_bytes})
 				_push(response)
 				inflight = {}
 				if terminal: break

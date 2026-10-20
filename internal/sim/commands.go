@@ -109,7 +109,7 @@ func (s *Simulation) applyCommandLocked(input Command) CommandResult {
 	default:
 		switch c.Kind {
 		case "advance_year":
-			h.advanceYear()
+			h.advanceYearProfiled(s.workProfile)
 			result.Accepted = true
 		case "set_sandbox":
 			if c.Sandbox == nil {

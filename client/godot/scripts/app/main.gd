@@ -18,6 +18,8 @@ extends Node
 static var pending_world: Dictionary = {}
 static var pending_source: Dictionary = {}
 
+var _annual_trace := AnnualTrace.new("main")
+
 var _launch: LaunchScreen
 var _last_session_error := ""
 var _startup: CanvasLayer
@@ -335,9 +337,12 @@ func set_year(y: int) -> void:
 
 
 func _load_frame() -> void:
+	var frame_started := _annual_trace.begin()
 	var next_frame: HistoryFrame = source.frame_at(current_year) if source != null else null
 	if current_frame != null and next_frame != null and current_frame.year == next_frame.year and current_frame.state_digest == next_frame.state_digest:
+		var refresh_start := _annual_trace.begin()
 		_refresh_ui()
+		_annual_trace.record("hud", refresh_start)
 		if not hud.playing() and selection.get("kind") == "cell":
 			_request_province_details(int(selection["id"]))
 		return
@@ -345,19 +350,30 @@ func _load_frame() -> void:
 	if current_frame != null:
 		current_year = current_frame.year
 	current_layer = requested_layer if MapLayers.available(requested_layer, source, current_frame) else "terrain"
+	var settlements_start := _annual_trace.begin()
 	settlements.set_settlements(current_frame.settlements if current_frame != null else [])
+	_annual_trace.record("settlements", settlements_start)
 	var label_mode := "states"
 	if current_layer in ["peoples", "cultures", "languages"]:
 		label_mode = "peoples"
 	elif current_layer == "religions":
 		label_mode = "religions"
+	var annotations_start := _annual_trace.begin()
 	history.rebuild(current_frame, label_mode)
+	_annual_trace.record("annotations", annotations_start)
+	var chronicle_start := _annual_trace.begin()
 	hud.set_chronicle(_collect_events())
+	_annual_trace.record("chronicle", chronicle_start)
 	if _applied_layer != current_layer or MapLayers.def(current_layer).get("requires", "") != "":
+		var layers_start := _annual_trace.begin()
 		_apply_layer()
+		_annual_trace.record("layers", layers_start)
+	var hud_start := _annual_trace.begin()
 	_refresh_ui()
+	_annual_trace.record("hud", hud_start)
 	if selection["kind"] != "":
 		select_entity(selection["kind"], selection["id"], false)
+	_annual_trace.record("frame-applied", frame_started, {"year":current_year})
 
 
 func _collect_events() -> Array:

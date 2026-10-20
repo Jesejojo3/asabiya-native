@@ -6,6 +6,8 @@ extends RefCounted
 
 const MAX_VISIBLE_EVENTS := 1000
 
+var _trace := AnnualTrace.new("decoder")
+
 var world: WorldData
 var year := 0
 var digest := ""
@@ -34,6 +36,7 @@ static func _object(value: Variant) -> Dictionary:
 	return value if value is Dictionary else {}
 
 func consume(data: Dictionary, delta: bool) -> HistoryFrame:
+	var started := _trace.begin()
 	if world == null:
 		return null
 	var schema: String = data.get("schema", "")
@@ -91,6 +94,7 @@ func consume(data: Dictionary, delta: bool) -> HistoryFrame:
 	digest = str(data.get("stateSHA256", ""))
 	stats = _array(data.get("stats"))
 	regional = _object(data.get("earth"))
+	_trace.record("consume-apply", started, {"year":year,"rows":provinces.size()})
 	return _publish()
 
 static func _color(value: Variant, id: int) -> Color:
@@ -99,6 +103,7 @@ static func _color(value: Variant, id: int) -> Color:
 	return MapLayers.id_color(id)
 
 func _publish() -> HistoryFrame:
+	var started := _trace.begin()
 	var f := HistoryFrame.new()
 	f.year = year; f.world_digest = world_digest; f.state_digest = digest
 	f.owner = owner.duplicate(); f.people = people.duplicate(); f.religion = religion.duplicate()
@@ -176,4 +181,5 @@ func _publish() -> HistoryFrame:
 		f.events.append(e)
 	for value: float in population:
 		f.world_population += value
+	_trace.record("publish-frame", started, {"year":year,"cells":population.size(),"events":f.events.size()})
 	return f

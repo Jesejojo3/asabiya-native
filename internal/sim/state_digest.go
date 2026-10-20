@@ -24,6 +24,8 @@ func (s *Simulation) StateDigest() string {
 	return s.stateDigestLocked()
 }
 func (s *Simulation) stateDigestLocked() string {
+	clock := startWork(s.workProfile)
+	defer clock.mark(10)
 	d := sha256.New()
 	e := canonicalState{hash: d, buffer: make([]byte, 0, 65536)}
 	e.text(StateDigestVersion)

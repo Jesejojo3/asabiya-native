@@ -9,6 +9,9 @@ import (
 	"net"
 	"path/filepath"
 	"sync"
+ "time"
+ "io"
+ "github.com/Jesejojo3/asabiya-native/internal/telemetry"
 
 	"github.com/Jesejojo3/asabiya-native/internal/mapsource"
 	"github.com/Jesejojo3/asabiya-native/internal/sim"
@@ -37,6 +40,7 @@ type Response struct {
 	Error   *ProtocolError `json:"error,omitempty"`
 }
 type Session struct {
+ trace *telemetry.Trace
 	mu           sync.Mutex
 	generation   uint64
 	world        *sim.World
@@ -61,6 +65,13 @@ func decodePayload(raw json.RawMessage, target any) error {
 func (s *Session) Handle(req Request) Response {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if s.trace != nil {
+		start:=time.Now()
+		defer func(){ fields:=map[string]any{"op":req.Op}
+			if s.simulation!=nil { fields["year"]=s.simulation.Status().Year;fields["profile"]=s.simulation.WorkProfile() }
+			s.trace.Record("handle",time.Since(start),fields)
+		}()
+	}
 	response := Response{Schema: LocalSchema, ID: req.ID, Session: s.generation}
 	fail := func(code string, err error) Response {
 		response.Error = &ProtocolError{Code: code, Message: err.Error()}
@@ -131,6 +142,7 @@ func (s *Session) Handle(req Request) Response {
 			return fail("invalid_arguments", err)
 		}
 		s.simulation = history
+        if s.trace != nil { s.simulation.EnableWorkProfile() }
 		s.generation++
 		response.Session = s.generation
 		if payload.View == "map" {
@@ -313,6 +325,8 @@ func Serve(ctx context.Context, listener net.Listener, session *Session) error {
 		return fmt.Errorf("local protocol requires a loopback TCP listener")
 	}
 	defer listener.Close()
+	session.trace = telemetry.Open("go-server")
+	defer session.trace.Close()
 	done := make(chan struct{})
 	defer close(done)
 	go func() {
@@ -355,7 +369,8 @@ func serveConnection(ctx context.Context, conn net.Conn, session *Session) (bool
 	}()
 	scanner := bufio.NewScanner(conn)
 	scanner.Buffer(make([]byte, 4096), 16*1024*1024)
-	encoder := json.NewEncoder(conn)
+	counter:=&timedWriter{writer:conn,enabled:session.trace!=nil}
+	encoder := json.NewEncoder(counter)
 	for scanner.Scan() {
 		var req Request
 		if err := json.Unmarshal(scanner.Bytes(), &req); err != nil {
@@ -365,12 +380,18 @@ func serveConnection(ctx context.Context, conn net.Conn, session *Session) (bool
 			continue
 		}
 		response := session.Handle(req)
+		var encodeStart time.Time
+		if session.trace != nil {encodeStart=time.Now();counter.elapsed=0;counter.bytes=0}
 		if err := encoder.Encode(response); err != nil {
 			return false, err
 		}
+		if session.trace!=nil { session.trace.Record("json",time.Since(encodeStart)-counter.elapsed,map[string]any{"op":req.Op,"bytes":counter.bytes,"socketWriteUs":counter.elapsed.Microseconds()}) }
 		if req.Op == "shutdown" && response.OK {
 			return true, nil
 		}
 	}
 	return false, scanner.Err()
 }
+
+type timedWriter struct {writer io.Writer;enabled bool;elapsed time.Duration;bytes int}
+func(w *timedWriter)Write(p []byte)(int,error){if !w.enabled{return w.writer.Write(p)};start:=time.Now();n,e:=w.writer.Write(p);w.elapsed+=time.Since(start);w.bytes+=n;return n,e}
