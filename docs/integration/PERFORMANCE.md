@@ -6,6 +6,8 @@ Rama de entrega: `mission/performance-stability`.
 ## Implementación
 
 - Go obtiene las ocho propiedades provinciales de mapa bajo el mismo bloqueo anual, sin crear antes las provincias detalladas con 32 valores tecnológicos. Snapshot, delta completo, reglas, calendario, comandos, digest y replay conservan sus contratos. Las publicaciones compactas son copias independientes.
+- La simulación conserva una única huella del mundo inmutable; publicar estados y replay deja de recalcular toda la geografía en cada año. Se conserva exactamente el texto del digest.
+- La inicialización histórica de Go se encola antes de construir la escena 3D, permitiendo solapar ambos trabajos.
 - Se conserva la adaptación r3 de enteros JSON exactos y su cobertura de sesión, loopback y argumentos inválidos.
 - Vegetación conserva tiles próximos a la cámara y desaloja los lejanos. Los cambios de asentamientos invalidan sólo tiles que intersecan los claros modificados. La tarea usa copias de claros y parámetros de relieve; una invalidación descarta el resultado al terminar sin bloquear la publicación anual. El cierre del nodo sí reúne la tarea antes de liberar sus datos.
 - Las mallas de terreno reservan vértices, índices y bordes una vez por LOD; desaparecen los arrays temporales por quad. Las posiciones y los índices mantienen la topología anterior.

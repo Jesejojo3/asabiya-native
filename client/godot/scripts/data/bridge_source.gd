@@ -156,9 +156,10 @@ func _on_geography(response: Dictionary) -> void:
 		_fail("No se pudo abrir la geografía exportada por Go.")
 		return
 	world = loaded
-	world_ready.emit(world)
 	status_changed.emit("Inicializando las sociedades humanas…")
+	# Queue Go initialization before synchronous main-thread scene construction.
 	request("start_history", {"historySeed":history_seed,"view":"map"}, _on_frame)
+	world_ready.emit(world)
 
 func _on_frame(response: Dictionary) -> void:
 	var publication: HistoryFrame = response.get("_frame")

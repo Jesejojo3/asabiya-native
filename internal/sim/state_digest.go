@@ -27,7 +27,7 @@ func (s *Simulation) stateDigestLocked() string {
 	d := sha256.New()
 	e := canonicalState{hash: d, buffer: make([]byte, 0, 65536)}
 	e.text(StateDigestVersion)
-	e.text(s.world.Digest())
+	e.text(s.worldDigestLocked())
 	p := s.h.r.Position()
 	e.u64(uint64(p.Seed))
 	e.u64(p.Calls)

@@ -104,7 +104,7 @@ func (s *Simulation) snapshotLocked() StateView {
 // can publish the same annual metadata without allocating detailed provinces.
 func (s *Simulation) snapshotMetadataLocked() StateView {
 	h := s.h
-	v := StateView{Schema: StateViewSchema, Engine: EngineVersion, WorldSHA256: s.world.Digest(), StateSHA256: s.stateDigestLocked(), Year: h.year, StartYear: h.start, RNG: h.r.Position(), Rules: h.rules.clone(), Favor: h.favor, Entities: make(map[string][]EntityRecord), Events: cloneEvents(h.events), Narrative: slices.Clone(h.eventText), Stats: slices.Clone(h.stats)}
+	v := StateView{Schema: StateViewSchema, Engine: EngineVersion, WorldSHA256: s.worldDigestLocked(), StateSHA256: s.stateDigestLocked(), Year: h.year, StartYear: h.start, RNG: h.r.Position(), Rules: h.rules.clone(), Favor: h.favor, Entities: make(map[string][]EntityRecord), Events: cloneEvents(h.events), Narrative: slices.Clone(h.eventText), Stats: slices.Clone(h.stats)}
 	v.Earth = h.earthView()
 	for k := range v.Stats {
 		v.Stats[k].EraShare = slices.Clone(h.stats[k].EraShare)

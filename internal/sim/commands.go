@@ -182,7 +182,7 @@ func cloneCommandResult(r CommandResult) CommandResult {
 func (s *Simulation) Replay() Replay {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	r := Replay{Schema: "asabiya/replay-v1", Engine: EngineVersion, Profile: NativeProfile, World: s.world.Config(), WorldSHA256: s.world.Digest(), HistorySeed: s.h.seed, InitialRules: s.initialRules.clone(), InitialSHA256: s.initialHistory.SHA256, Commands: make([]CommandResult, len(s.commandLog))}
+	r := Replay{Schema: "asabiya/replay-v1", Engine: EngineVersion, Profile: NativeProfile, World: s.world.Config(), WorldSHA256: s.worldDigestLocked(), HistorySeed: s.h.seed, InitialRules: s.initialRules.clone(), InitialSHA256: s.initialHistory.SHA256, Commands: make([]CommandResult, len(s.commandLog))}
 	if s.world.extended {
 		source := s.world.Source()
 		r.WorldSource = &source

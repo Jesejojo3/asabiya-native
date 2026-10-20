@@ -19,6 +19,7 @@ type Simulation struct {
 	initialRules    Rules
 	mu              sync.RWMutex
 	initialHistory  HistorySummary
+	worldSHA256     string
 	world           *World
 	h               *history
 }
@@ -38,7 +39,7 @@ func NewSimulationWithRules(world *World, historySeed string, rules Rules) (*Sim
 	if err := rules.Validate(); err != nil {
 		return nil, err
 	}
-	s := &Simulation{world: world, h: newHistory(world, historySeed, rules.clone())}
+	s := &Simulation{world: world, worldSHA256: world.Digest(), h: newHistory(world, historySeed, rules.clone())}
 	s.initialHistory = s.summaryLocked()
 	s.initialRules = rules.clone()
 	s.h.prepareAnnualState()
@@ -85,4 +86,14 @@ func (s *Simulation) InitialSummary() HistorySummary {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return cloneHistorySummary(s.initialHistory)
+}
+
+// worldDigestLocked reuses the fingerprint of the immutable world. Read-only
+// callers never write a lazy cache, so concurrent publication remains race-free.
+// The fallback also supports internally constructed simulations in tests.
+func (s *Simulation) worldDigestLocked() string {
+	if s.worldSHA256 != "" {
+		return s.worldSHA256
+	}
+	return s.world.Digest()
 }
