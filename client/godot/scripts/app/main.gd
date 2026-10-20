@@ -188,7 +188,9 @@ func _apply_ui_scale() -> void:
 			s = 1.5
 	var physical := Vector2(get_window().size)
 	var fitting := minf(physical.x / 1000.0, physical.y / 640.0)
-	get_window().content_scale_factor = clampf(minf(s, fitting), 0.75, 3.0)
+	var factor := clampf(minf(s, fitting), 0.75, 3.0)
+	if not is_equal_approx(get_window().content_scale_factor, factor):
+		get_window().content_scale_factor = factor
 
 
 func _build_scene() -> void:
