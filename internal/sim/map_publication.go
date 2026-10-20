@@ -57,7 +57,18 @@ func (s *Simulation) MapSnapshot() MapStateView {
 // enters the engine. Both returned data and the comparison baseline are owned
 // values, so later years cannot mutate previously published records.
 func (s *Simulation) AdvanceYearWithMapDelta() MapAnnualDelta {
-	delta, provinces := s.advanceYearWithDelta(true)
+	delta, provinces := s.advanceYearWithDelta(true, 1)
+	delta.Schema = "asabiya/map-delta-v1"
+	return MapAnnualDelta{AnnualDelta: delta, Provinces: provinces}
+}
+
+// AdvanceYearWithMapDeltaCheckpoints preserves every causal year and all map,
+ // event and entity records, but computes the expensive full state SHA only on
+ // scheduled years. Other years carry a declared deferred digest marker.
+ // Call MapSnapshot or StateDigest to obtain the exact SHA at any year.
+func (s *Simulation) AdvanceYearWithMapDeltaCheckpoints(interval int) MapAnnualDelta {
+	if interval != 25 { panic("unsupported digest checkpoint interval") }
+	delta, provinces := s.advanceYearWithDelta(true, interval)
 	delta.Schema = "asabiya/map-delta-v1"
 	return MapAnnualDelta{AnnualDelta: delta, Provinces: provinces}
 }
