@@ -64,6 +64,7 @@ var hover_label: Label
 var status_label: Label
 var help_panel: PanelContainer
 var fast_dialog: ConfirmationDialog
+var fast_hint: Label
 var fast_years: SpinBox
 var fast_interval: OptionButton
 var _throughput_started := 0
@@ -269,11 +270,33 @@ func _on_menu(id: int) -> void:
 			else:
 				dismiss_popovers()
 				command_panel.show_editor()
-		5:
-			if app.source.can_advance(): fast_dialog.popup_centered_clamped(Vector2i(440, 260), 0.75)
+		5: _open_fast_dialog()
 		2: app.map_view.camera.reset_view()
 		3: help_panel.visible = not help_panel.visible
 		4: app._request_close()
+
+
+func _open_fast_dialog() -> void:
+	# Opening the dialog never creates another in-flight year.
+	if _playing:
+		stop_playing()
+	if app.source is BridgeSource and (app.source as BridgeSource).is_live():
+		play_toggled.emit(false)
+	_sync_fast_dialog()
+	fast_dialog.popup_centered_clamped(Vector2i(460, 310), 0.8)
+
+
+func _sync_fast_dialog() -> void:
+	if fast_dialog == null or fast_hint == null:
+		return
+	var can_start: bool = app.source is BridgeSource and app.source.can_advance()
+	fast_dialog.get_ok_button().disabled = not can_start
+	if not app.source is BridgeSource or not (app.source as BridgeSource).connected:
+		fast_hint.text = "No hay motor Go conectado."
+	elif not can_start:
+		fast_hint.text = "Esperando a que termine el año actual…"
+	else:
+		fast_hint.text = "Listo para calcular. Go conserva todos los años."
 
 
 func _step_frames(delta: int) -> void:
@@ -367,7 +390,7 @@ func _build_layer_panel() -> void:
 		v.add_child(cb)
 	_legend_panel = PanelContainer.new()
 	_legend_panel.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	_legend_panel.offset_left = -276
+	_legend_panel.offset_left = -340
 	_legend_panel.offset_right = -16
 	_legend_panel.offset_top = -338
 	_legend_panel.offset_bottom = -154
@@ -377,6 +400,7 @@ func _build_layer_panel() -> void:
 	legend_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_legend_panel.add_child(legend_scroll)
 	legend_box = VBoxContainer.new()
+	legend_box.custom_minimum_size.x = 240
 	legend_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	legend_box.add_theme_constant_override("separation", 4)
 	legend_scroll.add_child(legend_box)
@@ -440,9 +464,15 @@ func set_legend(title: String, legend: Dictionary) -> void:
 			var hb := HBoxContainer.new()
 			var a := UiTheme.muted(str(legend.get("min", "")), 11)
 			var b := UiTheme.muted(str(legend.get("max", "")), 11)
-			b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			b.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			for label: Label in [a, b]:
+				label.autowrap_mode = TextServer.AUTOWRAP_OFF
+				label.clip_text = true
+				label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+			var spacer := Control.new()
+			spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			hb.add_child(a)
+			hb.add_child(spacer)
 			hb.add_child(b)
 			legend_box.add_child(hb)
 		"swatches":
@@ -452,7 +482,11 @@ func set_legend(title: String, legend: Dictionary) -> void:
 				sw.color = it[0]
 				sw.custom_minimum_size = Vector2(12, 12)
 				hb2.add_child(sw)
-				hb2.add_child(UiTheme.muted(str(it[1]), 11))
+				var swatch_text := UiTheme.muted(str(it[1]), 11)
+				swatch_text.autowrap_mode = TextServer.AUTOWRAP_OFF
+				swatch_text.clip_text = true
+				swatch_text.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+				hb2.add_child(swatch_text)
 				legend_box.add_child(hb2)
 		"text":
 			legend_box.add_child(UiTheme.muted(str(legend.get("text", "")), 11))
@@ -1248,6 +1282,8 @@ func _process(_dt: float) -> void:
 			_transport_live = bridge.is_live()
 			_transport_connected = bridge.connected
 			refresh_timeline(app.source, app.current_year)
+	if fast_dialog.visible:
+		_sync_fast_dialog()
 	if hover_tip.visible:
 		var m := get_local_mouse_position()
 		var s := hover_tip.size
@@ -1647,6 +1683,9 @@ func _build_fast_dialog() -> void:
 	# the label can be measured before its container has received a width.
 	var description := UiTheme.muted("Se calculan todos los años en orden.\nEl mapa se actualiza al intervalo elegido.\nPuedes pausar al terminar el año actual.", 13)
 	box.add_child(description)
+	fast_hint = UiTheme.muted("Esperando motor…", 12)
+	fast_hint.autowrap_mode = TextServer.AUTOWRAP_OFF
+	box.add_child(fast_hint)
 	box.add_child(UiTheme.muted("Años que calcular", 12))
 	fast_years = SpinBox.new()
 	fast_years.min_value = 1
@@ -1662,7 +1701,9 @@ func _build_fast_dialog() -> void:
 		if child is Label: child.autowrap_mode = TextServer.AUTOWRAP_OFF
 	fast_dialog.add_child(box)
 	fast_dialog.confirmed.connect(func():
-		if not app.source.can_advance(): return
+		if not app.source is BridgeSource or not app.source.can_advance():
+			_sync_fast_dialog()
+			return
 		_playing = true
 		sim_buttons["play"].text = "Pausar"
 		sim_buttons["play"].icon = AtlasIcons.get_icon("pause")
