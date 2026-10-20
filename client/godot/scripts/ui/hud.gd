@@ -18,6 +18,8 @@ signal entity_requested(kind: String, id: int)
 signal world_requested(seed_text: String)
 signal deselect_requested
 signal setting_changed(key: String, value: Variant)
+signal command_requested(kind_name: String, payload: Dictionary)
+signal command_context_requested
 
 const LEGACY_ERAS := ["Foraging","Neolithic","Bronze Age","Iron Age","Classical","Medieval","Gunpowder age","Age of Sail"]
 
@@ -105,6 +107,7 @@ var _transport_busy := false
 var _transport_live := false
 var _transport_connected := false
 var _search_timer: Timer
+var command_panel: CommandPanel
 
 
 func build(application: Node) -> void:
@@ -125,6 +128,7 @@ func build(application: Node) -> void:
 	_build_world_dialog()
 	_build_fast_dialog()
 	_build_stats()
+	_build_commands()
 	_build_atlas_navigation()
 	_build_notice()
 	resized.connect(_fit_layout)
@@ -144,6 +148,8 @@ func _fit_layout() -> void:
 		(stats_body.get_parent() as ScrollContainer).custom_minimum_size.y = clampf(size.y - 260.0, 180.0, 480.0)
 	if _welcome != null:
 		_welcome.visible = size.x >= 1250.0 and not info_panel.visible
+	if command_panel != null:
+		command_panel.offset_left = -minf(452.0, size.x - 90.0)
 
 func _build_top_bar() -> void:
 	var bar := PanelContainer.new()
@@ -207,6 +213,7 @@ func _build_top_bar() -> void:
 	pm.add_item("Estadísticas", 1)
 	pm.add_item("Figuras históricas", 6)
 	pm.add_item("Epidemias y cataclismos", 7)
+	pm.add_item("Presagios, sandbox y reglas…", 8)
 	pm.add_item("Simulación rápida…", 5)
 	pm.add_item("Centrar mapa (Inicio)", 2)
 	pm.add_separator("Interfaz")
@@ -255,6 +262,13 @@ func _on_menu(id: int) -> void:
 		1: toggle_stats()
 		6: _toggle_figures(not figures_panel.visible)
 		7: _toggle_disasters(not disasters_panel.visible)
+		8:
+			if command_panel.visible:
+				command_panel.cancel_target()
+				command_panel.hide()
+			else:
+				dismiss_popovers()
+				command_panel.show_editor()
 		5:
 			if app.source.can_advance(): fast_dialog.popup_centered_clamped(Vector2i(440, 260), 0.75)
 		2: app.map_view.camera.reset_view()
@@ -1086,7 +1100,9 @@ func _build_search() -> void:
 
 
 func dismiss_popovers() -> bool:
-	var had_popup := _search_panel.visible or _layer_panel.visible or chronicle_panel.visible or figures_panel.visible or disasters_panel.visible or _notice.visible
+	var had_popup := _search_panel.visible or _layer_panel.visible or chronicle_panel.visible or figures_panel.visible or disasters_panel.visible or _notice.visible or command_panel.visible
+	command_panel.cancel_target()
+	command_panel.hide()
 	disasters_panel.hide()
 	figures_panel.hide()
 	_toggle_chronicle(false)
@@ -1285,6 +1301,36 @@ func _build_world_dialog() -> void:
 	world_dialog.add_child(v)
 	world_dialog.confirmed.connect(func(): world_requested.emit(world_seed_edit.text))
 	add_child(world_dialog)
+
+
+func _build_commands() -> void:
+	command_panel = CommandPanel.new()
+	add_child(command_panel)
+	command_panel.build()
+	command_panel.command_requested.connect(func(kind_name: String, payload: Dictionary):
+		command_requested.emit(kind_name, payload))
+	command_panel.context_requested.connect(func():
+		command_context_requested.emit())
+
+
+func set_command_catalog(catalog: Dictionary) -> void:
+	if command_panel != null: command_panel.configure(catalog)
+
+
+func set_command_context(context: Dictionary) -> void:
+	if command_panel != null: command_panel.set_context(context)
+
+
+func set_command_pending(pending: bool) -> void:
+	if command_panel != null: command_panel.set_pending(pending)
+
+
+func set_command_outcome(result: Dictionary) -> void:
+	if command_panel != null: command_panel.show_outcome(result)
+
+
+func consume_omen_target(cell: int) -> Dictionary:
+	return command_panel.consume_target(cell) if command_panel != null else {}
 
 
 func _build_stats() -> void:
