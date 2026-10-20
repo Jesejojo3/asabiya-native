@@ -121,8 +121,10 @@ func _run() -> void:
 	check(hud.figure_list.item_count == 1 and int(hud.figure_list.get_item_metadata(0)) == 41, "ruler category matches HTML")
 	hud.figure_filter.select(0)
 	hud.figure_query.text = "reformadora"
+	hud._fill_figures() # assigning LineEdit.text in a test does not emit text_changed
 	check(hud.figure_list.item_count == 1 and int(hud.figure_list.get_item_metadata(0)) == 42, "figure titles are filtered")
 	hud.figure_query.text = ""
+	hud._fill_figures()
 	hud._on_figure_activated(0)
 	check(not hud.figures_panel.visible and figure_intents == [["engine:figure",42]], "figure index opens Go entity via intent")
 	check(observer.source._outgoing.is_empty(), "figure browser does not mutate causal engine")
