@@ -16,6 +16,7 @@ type AnnualDelta struct {
 	FromYear             int                       `json:"fromYear"`
 	Year                 int                       `json:"year"`
 	StateSHA256          string                    `json:"stateSHA256"`
+	DigestMode           string                    `json:"digestMode,omitempty"`
 	RulesSHA256          string                    `json:"rulesSHA256"`
 	Provinces            []ProvinceView            `json:"provinces"`
 	EntityUpserts        map[string][]EntityRecord `json:"entityUpserts"`
@@ -30,11 +31,11 @@ type AnnualDelta struct {
 // Entity upserts include the current entity records (not just births), so clients
 // can apply them by stable ID without understanding the engine's internal census.
 func (s *Simulation) AdvanceYearWithDelta() AnnualDelta {
-	delta, _ := s.advanceYearWithDelta(false)
+	delta, _ := s.advanceYearWithDelta(false, 1)
 	return delta
 }
 
-func (s *Simulation) advanceYearWithDelta(mapOnly bool) (AnnualDelta, []MapProvinceView) {
+func (s *Simulation) advanceYearWithDelta(mapOnly bool, digestEvery int) (AnnualDelta, []MapProvinceView) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	h := s.h
@@ -58,7 +59,14 @@ func (s *Simulation) advanceYearWithDelta(mapOnly bool) (AnnualDelta, []MapProvi
 	clock.mark(9)
 	s.applyCommandLocked(s.nextCommandLocked("advance_year"))
 	clock = startWork(s.workProfile)
-	delta := AnnualDelta{Schema: "asabiya/annual-delta-v1", FromYear: from, Year: h.year, StateSHA256: s.stateDigestLocked(), RulesSHA256: s.rulesDigestLocked(), EntityUpserts: make(map[string][]EntityRecord), Favor: h.favor}
+	delta := AnnualDelta{Schema: "asabiya/annual-delta-v1", FromYear: from, Year: h.year, RulesSHA256: s.rulesDigestLocked(), EntityUpserts: make(map[string][]EntityRecord), Favor: h.favor}
+	// Digest checkpoints are a strictly opt-in presentation mode.
+	// All complete years and replay records are still produced.
+	if digestEvery <= 1 || (h.year-h.start)%digestEvery == 0 {
+		delta.StateSHA256 = s.stateDigestLocked()
+	} else {
+		delta.DigestMode = "deferred-v1"
+	}
 	delta.Earth = h.earthView()
 	delta.RNG = h.r.Position()
 	delta.Rules = h.rules.clone()
