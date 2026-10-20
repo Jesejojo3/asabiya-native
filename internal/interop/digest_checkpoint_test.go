@@ -30,3 +30,20 @@ func TestCheckpointAnnualEquivalence(t *testing.T) {
   })
  }
 }
+
+func BenchmarkCheckpointAnnualPublication(b *testing.B) {
+ for _,mode:=range []string{"exact-every-year","checkpoint-25"} {
+  b.Run(mode,func(b *testing.B){
+   s:=throughputSession(b,400,200)
+   payload:=json.RawMessage(`{"view":"map-columns-v1"}`)
+   if mode=="checkpoint-25" {payload=json.RawMessage(`{"view":"map-columns-v1","digestMode":"checkpoint-v1"}`)}
+   b.ReportAllocs();b.ResetTimer()
+   for i:=0;i<b.N;i++ {
+    r:=s.Handle(Request{Schema:LocalSchema,ID:"perf",Op:"advance",Payload:payload})
+    if !r.OK {b.Fatal(r.Error)}
+   }
+   b.StopTimer()
+   b.ReportMetric(float64(b.N)/b.Elapsed().Seconds(),"years/s")
+  })
+ }
+}
