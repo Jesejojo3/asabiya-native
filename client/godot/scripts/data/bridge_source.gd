@@ -7,6 +7,9 @@ extends HistorySource
 signal world_ready(value: WorldData)
 signal request_failed(op: String, code: String, message: String)
 signal progress_changed(calculated_year: int, visualized_year: int, remaining: int)
+signal command_context_changed(context: Dictionary)
+signal command_result_received(result: Dictionary)
+signal command_pending_changed(pending: bool)
 
 const PROTOCOL := "asabiya/local-v1"
 const EXE_WIN := "asabiya-server.exe"
@@ -25,6 +28,7 @@ var source_config: Dictionary = {}
 var history_seed := "1"
 var tech_catalog: Array = []
 var era_names: Array = []
+var command_catalog: Dictionary = {}
 var _map_view := "map"
 var _sparse_entities := false
 # Exact fingerprints are required for retained observation frames. The wire
@@ -177,6 +181,7 @@ func _on_catalog(response: Dictionary) -> void:
 	var data: Dictionary = response.get("data", {})
 	tech_catalog = data.get("technologies", [])
 	era_names = data.get("eras", [])
+	command_catalog = {"omens": data.get("omens", []), "parameters": data.get("parameters", [])}
 	_map_view = "map-columns-v1" if data.get("mapColumnsV1", false) else "map"
 	_sparse_entities = _map_view == "map-columns-v1" and bool(data.get("entityChangesV1", false))
 	_field_changes = _map_view == "map-columns-v1" and bool(data.get("mapFieldChangesV1", false))
@@ -294,6 +299,63 @@ func pause() -> void:
 	if connected:
 		request("pause", {}, func(_response: Dictionary) -> void:
 			fetch_frame())
+
+func refresh_command_context() -> void:
+	if not connected or _fast_active or _stop or _closing: return
+	request("get_status", {}, func(response: Dictionary) -> void:
+		var context: Dictionary = response.get("data", {}).get("commandContext", {})
+		if not context.is_empty(): command_context_changed.emit(context))
+
+
+func submit_command(kind_name: String, arguments: Dictionary) -> void:
+	if not connected or busy or _fast_active or _remaining > 0 or _stop or _closing:
+		command_result_received.emit({"accepted":false, "error":"La simulación está ocupada o no está conectada. Pausa el avance antes de intervenir."})
+		return
+	if kind_name not in ["set_sandbox", "change_rules", "cast_omen"]:
+		command_result_received.emit({"accepted":false, "error":"Tipo de intervención no permitido."})
+		return
+	stop_live()
+	busy = true
+	command_pending_changed.emit(true)
+	# The command's sequence, completed year and rules hash must come from Go.
+	# Do not trust a cached Godot frame or synthesize a replay sequence.
+	request("get_status", {}, func(status_response: Dictionary) -> void:
+		var context: Dictionary = status_response.get("data", {}).get("commandContext", {})
+		if context.is_empty():
+			busy = false
+			command_pending_changed.emit(false)
+			command_result_received.emit({"accepted":false, "error":"Go no proporcionó un contexto de comando."})
+			return
+		command_context_changed.emit(context)
+		var command := {
+			"schema":"asabiya/command-v1", "profile":"native",
+			"sequence":int(context.get("nextSequence", 0)),
+			"targetYear":int(context.get("year", 0)),
+			"expectedRulesSHA256":str(context.get("rulesSHA256", "")),
+			"kind":kind_name,
+		}
+		match kind_name:
+			"set_sandbox":
+				command["sandbox"] = bool(arguments.get("sandbox", false))
+			"change_rules":
+				command["values"] = arguments.get("values", {})
+			"cast_omen":
+				command["omen"] = str(arguments.get("omen", ""))
+				command["cell"] = int(arguments.get("cell", -1))
+		request("apply_command_status", command, func(result_response: Dictionary) -> void:
+			var data: Dictionary = result_response.get("data", {})
+			var updated: Dictionary = data.get("commandContext", {})
+			if not updated.is_empty(): command_context_changed.emit(updated)
+			var result: Dictionary = data.get("result", {})
+			command_result_received.emit(result)
+			command_pending_changed.emit(false)
+			if bool(result.get("accepted", false)):
+				# Go invalidated its compact publication baseline. Re-fetch
+				# authoritative state; Godot never applies the omen locally.
+				fetch_frame()
+			else:
+				busy = false))
+
 
 func query_province(id: int, callback: Callable) -> void:
 	request("get_province", {"id":id}, callback)
