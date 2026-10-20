@@ -46,6 +46,42 @@ func _run() -> void:
 	check(hud.top_year.text == Hud.fmt_year(-100), "engine year is formatted")
 	check(hud.top_stats["states"].text == "1", "real state count")
 	check(hud.speed() == 10, "previous live pacing default preserved")
+	# Regression: opening Fast Simulation during an in-flight year must not
+	# silently do nothing or enqueue a second conflicting advance.
+	var fast_intents := []
+	hud.fast_forward_requested.connect(func(n: int, every: int): fast_intents.append([n, every]))
+	observer.source.busy = true
+	hud._playing = true
+	hud._on_menu(5)
+	check(hud.fast_dialog.visible, "fast simulation settings open while a year is computing")
+	check(hud.fast_dialog.get_ok_button().disabled, "fast simulation cannot start two competing advances")
+	check(not hud._playing and observer.source._outgoing.is_empty(),
+		"opening the settings pauses the UI without duplicating in-flight work")
+	observer.source.busy = false
+	hud._sync_fast_dialog()
+	check(not hud.fast_dialog.get_ok_button().disabled and hud.fast_hint.text.contains("Listo"),
+		"fast simulation button becomes available after the year finishes")
+	hud.fast_dialog.confirmed.emit()
+	check(fast_intents == [[1000, 50]], "confirmed fast simulation forwards selected parameters once")
+	hud.stop_playing()
+	hud.fast_dialog.hide()
+	observer.source.connected = false
+	hud._on_menu(5)
+	check(hud.fast_dialog.visible and hud.fast_dialog.get_ok_button().disabled
+		and hud.fast_hint.text.contains("No hay motor"),
+		"disconnected engine displays an explanation instead of an inert menu")
+	hud.fast_dialog.hide()
+	observer.source.connected = true
+	hud.set_legend("Población", {"kind":"ramp","min":"0,01 hab/km²","max":"100 hab/km²"})
+	await process_frame
+	var labels_row: HBoxContainer = hud.legend_box.get_child(2)
+	var min_label: Label = labels_row.get_child(0)
+	var max_label: Label = labels_row.get_child(2)
+	check(min_label.autowrap_mode == TextServer.AUTOWRAP_OFF
+		and max_label.autowrap_mode == TextServer.AUTOWRAP_OFF,
+		"population legend values cannot collapse into vertical characters")
+	check(hud.legend_box.custom_minimum_size.x >= 240 and hud._legend_panel.offset_left <= -330,
+		"ramp legend has enough horizontal room for numbers and units")
 	var original_eras := ["Foraging","Neolithic","Bronze Age","Iron Age","Classical","Medieval","Gunpowder age","Age of Sail"]
 	for i in original_eras.size():
 		check(Hud.fmt_era(i) == original_eras[i], "HTML era name " + str(i))
