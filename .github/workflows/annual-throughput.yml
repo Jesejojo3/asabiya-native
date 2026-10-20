@@ -43,8 +43,10 @@ jobs:
         run: |
           go test -count=1 ./internal/sim -run '^(TestWorkProfileNeutral|TestMapPublicationReconstructsFullState|TestCanonicalScalarEncodingParity)$' 2>&1 | Tee-Object artifacts/annual-throughput/integrity.txt
           if ($LASTEXITCODE -ne 0) { throw 'Integrity failed' }
-          go test -count=1 ./internal/interop -run '^(TestMapColumnsLossless|TestStatusYearsPreserveHistory|TestSparseEntityPublicationPreservesFramesAndHistory)$' 2>&1 | Tee-Object artifacts/annual-throughput/column-integrity.txt
+          go test -count=1 ./internal/interop -run '^(TestMapColumnsLossless|TestStatusYearsPreserveHistory|TestSparseEntityPublicationPreservesFramesAndHistory|TestCheckpointAnnualEquivalence)$' 2>&1 | Tee-Object artifacts/annual-throughput/column-integrity.txt
           if ($LASTEXITCODE -ne 0) { throw 'Column integrity failed' }
+          go test -run TestNoTestsShouldMatch -bench BenchmarkCheckpointAnnualPublication -benchtime=50x -count=1 -cpu=2 -benchmem ./internal/interop 2>&1 | Tee-Object artifacts/annual-throughput/checkpoint-benchmark.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Digest checkpoint benchmark failed' }
           go test -run TestNoTestsShouldMatch -bench BenchmarkEntityWirePublication -benchtime=15x -count=1 -cpu=2 -benchmem ./internal/interop 2>&1 | Tee-Object artifacts/annual-throughput/entity-wire-benchmark.txt
           if ($LASTEXITCODE -ne 0) { throw 'Entity publication benchmark failed' }
           go test -run '^$' -bench '^BenchmarkAnnualThroughput$' -benchtime=6x -count=1 -cpuprofile artifacts/annual-throughput/cpu.pprof -memprofile artifacts/annual-throughput/memory.pprof ./internal/interop 2>&1 | Tee-Object artifacts/annual-throughput/go-benchmark.txt
