@@ -232,7 +232,9 @@ func test_frame_decoding() -> void:
 	var result := MapLayers.build("states", world, f)
 	check((result["colors"] as PackedByteArray)[world.land_cells[0] * 4 + 3] > 0, "state layer paints engine cells")
 	check(decoder.consume({}, false) == null, "unknown schema rejected")
-	var changed := {"schema":"asabiya/map-delta-v1","year":-2499,"fromYear":-2500,"provinces":[{"id":int(world.land_cells[0]),"ownerPolityId":0}]}
+	# Deltas require a valid stateSHA256; a missing digest must be rejected by the wire decoder.
+	var changed := {"schema":"asabiya/map-delta-v1","year":-2499,"fromYear":-2500,
+		"stateSHA256":"b".repeat(64),"provinces":[{"id":int(world.land_cells[0]),"ownerPolityId":0}]}
 	var later := decoder.consume(changed, true)
 	check(later != null and later.owner[world.land_cells[0]] == 0, "delta replaces a province")
 	check(f.owner[world.land_cells[0]] == 7, "published old frame is immutable")
