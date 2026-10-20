@@ -128,6 +128,50 @@ func _run() -> void:
 	hud._on_figure_activated(0)
 	check(not hud.figures_panel.visible and figure_intents == [["engine:figure",42]], "figure index opens Go entity via intent")
 	check(observer.source._outgoing.is_empty(), "figure browser does not mutate causal engine")
+	# Historical disaster archive is computed from the published Go records only.
+	observer.current_frame.entity_records["cataclysm"] = {
+		5:{"name":"Gran temblor", "year":-120, "deaths":1000, "cellId":2},
+		8:{"name":"Gran inundación", "year":-130, "deaths":5000, "cellId":1},
+		9:{"name":"Cataclismo futuro", "year":-90, "deaths":9000, "cellId":3}
+	}
+	observer.current_frame.entity_records["outbreak"] = {
+		3:{"name":"Fiebre antigua", "start":-130, "deaths":200000, "originCellId":1, "done":true},
+		4:{"name":"Peste grave", "start":-120, "deaths":900000, "originCellId":2, "done":true},
+		12:{"name":"Fiebre reciente", "start":-110, "deaths":100000, "originCellId":999, "done":false}
+	}
+	var map_focus_intents := []
+	hud.focus_cell.connect(func(cell: int): map_focus_intents.append(cell))
+	hud._toggle_disasters(true)
+	check(hud.disasters_panel.visible and hud.cataclysm_list.item_count == 2,
+		"historical disasters panel filters records after selected year")
+	check(int(hud.cataclysm_list.get_item_metadata(0)["id"]) == 5,
+		"cataclysms are sorted latest first")
+	check(hud.outbreak_list.item_count == 3 and int(hud.outbreak_list.get_item_metadata(0)["id"]) == 4,
+		"epidemic archive defaults to deadliest first")
+	hud.disaster_sort.select(1)
+	hud._fill_disasters()
+	check(int(hud.outbreak_list.get_item_metadata(0)["id"]) == 12,
+		"epidemic archive supports recent-first sort")
+	hud.disaster_query.text = "antigua"
+	hud._fill_disasters()
+	check(hud.outbreak_list.item_count == 1 and int(hud.outbreak_list.get_item_metadata(0)["id"]) == 3,
+		"epidemic archive supports native name search")
+	hud.disaster_query.text = ""
+	hud._fill_disasters()
+	var previous_intents := figure_intents.size()
+	hud._on_disaster_activated(hud.cataclysm_list, 0)
+	check(not hud.disasters_panel.visible and map_focus_intents == [2],
+		"cataclysm atlas action focuses Go's origin cell without selecting the province")
+	check(figure_intents.size() == previous_intents + 1 and figure_intents[-1] == ["engine:cataclysm",5],
+		"cataclysm atlas action opens native record inspector")
+	hud._toggle_disasters(true)
+	previous_intents = figure_intents.size()
+	hud._on_disaster_activated(hud.outbreak_list, 0)
+	check(map_focus_intents.size() == 1 and figure_intents.size() == previous_intents + 1
+		and figure_intents[-1] == ["engine:outbreak",12],
+		"invalid epidemic cell is not used for camera focus; record still opens")
+	check(observer.source._outgoing.is_empty(),
+		"disaster archive is a read-only projection of Go publications")
 	# Fiches must show real Go fields without interpreting them as new mechanics.
 	var app_script: Script = load("res://scripts/app/main.gd")
 	var inspector: Variant = app_script.new()
