@@ -882,12 +882,12 @@ func _entity_sections(kind_name: String, value: Dictionary) -> Array:
 	# fields or long JSON arrays in the observer's inspector.
 	var common := [["born","Fundación","year"],["alive","Activa","bool"]]
 	var layouts := {
-		"polity":common + [["cellsAtLastCensus","Provincias del último censo","count"],["peakCells","Extensión máxima","count"],["dynastyLabel","Dinastía","text"]],
-		"people":common + [["languageStyle","Lengua","text"],["populationAtLastCensus","Población del último censo","count"],["cellsAtLastCensus","Provincias del último censo","count"]],
+		"polity":common + [["cellsAtLastCensus","Provincias del último censo","count"],["peakCells","Extensión máxima","count"],["peakPopulation","Población máxima","count"],["dynastyLabel","Dinastía","text"],["dynastyGeneration","Generaciones","count"]],
+		"people":common + [["languageStyle","Lengua","text"],["languageMacro","Familia lingüística","text"],["populationAtLastCensus","Población del último censo","count"],["cellsAtLastCensus","Provincias del último censo","count"],["peakCells","Mayor extensión","count"]],
 		"ruler":[["born","Nacimiento","year"],["since","Gobierna desde","year"],["competence","Competencia","number"],["charisma","Carisma","number"],["piety","Piedad","number"],["aggression","Agresividad","number"],["conquests","Conquistas","count"]],
-		"figure":[["title","Título","text"],["born","Nacimiento","year"],["conquests","Conquistas","count"],["works","Obras","count"]],
+		"figure":[["title","Título","text"],["born","Nacimiento","year"],["conquests","Conquistas","count"],["realmCells","Mayor dominio (provincias)","count"],["works","Obras","count"]],
 		"city":[["born","Fundación","year"],["population","Población provincial","count"],["holy","Lugar sagrado","bool"]],
-		"religion":common + [["populationAtLastCensus","Población del último censo","count"],["cellsAtLastCensus","Provincias del último censo","count"],["centralization","Centralización","number"]],
+		"religion":common + [["populationAtLastCensus","Población del último censo","count"],["cellsAtLastCensus","Provincias del último censo","count"],["peakCells","Máxima extensión","count"],["centralization","Centralización","number"],["missionary","Ímpetu misionero","number"],["councils","Concilios","count"]],
 		"war":[["start","Inicio","year"],["active","Activa","bool"],["civil","Guerra civil","bool"],["holy","Guerra religiosa","bool"],["gainsAttackers","Ganancias atacantes","count"],["gainsDefenders","Ganancias defensores","count"]],
 		"route":[["born","Apertura","year"],["last","Última actividad","year"],["active","Activa","bool"]],
 		"migration":[["start","Inicio","year"],["population","Población","count"],["done","Concluida","bool"]],
@@ -909,6 +909,23 @@ func _entity_sections(kind_name: String, value: Dictionary) -> Array:
 		rows.append([spec[1], text])
 	if kind_name == "war" and not value.get("active", false) and value.has("end"):
 		rows.append(["Final", Hud.fmt_year(int(value["end"]))])
+	if kind_name == "people":
+		var lexicon: Variant = value.get("lexicon")
+		if lexicon is Array:
+			var concepts := ["Raíz", "Río", "Dios", "Sol", "Mar", "Montaña", "Madre", "Grano"]
+			for k in mini(concepts.size(), lexicon.size()):
+				if str(lexicon[k]) != "":
+					rows.append([concepts[k], str(lexicon[k])])
+		var changes: Variant = value.get("soundChanges")
+		if changes is Array and not changes.is_empty():
+			rows.append(["Cambios fonéticos", ", ".join(changes.slice(-8))])
+	if kind_name == "polity":
+		var metrics: Variant = value.get("metrics")
+		if metrics is Dictionary:
+			for spec in [["population","Población del censo"],["cohesion","Cohesión"],["pressure","Presión social"],["eliteShare","Proporción de élites"],["crisisPressure","Inestabilidad"],["treasury","Tesoro"]]:
+				var metric: Variant = metrics.get(spec[0])
+				if metric is float or metric is int:
+					rows.append([spec[1], Hud._fmt_int(float(metric)) if spec[0] == "population" else "%.2f" % float(metric)])
 	var relations := [
 		["capitalId","Capital","cell"],["cellId","Provincia","cell"],
 		["originCellId","Origen","cell"],["holyCellId","Lugar sagrado","cell"],
@@ -918,11 +935,32 @@ func _entity_sections(kind_name: String, value: Dictionary) -> Array:
 		["polityId","Estado","polity"],["founderFigureId","Fundador","figure"],
 		["attackers","Atacante","polity"],["defenders","Defensor","polity"]
 	]
+	# These IDs exist in the native catalog. Never infer identities from labels,
+	# and do not mistake a religion's parent for a people or a polity.
+	match kind_name:
+		"polity":
+			relations.append_array([["founderRulerId","Gobernante fundador","ruler"],["fromPolityId","Estado originario","polity"],["overlordId","Señor superior","polity"],["allies","Aliados","polity"],["enemies","Rivales","polity"],["children","Estados sucesores","polity"],["warIds","Guerras","war"]])
+		"people":
+			relations.append_array([["parentId","Pueblo ancestral","people"],["secondParentId","Otro pueblo ancestral","people"],["children","Pueblos descendientes","people"]])
+		"religion":
+			relations.append_array([["parentId","Tradición anterior","religion"],["children","Cismas y ramas","religion"],["stateIds","Estados que la adoptaron","polity"],["holderPolityId","Estado custodio","polity"]])
+		"ruler":
+			relations.append(["figureId","Figura histórica","figure"])
+		"migration":
+			relations.append_array([["originPolityId","Estado de origen","polity"],["previousMigrationId","Migración anterior","migration"],["settledPolityId","Estado fundado","polity"]])
+		"outbreak":
+			relations.append_array([["fromPeopleId","Pueblo de origen","people"],["hitPolityIds","Estados afectados","polity"]])
+		"cataclysm":
+			relations.append(["hitPolityIds","Estados afectados","polity"])
+		"omen":
+			relations.append_array([["outbreakId","Epidemia desatada","outbreak"],["cataclysmId","Cataclismo provocado","cataclysm"]])
 	for relation: Array in relations:
 		var raw: Variant = value.get(relation[0])
 		if raw == null: continue
 		var ids: Array = raw if raw is Array else [raw]
+		var linked := 0
 		for target_id: Variant in ids:
+			if linked >= 20: break
 			if not (target_id is int or target_id is float): continue
 			var ident := int(target_id)
 			var target_kind: String = relation[2]
@@ -935,7 +973,20 @@ func _entity_sections(kind_name: String, value: Dictionary) -> Array:
 			else:
 				entity_name = str(current_frame.entity_records.get(target_kind, {}).get(ident, {}).get("name", entity_name))
 			rows.append([relation[1], func(): select_entity("cell" if target_kind == "cell" else "engine:" + target_kind, ident, false), entity_name])
+			linked += 1
 	var sections := [["Información", rows]]
+	if kind_name == "figure":
+		# Deed records arrive from Go as Year/Text objects; unlike the HTML
+		# source, they are not raw [year,text,refs] JavaScript arrays.
+		var deeds: Variant = value.get("deeds")
+		if deeds is Array and not deeds.is_empty():
+			var deed_rows := []
+			for deed in deeds.slice(maxi(0, deeds.size() - 24)):
+				if not deed is Dictionary: continue
+				if not deed.has("Year") or not deed.has("Text"): continue
+				deed_rows.append([Hud.fmt_year(int(deed["Year"])), str(deed["Text"])])
+			if not deed_rows.is_empty():
+				sections.append(["Hazañas", deed_rows])
 	for spec in [["text","Crónica"],["why","Contexto"],["outcome","Resultado"],["followText","Consecuencias"]]:
 		if value.get(spec[0]) is String and value[spec[0]] != "":
 			sections.append([spec[1], [UiTheme.muted(str(value[spec[0]]), 14)]])
