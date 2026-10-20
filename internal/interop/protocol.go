@@ -48,6 +48,8 @@ type Session struct {
 	simulation   *sim.Simulation
 	mapCache     []mapProvince
 	mapCacheYear int
+	entityCache map[string]map[int]sim.EntityRecord
+	entityCacheYear int
 }
 
 func decodePayload(raw json.RawMessage, target any) error {
@@ -86,6 +88,7 @@ func (s *Session) Handle(req Request) Response {
 	switch req.Op {
 	case "create_world":
 		s.mapCache = nil
+		s.entityCache = nil
 		var payload struct {
 			World  *sim.WorldConfig `json:"world"`
 			Fine   *bool            `json:"fine"`
@@ -119,6 +122,7 @@ func (s *Session) Handle(req Request) Response {
 		response.Data = w.Summary()
 	case "start_history":
 		s.mapCache = nil
+		s.entityCache = nil
 		if s.world == nil {
 			return fail("not_ready", fmt.Errorf("create_world first"))
 		}
@@ -156,7 +160,7 @@ func (s *Session) Handle(req Request) Response {
 		}
 		response.Data = s.world.Summary()
 	case "get_catalog":
-		response.Data = map[string]any{"schema": "asabiya/catalog-v1", "technologies": sim.TechCatalog(), "eras": sim.Eras(), "mapColumnsV1": true}
+		response.Data = map[string]any{"schema": "asabiya/catalog-v1", "technologies": sim.TechCatalog(), "eras": sim.Eras(), "mapColumnsV1": true, "entityChangesV1": true}
 	case "export_geography":
 		if s.world == nil {
 			return fail("not_ready", fmt.Errorf("create_world first"))
@@ -211,28 +215,44 @@ func (s *Session) Handle(req Request) Response {
 			var payload struct {
 				View        string `json:"view"`
 				Publication string `json:"publication"`
+				EntityMode string `json:"entityMode"`
 			}
 			if err := decodePayload(req.Payload, &payload); err != nil {
 				return fail("invalid_arguments", err)
 			}
-			if (payload.View != "" && payload.View != "map" && payload.View != "map-columns-v1") || (payload.Publication != "" && payload.Publication != "status") {
+			if (payload.View != "" && payload.View != "map" && payload.View != "map-columns-v1") || (payload.Publication != "" && payload.Publication != "status") || (payload.EntityMode != "" && (payload.EntityMode != "changed" || payload.View != "map-columns-v1" || payload.Publication != "")) {
 				return fail("invalid_arguments", fmt.Errorf("unknown publication/view"))
 			}
 			if payload.Publication == "status" {
 				s.mapCache = nil
+		s.entityCache = nil
 				s.simulation.AdvanceYear()
 				status := s.simulation.Status()
 				response.Data = map[string]any{"schema": "asabiya/advance-status-v1", "year": status.Year, "rng": status.HistoryRNG}
 			} else {
 				if payload.View == "map" || payload.View == "map-columns-v1" {
-					view:=s.filterMapDelta(s.simulation.AdvanceYearWithMapDelta());if payload.View=="map-columns-v1" {response.Data=packDelta(view)}else{response.Data=view}
+					view := s.filterMapDelta(s.simulation.AdvanceYearWithMapDelta())
+					if payload.EntityMode == "changed" {
+						s.filterEntityChanges(&view)
+					} else {
+						// Switching between complete and sparse publications must
+						// always restart the entity baseline from a full snapshot.
+						s.entityCache = nil
+					}
+					if payload.View == "map-columns-v1" {
+						response.Data = packDelta(view)
+					} else {
+						response.Data = view
+					}
 				} else {
 					s.mapCache = nil
+		s.entityCache = nil
 					response.Data = s.simulation.AdvanceYearWithDelta()
 				}
 			}
 		case "apply_command":
 			s.mapCache = nil
+		s.entityCache = nil
 			var command sim.Command
 			if err := decodePayload(req.Payload, &command); err != nil {
 				return fail("invalid_arguments", err)
