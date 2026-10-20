@@ -107,6 +107,25 @@ func _run() -> void:
 	hud._on_search("archivo histórico")
 	hud._on_search_pick(0)
 	check(observer.selection == {"kind":"engine:figure","id":100}, "figure search opens a Go-backed record")
+	observer.current_frame.entity_records["figure"] = {
+		41:{"name":"Gobernante antiguo","title":"Rey","kind":"ruler","born":-300,"conquests":2,"realmCells":10,"deeds":[["conquista"]],"works":0},
+		42:{"name":"Profeta recordada","title":"Reformadora","kind":"prophet","born":-500,"conquests":0,"realmCells":0,"deeds":[["obra"],["viaje"]],"works":1}
+	}
+	var figure_intents := []
+	hud.entity_requested.connect(func(kind: String, id: int): figure_intents.append([kind, id]))
+	hud._toggle_figures(true)
+	check(hud.figures_panel.visible and hud.figure_list.item_count == 2, "figures catalogue opens from Atlas UX")
+	check(int(hud.figure_list.get_item_metadata(0)) == 42, "HTML figure score prioritizes greater renown")
+	hud.figure_filter.select(1)
+	hud._fill_figures()
+	check(hud.figure_list.item_count == 1 and int(hud.figure_list.get_item_metadata(0)) == 41, "ruler category matches HTML")
+	hud.figure_filter.select(0)
+	hud.figure_query.text = "reformadora"
+	check(hud.figure_list.item_count == 1 and int(hud.figure_list.get_item_metadata(0)) == 42, "figure titles are filtered")
+	hud.figure_query.text = ""
+	hud._on_figure_activated(0)
+	check(not hud.figures_panel.visible and figure_intents == [["engine:figure",42]], "figure index opens Go entity via intent")
+	check(observer.source._outgoing.is_empty(), "figure browser does not mutate causal engine")
 	var many_figures := {}
 	for i in 100:
 		many_figures[1000 + i] = {"name":"Muchos exploradores %d" % i}
