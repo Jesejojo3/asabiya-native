@@ -171,7 +171,7 @@ func (s *Session) Handle(req Request) Response {
 		}
 		response.Data = s.world.Summary()
 	case "get_catalog":
-		response.Data = map[string]any{"schema": "asabiya/catalog-v1", "technologies": sim.TechCatalog(), "eras": sim.Eras(), "mapColumnsV1": true, "entityChangesV1": true, "digestCheckpointsV1": 25, "mapFieldChangesV1": true}
+		response.Data = map[string]any{"schema": "asabiya/catalog-v1", "technologies": sim.TechCatalog(), "eras": sim.Eras(), "parameters": sim.ParameterDefs(), "omens": sim.OmenDefs(), "mapColumnsV1": true, "entityChangesV1": true, "digestCheckpointsV1": 25, "mapFieldChangesV1": true}
 	case "export_geography":
 		if s.world == nil {
 			return fail("not_ready", fmt.Errorf("create_world first"))
@@ -226,7 +226,7 @@ func (s *Session) Handle(req Request) Response {
 				response.Data = s.simulation.Snapshot()
 			}
 		case "get_status":
-			response.Data = map[string]any{"status": s.simulation.Status(), "nextSequence": s.simulation.NextSequence(), "rulesSHA256": s.simulation.RulesDigest()}
+			response.Data = map[string]any{"status": s.simulation.Status(), "nextSequence": s.simulation.NextSequence(), "rulesSHA256": s.simulation.RulesDigest(), "commandContext": s.simulation.CommandContext()}
 		case "advance":
 			var payload struct {
 				View         string `json:"view"`
@@ -276,7 +276,7 @@ func (s *Session) Handle(req Request) Response {
 					response.Data = s.simulation.AdvanceYearWithDelta()
 				}
 			}
-		case "apply_command":
+		case "apply_command", "apply_command_status":
 			s.mapCache = nil
 			s.entityCache = nil
 			var command sim.Command
@@ -284,7 +284,14 @@ func (s *Session) Handle(req Request) Response {
 				return fail("invalid_arguments", err)
 			}
 			result := s.simulation.ApplyCommand(command)
-			response.Data = map[string]any{"result": result, "state": s.simulation.Snapshot()}
+			if req.Op == "apply_command_status" {
+				// Keep the original apply_command response intact for existing clients.
+				// Godot needs only the outcome; it fetches its compact map publication
+				// after an accepted intervention, never a duplicate full-world JSON.
+				response.Data = map[string]any{"result": result, "commandContext": s.simulation.CommandContext()}
+			} else {
+				response.Data = map[string]any{"result": result, "state": s.simulation.Snapshot()}
+			}
 		case "get_province", "get_province_history":
 			var payload struct {
 				ID sim.CellID `json:"id"`
