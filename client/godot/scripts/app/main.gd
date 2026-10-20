@@ -270,6 +270,9 @@ func _build_scene() -> void:
 	hud.playback_rate_changed.connect(func(rate: int):
 		if source is BridgeSource: (source as BridgeSource).set_live_rate(rate))
 	hud.fly_to.connect(func(c: int): select_entity("cell", c, true))
+	hud.focus_cell.connect(func(c: int):
+		if c >= 0 and c < world.cell_count():
+			map_view.camera.focus_on(world.cell_center(c), minf(map_view.camera.distance, 18.0)))
 	hud.entity_requested.connect(func(kind: String, id: int): select_entity(kind, id, false))
 	hud.world_requested.connect(_generate_world)
 	hud.deselect_requested.connect(_deselect)
