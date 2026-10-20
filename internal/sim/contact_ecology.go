@@ -3,7 +3,13 @@ package sim
 import (
 	"fmt"
 	"math"
+	"sync"
 )
+
+// Scratch only: every contribution is rebuilt from the current complete year.
+// A pass owns its buffer until all four bands finish; concurrent histories do
+// not share writable storage. The GC may discard unused buffers.
+var exitFieldPool sync.Pool
 
 func (h *history) localPop(i CellID) float64 {
 	t := float64(h.pop[i])
@@ -16,7 +22,55 @@ func (h *history) localPop(i CellID) float64 {
 }
 func (h *history) exitPass(start, end float64) {
 	h.prepareAnnualState()
+	field := h.exitField()
+	defer releaseExitField(field)
+	h.exitPassWithField(start, end, field)
+}
+
+func releaseExitField(field []float64) { exitFieldPool.Put(field) }
+
+// All four bands read the same population, ownership and immutable geography.
+// Compute each source contribution once, instead of up to 48 times. Padding
+// wraps longitude so the neighborhood scan needs no remainder operations.
+func (h *history) exitField() []float64 {
 	w := h.world
+	width, height := w.config.Width, w.config.Height
+	stride := width + 6
+	size := stride * height
+	var field []float64
+	if previous := exitFieldPool.Get(); previous != nil {
+		field = previous.([]float64)
+	}
+	if cap(field) < size {
+		field = make([]float64, size)
+	} else {
+		field = field[:size]
+		clear(field) // oceans differ between histories and must contribute zero
+	}
+	for _, j := range w.landList {
+		warm := .3
+		if w.temperature[j] > 10 {
+			warm = 1
+		}
+		quality := max64(float64(w.farmSuitability[j]), max64(.5*float64(w.forest[j])*warm, .4*float64(w.herdSuitability[j])))
+		density := max64(.3, 7*quality)
+		political := 1.
+		if h.pol[j] != 0 {
+			political = .4
+		}
+		field[(int(j)/width)*stride+int(j)%width+3] = quality * max64(0, 1-float64(h.pop[j])/float64(w.area[j])/density) * political
+	}
+	for y := 0; y < height; y++ {
+		row := field[y*stride : (y+1)*stride]
+		copy(row[:3], row[width:width+3])
+		copy(row[width+3:], row[3:6])
+	}
+	return field
+}
+
+func (h *history) exitPassWithField(start, end float64, field []float64) {
+	w := h.world
+	stride := w.config.Width + 6
 	for k, stop := int(math.Floor(start*float64(len(w.landList)))), int(math.Floor(end*float64(len(w.landList)))); k < stop; k++ {
 		i := w.landList[k]
 		if h.pop[i] < 1 || float64(w.farmSuitability[i]) < .1 {
@@ -25,36 +79,20 @@ func (h *history) exitPass(start, end float64) {
 		}
 		cx, cy := int(i)%w.config.Width, int(i)/w.config.Width
 		total, n := 0., 0
-		for dy := -3; dy <= 3; dy++ {
-			yy := cy + dy
-			if yy < 0 || yy >= w.config.Height {
-				continue
-			}
+		for yy := max(0, cy-3); yy <= min(w.config.Height-1, cy+3); yy++ {
+			row := field[yy*stride+cx : yy*stride+cx+7]
 			for dx := -3; dx <= 3; dx++ {
-				if dx == 0 && dy == 0 {
+				if dx == 0 && yy == cy {
 					continue
 				}
-				j := CellID(yy*w.config.Width + (cx+dx+w.config.Width)%w.config.Width)
 				n++
-				if !w.land[j] {
-					continue
-				}
-				warm := .3
-				if w.temperature[j] > 10 {
-					warm = 1
-				}
-				quality := math.Max(float64(w.farmSuitability[j]), math.Max(.5*float64(w.forest[j])*warm, .4*float64(w.herdSuitability[j])))
-				density := math.Max(.3, 7*quality)
-				political := 1.
-				if h.pol[j] != 0 {
-					political = .4
-				}
-				total += quality * math.Max(0, 1-float64(h.pop[j])/float64(w.area[j])/density) * political
+				// Same dy/dx accumulation order, including clipped polar rows.
+				total += row[dx+3]
 			}
 		}
 		ex, own := total/float64(n), float64(w.farmSuitability[i])+.1
 		h.exit[i] = float32(ex)
-		h.circE[i] = float32(clamp(math.Max(float64(w.circumscription[i]), 1-1.6*ex/own), 0, 1))
+		h.circE[i] = float32(clamp(max64(float64(w.circumscription[i]), 1-1.6*ex/own), 0, 1))
 	}
 }
 func (h *history) poolPass() {
@@ -70,24 +108,24 @@ func (h *history) poolPass() {
 		if h.city[i] >= 0 {
 			city = .2
 		}
-		target := math.Min(1, .22*math.Log10(1+density)+.3*float64(h.tech[TechHerd][i])*float64(h.tech[TechFarm][i])+city)
+		target := min64(1, .22*math.Log10(1+density)+.3*float64(h.tech[TechHerd][i])*float64(h.tech[TechFarm][i])+city)
 		maximum := float64(h.plaguePool[i])
 		for _, j := range w.neighbors[i] {
 			if j < 0 || h.pop[j] < 1 {
 				continue
 			}
-			contact := math.Min(1, math.Sqrt(float64(h.pop[i])*float64(h.pop[j]))/20000+float64(h.caravan[i]))
-			maximum = math.Max(maximum, float64(h.plaguePool[j])*(.9+.08*contact))
+			contact := min64(1, math.Sqrt(float64(h.pop[i])*float64(h.pop[j]))/20000+float64(h.caravan[i]))
+			maximum = max64(maximum, float64(h.plaguePool[j])*(.9+.08*contact))
 		}
 		if w.coast[i] && float64(h.tech[TechSail][i]) > .5 {
 			for q := w.seaOffsets[i]; q < w.seaOffsets[i+1]; q++ {
 				j := w.seaTargets[q]
 				if h.pop[j] >= 1 {
-					maximum = math.Max(maximum, float64(h.plaguePool[j])*.92)
+					maximum = max64(maximum, float64(h.plaguePool[j])*.92)
 				}
 			}
 		}
-		h.bfsParent[i] = int32(jsRound(1000 * (float64(h.plaguePool[i]) + .06*(math.Max(target, maximum)-float64(h.plaguePool[i])))))
+		h.bfsParent[i] = int32(jsRound(1000 * (float64(h.plaguePool[i]) + .06*(max64(target, maximum)-float64(h.plaguePool[i])))))
 	}
 	// v0.6 reuses the BFS parent scratch array, including stale slots for empty
 	// cells. Do not silently replace those slots with the decayed dp value.
@@ -110,7 +148,7 @@ func (h *history) poolPass() {
 				for dx := -9; dx <= 9; dx++ {
 					j := CellID(yy*w.config.Width + (cx+dx+w.config.Width)%w.config.Width)
 					if w.land[j] && float64(h.tech[TechHerd][j]) > .3 && dx*dx+dy*dy <= 81 {
-						h.rp[j] = float32(math.Max(float64(h.rp[j]), .65))
+						h.rp[j] = float32(max64(float64(h.rp[j]), .65))
 						n++
 					}
 				}
@@ -122,7 +160,7 @@ func (h *history) poolPass() {
 			}
 			h.chron("plague", "A cattle plague sweeps the herds"+extra+"; herders lose most of their beasts, and hunger drives many from the land.", c)
 			if e >= 0 {
-				h.pushPressure(int(e), float64(h.pop[c])*.3*math.Min(20, float64(n)), c, 0, -1)
+				h.pushPressure(int(e), float64(h.pop[c])*.3*min64(20, float64(n)), c, 0, -1)
 			}
 			break
 		}

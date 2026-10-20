@@ -49,6 +49,9 @@ jobs:
           timeout --signal=TERM 60s ./godot --headless --path client/godot --script res://tests/deep_publication_regressions.gd
           timeout --signal=TERM 60s ./godot --headless --path client/godot --script res://tests/fluid_playback_regressions.gd -- --server "$PWD/build/bin/asabiya-server"
           timeout --signal=TERM 60s ./godot --headless --path client/godot --script res://tests/annual_throughput_regressions.gd -- --server "$PWD/build/bin/asabiya-server"
+      - name: Numeric contracts and concurrent algorithm workspaces
+        timeout-minutes: 2
+        run: go test -race -count=1 ./internal/sim -run '^(TestMinMaxFloat64Contract|TestExitFieldMatchesOriginalNeighborhoods|TestConcurrentAlgorithmWorkspaces)$'
 
   windows:
     runs-on: windows-2022

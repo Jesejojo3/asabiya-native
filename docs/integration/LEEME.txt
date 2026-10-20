@@ -41,6 +41,10 @@ de interfaz e intervenciones. Se han ejecutado pruebas Go y Godot headless
 de años consecutivos, pausa, huellas y replay. No se ha probado la GPU
 ni la ejecución Windows en tu equipo.
 
+Incluye optimizaciones del motor: datos de vecindad calculados una sola vez,
+recorridos de tecnologías conocidas y operaciones numéricas más eficientes.
+Se conservan las reglas y los resultados. Ver CAMBIOS-ALGORITMOS.md.
+
 Descomprime todo el ZIP Fluido en una carpeta nueva y abre AsabiyaNative.exe.
 No necesitas instalar Go, Godot ni herramientas de desarrollo.
 Evita mezclar sus archivos con los de entregas anteriores.

@@ -1,7 +1,5 @@
 package sim
 
-import "math"
-
 func (h *history) politicalBorders(influence float64) {
 	w, r := h.world, h.r
 	y := h.year
@@ -123,7 +121,7 @@ func (h *history) politicalBorders(influence float64) {
 				if float64(h.uni[i]) > .3 && int(h.uniFamily[i]) == h.peoples[o.Core].Family {
 					unity = 1.6
 				}
-				h.integ[i] = float32(math.Min(1, float64(h.integ[i])+.0011/(1+.8*h.rules.get("eco")*h.ecoD(i, o))*(.5+float64(h.tech[TechWriting][i])+float64(h.tech[TechRoads][i])+.5*float64(h.tech[TechLaw][i]))*famMultiplier*relMultiplier*unity))
+				h.integ[i] = float32(min64(1, float64(h.integ[i])+.0011/(1+.8*h.rules.get("eco")*h.ecoD(i, o))*(.5+float64(h.tech[TechWriting][i])+float64(h.tech[TechRoads][i])+.5*float64(h.tech[TechLaw][i]))*famMultiplier*relMultiplier*unity))
 			}
 			if candidate >= 0 && int(h.taken[i]) != y {
 				q := h.pol[candidate]
@@ -139,7 +137,7 @@ func (h *history) politicalBorders(influence float64) {
 					if q == 0 {
 						mobility := 1.
 						if !horde {
-							mobility = math.Min(1, math.Max(.1, float64(h.pop[i])/float64(w.area[i])/6)) * (.3 + .7*math.Min(1, o.Press)) * (1 + 2*float64(h.tech[TechGunpowder][i]))
+							mobility = min64(1, max64(.1, float64(h.pop[i])/float64(w.area[i])/6)) * (.3 + .7*min64(1, o.Press)) * (1 + 2*float64(h.tech[TechGunpowder][i]))
 						}
 						rate = warRate * mobility
 					}
@@ -171,7 +169,7 @@ func (h *history) politicalBorders(influence float64) {
 				}
 			}
 			if threat && !horde && o.S > .45 && o.Gate > .7 && float64(h.tech[TechWriting][o.Capital]) > .3 && h.fort[i] < 1 {
-				h.fort[i] = float32(math.Min(1, float64(h.fort[i])+.006*fortify*(1+float64(h.tech[TechRoads][i]))))
+				h.fort[i] = float32(min64(1, float64(h.fort[i])+.006*fortify*(1+float64(h.tech[TechRoads][i]))))
 			}
 		} else {
 			if frontier {
@@ -187,10 +185,10 @@ func (h *history) politicalBorders(influence float64) {
 				if w.desert[i] {
 					desert = 1
 				}
-				pasture := float64(h.tech[TechHerd][i]) * math.Max(float64(w.herdSuitability[i]), desert*float64(h.tech[TechCamel][i])*.6)
+				pasture := float64(h.tech[TechHerd][i]) * max64(float64(w.herdSuitability[i]), desert*float64(h.tech[TechCamel][i])*.6)
 				if agriculture > .35 && density > 4.5 && !w.nomad[i] && h.localPop(i) >= 15000*h.rules.get("floor") {
 					cereal := h.cerealEff(i)
-					chance := h.rules.get("formRate") * .0012 * (.2 + 1.6*h.rules.get("circ")*float64(h.circE[i])) * (.4 + float64(h.cohesion[i])) * (1 + math.Min(2, density/15)) * math.Min(1, .05+float64(h.tech[TechCopper][i])+float64(h.tech[TechWriting][i])+float64(h.tech[TechHorse][i])*.5+math.Min(.4, math.Max(0, density-5)/25)+.15*math.Max(0, float64(h.circE[i])-.5)) * (.03 + .97*cereal*cereal)
+					chance := h.rules.get("formRate") * .0012 * (.2 + 1.6*h.rules.get("circ")*float64(h.circE[i])) * (.4 + float64(h.cohesion[i])) * (1 + min64(2, density/15)) * min64(1, .05+float64(h.tech[TechCopper][i])+float64(h.tech[TechWriting][i])+float64(h.tech[TechHorse][i])*.5+min64(.4, max64(0, density-5)/25)+.15*max64(0, float64(h.circE[i])-.5)) * (.03 + .97*cereal*cereal)
 					if r.Float64() < chance {
 						id := h.newPolity(i, nil, polityOptions{})
 						for _, j := range w.neighbors[i] {
@@ -261,10 +259,12 @@ func (h *history) politicalTerritory() {
 		}
 	}
 	if h.year%10 == 0 {
-		h.exitPass(0, .25)
-		h.exitPass(.25, .5)
-		h.exitPass(.5, .75)
-		h.exitPass(.75, 1)
+		field := h.exitField()
+		h.exitPassWithField(0, .25, field)
+		h.exitPassWithField(.25, .5, field)
+		h.exitPassWithField(.5, .75, field)
+		h.exitPassWithField(.75, 1, field)
+		releaseExitField(field)
 	}
 	for _, i := range w.landList {
 		p := h.pol[i]

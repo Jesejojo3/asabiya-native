@@ -16,7 +16,7 @@ func (h *history) weather() {
 	e := h.epoch
 	ramp := 0.0
 	if e != nil && e.Kind == "dry" {
-		ramp = math.Max(0, math.Min(1, math.Min(float64(h.year-e.Start)/20, float64(e.End-h.year)/20)))
+		ramp = max64(0, min64(1, min64(float64(h.year-e.Start)/20, float64(e.End-h.year)/20)))
 	} else {
 		e = nil
 	}

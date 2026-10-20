@@ -14,6 +14,8 @@ Abre `AsabiyaNative.exe` en la carpeta Windows entregada. No necesitas instalar 
 
 **Reproducción Fluida:** inicia en Máxima, muestra todos los años y comprueba el estado cada 25 años y al pausar. Desactiva Fluido para conservar verificación anual. Se han ejecutado regresiones Go/Godot headless; la ejecución Windows en el equipo del usuario sigue pendiente. [Cambio y mediciones](docs/integration/FLUID_PLAYBACK.md).
 
+El núcleo reduce cálculos repetidos de vecindad y recorre sólo tecnologías conocidas, conservando los resultados anteriores. [Optimización de algoritmos y comparación de campañas](docs/integration/CORE_ALGORITHMS.md).
+
 ## Reconstruir
 
 Requiere Go **1.27.2 Windows amd64** y Godot **4.7.2 estable**. Las herramientas y hashes están fijados. El script puede obtener el editor y las plantillas oficiales:

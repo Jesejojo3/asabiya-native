@@ -68,6 +68,7 @@ Copy-Item -LiteralPath (Join-Path $repo 'reference/v0.6/Asabiya History Engine (
 $earth=@{world=@{seed='Earth';width=400;height=200;detail=4;landFraction=0.33};historySeed='1';source=@{kind='earth';fitClimate=$true;assets=@(@{role='earth-html';path='resources/legacy-v0.6.html'})}}
 $earth | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $out 'asabiya-earth.json') -Encoding utf8
 Copy-Item -LiteralPath (Join-Path $repo 'docs/integration/LEEME.txt') -Destination (Join-Path $out 'LEEME.txt') -Force
+Copy-Item -LiteralPath (Join-Path $repo 'docs/integration/CORE_ALGORITHMS.md') -Destination (Join-Path $out 'CAMBIOS-ALGORITMOS.md') -Force
 New-Item -ItemType Directory -Force -Path (Join-Path $out 'licenses') | Out-Null
 Copy-Item -LiteralPath (Join-Path $repo 'client/licenses/GODOT_LICENSE.txt'),(Join-Path $repo 'client/licenses/GODOT_COPYRIGHT.txt'),(Join-Path $repo 'client/licenses/GO_LICENSE.txt') -Destination (Join-Path $out 'licenses') -Force
 $diagnostics=Join-Path $out 'diagnostics'

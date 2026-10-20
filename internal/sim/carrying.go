@@ -97,8 +97,8 @@ func (h *history) epochTemp() float64 {
 		return 0
 	}
 	y := float64(h.year)
-	ramp := math.Min(1, math.Min((y-float64(e.Start))/40, (float64(e.End)-y)/40))
-	return e.Amp * math.Max(0, ramp)
+	ramp := min64(1, min64((y-float64(e.Start))/40, (float64(e.End)-y)/40))
+	return e.Amp * max64(0, ramp)
 }
 
 // toFixed0 is Number.prototype.toFixed(0) for finite non-negative values.
@@ -146,40 +146,40 @@ func (h *history) computeK() {
 		wm, mz := float64(h.wm[i]), float64(w.monsoonZone[i])
 		pn := float64(w.precipitation[i])*wm + orb*mz*420
 		ar, rv, coast := float64(w.area[i]), float64(w.river[i]), b2f(w.coast[i])
-		npp := math.Min(3000/(1+math.Exp(1.315-.119*(T+float64(w.amplitude[i])*.15))), 3000*(1-math.Exp(-.000664*pn)))
+		npp := min64(3000/(1+math.Exp(1.315-.119*(T+float64(w.amplitude[i])*.15))), 3000*(1-math.Exp(-.000664*pn)))
 		kf := ar * .1 * npp / 1000 * (1 + .5*coast + .4*rv)
 		dry := clamp(wm, .3, 1.6)
 		sh := float64(w.herdSuitability[i])
 		if mz > 0 {
-			sh = math.Max(sh, orb*mz*.7)
+			sh = max64(sh, orb*mz*.7)
 		}
 		if w.desert[i] {
-			sh = math.Max(sh, .25*float64(tk[TechCamel][i]))
+			sh = max64(sh, .25*float64(tk[TechCamel][i]))
 		}
-		kh := ar * 1.6 * sh * float64(tk[TechHerd][i]) * math.Min(1.3, dry) * (1 + .2*float64(tk[TechHorse][i])) * (1 - float64(h.rp[i]))
+		kh := ar * 1.6 * sh * float64(tk[TechHerd][i]) * min64(1.3, dry) * (1 + .2*float64(tk[TechHorse][i])) * (1 - float64(h.rp[i]))
 		irrig := float64(tk[TechIrrigation][i])
 		irr := irrig * rv
-		wf := 1 + (math.Min(dry, 1.25)-1)*(1-.75*irr)
+		wf := 1 + (min64(dry, 1.25)-1)*(1-.75*irr)
 		hv, lc := float64(w.heavySoil[i]), float64(w.leach[i])
 		sf, forest := float64(w.farmSuitability[i]), float64(h.forest[i])
 		t := func(k int) float64 { return float64(tk[k][i]) }
 		kfa := ar * 3.5 * sf * t(TechFarm) * float64(h.fert[i]) * wf *
 			(1 + .8*t(TechCopper) + .9*t(TechIron)*(1-.4*lc) + 1.0*t(TechCrops) + .7*t(TechWriting) + .55*t(TechArd)*(1-.6*hv) +
 				.7*t(TechPlough)*hv + .6*t(TechManure) + t(TechXCrops)*(.25+.8*lc+.5*float64(w.tropical[i])+.3*(1-sf)) +
-				.4*t(TechFungal)*math.Max(lc, forest) + .15*t(TechTidemill)*coast) *
+				.4*t(TechFungal)*max64(lc, forest) + .15*t(TechTidemill)*coast) *
 			(1 + rv*(.25+2.2*irrig))
 		kfa *= (.45 + .55*(1-forest)) * (1 - .6*float64(h.salt[i])) * (1 - .5*float64(w.oncho[i]))
 		if w.temperature[i] < 12 {
 			kfa *= clamp(1+.18*dT, .4, 1.35)
 		}
 		if hv > 0 {
-			kfa *= 1 - .7*hv*(1-math.Max(t(TechPlough), .4*t(TechIron)))
+			kfa *= 1 - .7*hv*(1-max64(t(TechPlough), .4*t(TechIron)))
 		}
-		k := math.Max(math.Max(1, kf), math.Max(kh+.4*kf, kfa+.3*kh+.2*kf)) *
+		k := max64(max64(1, kf), max64(kh+.4*kf, kfa+.3*kh+.2*kf)) *
 			(1 - .5*float64(w.malaria[i])*(1-float64(h.adapt[i]))*(1-.5*t(TechFeverbark)))
 		h.K[i] = float32(k)
 		if float64(h.kModUntil[i]) > float64(h.year) {
-			h.K[i] = float32(math.Max(1, float64(h.K[i])*float64(h.kMod[i])))
+			h.K[i] = float32(max64(1, float64(h.K[i])*float64(h.kMod[i])))
 		}
 	}
 }

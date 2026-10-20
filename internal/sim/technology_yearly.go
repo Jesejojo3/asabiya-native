@@ -44,9 +44,14 @@ func (h *history) techStep(start, end float64) {
 	h.prepareAnnualState()
 	w, r := h.world, h.r
 	diffusion, loss := .12*h.rules.get("techDiff"), .006*h.rules.get("techLoss")
-	var known, institutional [techCount]bool
+	var known [techCount]int
+	knownCount := 0
+	var institutional [techCount]bool
 	for k := 0; k < techCount; k++ {
-		known[k] = h.firstDiscoveries[k] != nil || k == TechSail
+		if h.firstDiscoveries[k] != nil || k == TechSail {
+			known[knownCount] = k
+			knownCount++
+		}
 		institutional[k] = k == TechWriting || k == TechCoin || k == TechLaw || k == TechRoads || k == TechPaper
 	}
 	for index, stop := int(math.Floor(start*float64(len(w.landList)))), int(math.Floor(end*float64(len(w.landList)))); index < stop; index++ {
@@ -78,7 +83,7 @@ func (h *history) techStep(start, end float64) {
 			if j < 0 {
 				continue
 			}
-			contact[d] = math.Min(1, .25+math.Sqrt(float64(h.pop[i])*float64(h.pop[j]))/6000+float64(h.caravan[i])+float64(h.caravan[j])) * pigeons
+			contact[d] = min64(1, .25+math.Sqrt(float64(h.pop[i])*float64(h.pop[j]))/6000+float64(h.caravan[i])+float64(h.caravan[j])) * pigeons
 			if h.pop[j] >= 1 {
 				neighbors[d] = j
 			}
@@ -86,10 +91,7 @@ func (h *history) techStep(start, end float64) {
 		cosLat := float64(w.cosLat[i])
 		lowContact := connected < 3000
 		noFarm := float64(h.tech[TechFarm][i]) < .3 && float64(h.tech[TechHerd][i]) < .3
-		for f := 0; f < techCount; f++ {
-			if !known[f] {
-				continue
-			}
+		for _, f := range known[:knownCount] {
 			a := h.tech[f]
 			t := float64(a[i])
 			if t < .995 {
@@ -121,7 +123,7 @@ func (h *history) techStep(start, end float64) {
 					if same {
 						border = 1
 					}
-					rate := diffusion * riverBonus * border * math.Min(1, multiplier)
+					rate := diffusion * riverBonus * border * min64(1, multiplier)
 					if f >= 3 && f != TechSail && f != TechCamel && noFarm {
 						rate *= .02
 					}
@@ -176,7 +178,7 @@ func (h *history) techStep(start, end float64) {
 				maximum := 0.0
 				for _, j := range neighbors {
 					if j >= 0 {
-						maximum = math.Max(maximum, float64(a[j]))
+						maximum = max64(maximum, float64(a[j]))
 					}
 				}
 				if maximum < .5 {
@@ -231,7 +233,7 @@ func (h *history) techStep(start, end float64) {
 		if h.religion[j] < 0 {
 			newcomer = 1.3
 		}
-		probability := .09 * religion.Missionary * h.rules.get("faith") * math.Min(1, .15+math.Sqrt(float64(h.pop[i])*float64(h.pop[j]))/15000+2*float64(h.caravan[j])) * same * bias * newcomer * (1 + .5*float64(h.tech[TechPaper][i])) * (.7 + .6*religion.Centralization)
+		probability := .09 * religion.Missionary * h.rules.get("faith") * min64(1, .15+math.Sqrt(float64(h.pop[i])*float64(h.pop[j]))/15000+2*float64(h.caravan[j])) * same * bias * newcomer * (1 + .5*float64(h.tech[TechPaper][i])) * (.7 + .6*religion.Centralization)
 		if r.Float64() < probability {
 			h.religion[j] = ri
 		}

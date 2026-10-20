@@ -1,0 +1,68 @@
+[
+  {
+    "phase": "early",
+    "from": -8980,
+    "to": -7980,
+    "beforeMs": 8.688118313999999,
+    "afterMs": 5.856788154,
+    "reductionPercent": 32.58853134444089,
+    "states": 0,
+    "sha256": "801ed8282217976f65084a2aa1ddaf4d2c9787b6fbe8e20e98d67a62bed5e145",
+    "rngCalls": 18788626
+  },
+  {
+    "phase": "early",
+    "from": -7980,
+    "to": -6980,
+    "beforeMs": 9.462005833,
+    "afterMs": 6.150296141,
+    "reductionPercent": 35.000080854420666,
+    "states": 0,
+    "sha256": "d1147c1cfcc1ba3bcbe090acee393fc332236a9db5a57ae35c2bdf05b85ecaad",
+    "rngCalls": 37350476
+  },
+  {
+    "phase": "early",
+    "from": -6980,
+    "to": -5980,
+    "beforeMs": 9.272181006,
+    "afterMs": 6.505410304,
+    "reductionPercent": 29.839481134046363,
+    "states": 0,
+    "sha256": "3dec8f0b61e6496bb40500c747bcd596433d409092db7f508ea57c7936aaddc5",
+    "rngCalls": 55888021
+  },
+  {
+    "phase": "mature",
+    "from": 1000,
+    "to": 1300,
+    "beforeMs": 13.332588666666668,
+    "afterMs": 11.216165643333333,
+    "reductionPercent": 15.874059241208627,
+    "states": 126,
+    "sha256": "20ba09a543ebc0680da87a0775e267145aa0975ab134402773c8c9ffd2daae7f",
+    "rngCalls": 203067049
+  },
+  {
+    "phase": "mature",
+    "from": 1300,
+    "to": 1600,
+    "beforeMs": 13.671425220000001,
+    "afterMs": 11.330460746666667,
+    "reductionPercent": 17.123046322257064,
+    "states": 133,
+    "sha256": "cc8c8a57428df739edcf3e35931b6c03a20c6d9b0382f6e8c91b9e62937c2061",
+    "rngCalls": 210902324
+  },
+  {
+    "phase": "mature",
+    "from": 1600,
+    "to": 1900,
+    "beforeMs": 14.460121803333335,
+    "afterMs": 11.842985806666666,
+    "reductionPercent": 18.09898998266646,
+    "states": 130,
+    "sha256": "c63f1a11fa308cb2ec09ce63e06dbb87b4f709621f7fd298da13cc4a5590f25f",
+    "rngCalls": 219035855
+  }
+]
