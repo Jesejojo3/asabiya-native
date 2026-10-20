@@ -6,6 +6,7 @@ extends HistorySource
 
 signal world_ready(value: WorldData)
 signal request_failed(op: String, code: String, message: String)
+signal progress_changed(calculated_year: int, visualized_year: int, remaining: int)
 
 const PROTOCOL := "asabiya/local-v1"
 const EXE_WIN := "asabiya-server.exe"
@@ -24,6 +25,12 @@ var source_config: Dictionary = {}
 var history_seed := "1"
 var tech_catalog: Array = []
 var era_names: Array = []
+var _map_view := "map"
+var _fast_active := false
+var _fast_cancel := true
+var _fast_progress: Dictionary = {}
+var calculated_year := 0
+var fast_remaining := 0
 
 var _pid := -1
 var _endpoint := ""
@@ -105,6 +112,9 @@ func start(_extra_args := PackedStringArray()) -> bool:
 	_paused = false
 	_live_due_us = 0
 	last_error = ""
+	_fast_active = false
+	_fast_cancel = true
+	_fast_progress.clear()
 	_pending.clear()
 	_pending_ops.clear()
 	_outgoing.clear()
@@ -159,6 +169,7 @@ func _on_catalog(response: Dictionary) -> void:
 	var data: Dictionary = response.get("data", {})
 	tech_catalog = data.get("technologies", [])
 	era_names = data.get("eras", [])
+	_map_view = "map-columns-v1" if data.get("mapColumnsV1", false) else "map"
 	request("export_geography", {"directory":_directory.path_join("world")}, _on_geography)
 
 func _on_geography(response: Dictionary) -> void:
@@ -169,7 +180,7 @@ func _on_geography(response: Dictionary) -> void:
 	world = loaded
 	status_changed.emit("Inicializando las sociedades humanas…")
 	# Queue Go initialization before synchronous main-thread scene construction.
-	request("start_history", {"historySeed":history_seed,"view":"map"}, _on_frame)
+	request("start_history", {"historySeed":history_seed,"view":_map_view}, _on_frame)
 	world_ready.emit(world)
 
 func _on_frame(response: Dictionary) -> void:
@@ -186,6 +197,7 @@ func _on_frame(response: Dictionary) -> void:
 
 func _store(publication: HistoryFrame) -> void:
 	_frames[publication.year] = publication
+	calculated_year = maxi(calculated_year, publication.year) if _fast_active else publication.year
 	var ys := PackedInt32Array(_frames.keys())
 	ys.sort()
 	while ys.size() > MAX_FRAMES:
@@ -197,7 +209,7 @@ func _store(publication: HistoryFrame) -> void:
 
 
 func is_live() -> bool:
-	return _live_running
+	return _live_running or _fast_active
 
 
 func set_live_rate(years_per_second: int) -> void:
@@ -206,7 +218,7 @@ func set_live_rate(years_per_second: int) -> void:
 
 
 func start_live(years_per_second: int) -> void:
-	if not connected or _closing: return
+	if not connected or _closing or _fast_active: return
 	set_live_rate(years_per_second)
 	_live_running = true
 	_paused = false
@@ -216,11 +228,14 @@ func start_live(years_per_second: int) -> void:
 
 func stop_live() -> void:
 	_live_running = false
+	_mutex.lock()
+	_fast_cancel = true
+	_mutex.unlock()
 
 func fetch_frame() -> void:
 	if not connected: return
 	busy = true
-	request("get_state", {"view":"map"}, _on_frame)
+	request("get_state", {"view":_map_view}, _on_frame)
 
 func advance(count: int) -> void:
 	if not can_advance() or count < 1: return
@@ -237,7 +252,7 @@ func _next_advance() -> void:
 		return
 	if _remaining == 1 and _since_publication == 0:
 		_remaining = 0
-		request("advance", {"view":"map"}, _on_frame)
+		request("advance", {"view":_map_view}, _on_frame)
 		return
 	request("advance", {"publication":"status"}, func(response: Dictionary) -> void:
 		_remaining = maxi(0, _remaining - 1)
@@ -255,6 +270,7 @@ func pause() -> void:
 	stop_live()
 	_remaining = 0 # One already accepted year finishes atomically.
 	_paused = true
+	if _fast_active: return
 	if connected:
 		request("pause", {}, func(_response: Dictionary) -> void:
 			fetch_frame())
@@ -283,12 +299,28 @@ func poll() -> void:
 	_mutex.lock()
 	var replies: Array = _received
 	_received = []
+	var progress: Dictionary = _fast_progress
+	_fast_progress = {}
 	_mutex.unlock()
+	if not progress.is_empty():
+		calculated_year = int(progress["year"])
+		fast_remaining = int(progress["remaining"])
+		progress_changed.emit(calculated_year, _years[-1] if not _years.is_empty() else calculated_year, fast_remaining)
 	for response: Dictionary in replies:
 		if response.has("_error"):
 			connected = false
 			_fail(str(response["_error"]))
 			break
+		if response.has("_fast_frame"):
+			var frame: HistoryFrame = response["_fast_frame"]
+			calculated_year = maxi(calculated_year, frame.year)
+			if response.get("done", false):
+				_fast_active = false
+				busy = false
+				fast_remaining = 0
+			_store(frame)
+			progress_changed.emit(calculated_year, frame.year, fast_remaining)
+			continue
 		if response.has("_connected"):
 			_on_connected(response)
 			continue
@@ -320,7 +352,7 @@ func poll() -> void:
 		_live_due_us = Time.get_ticks_usec() + _live_interval_us
 		_live_advance_pending = true
 		busy = true
-		request("advance", {"view":"map"}, func(response: Dictionary):
+		request("advance", {"view":_map_view}, func(response: Dictionary):
 			_live_advance_pending = false
 			_on_frame(response))
 
@@ -341,6 +373,7 @@ func _report_request_error(op: String, code: String, message: String) -> void:
 
 func _fail(message: String) -> void:
 	stop_live()
+	_fast_active = false
 	_live_advance_pending = false
 	connected = false
 	busy = false
@@ -415,6 +448,7 @@ func _worker() -> void:
 	var inflight: Dictionary = {}
 	var ready := false
 	var decoder := NativeFrameDecoder.new(world)
+	var fast: Dictionary = {}
 	while not _stopped():
 		peer.poll()
 		var status := peer.get_status()
@@ -435,10 +469,24 @@ func _worker() -> void:
 			_mutex.lock()
 			if not _outgoing.is_empty(): inflight = _outgoing.pop_front()
 			_mutex.unlock()
+			if inflight.has("_fast_start"):
+				fast = {"job":inflight["id"],"sequence":0,"remaining":inflight["years"],"every":inflight["every"],"since":0,"year":decoder.year}
+				inflight = {}
+			if inflight.is_empty() and not fast.is_empty():
+				_mutex.lock()
+				var cancelled := _fast_cancel
+				var backlog := _received.size()
+				_mutex.unlock()
+				if backlog < 2:
+					var snapshot: bool = cancelled or int(fast["remaining"]) <= 0 or int(fast["since"]) >= int(fast["every"])
+					fast["sequence"] = int(fast["sequence"]) + 1
+					inflight = {"schema":PROTOCOL,"id":"ff-%s-%d" % [fast["job"],fast["sequence"]],"op":"get_state" if snapshot else "advance","payload":{"view":_map_view} if snapshot else {"publication":"status"},"_local_fast":true}
 			if not inflight.is_empty():
 				inflight["session"] = session
 				request_started = trace.begin()
-				pending_bytes = (JSON.stringify(inflight) + "\n").to_utf8_buffer()
+				var wire := inflight.duplicate()
+				wire.erase("_local_fast")
+				pending_bytes = (JSON.stringify(wire) + "\n").to_utf8_buffer()
 				sent = 0
 				deadline = Time.get_ticks_msec() + 180000
 		if not pending_bytes.is_empty():
@@ -491,7 +539,35 @@ func _worker() -> void:
 						response.erase("data") # Do not retain large raw provincial dictionaries.
 				var terminal: bool = not response["ok"] and not _is_recoverable_request_error(op, str(response.get("error", {}).get("code", "")))
 				trace.record("request-decode", request_started, {"op":op,"bytes":response_bytes})
-				_push(response)
+				if inflight.get("_local_fast", false) and not terminal:
+					if not response.get("ok", false):
+						_push({"_error":"No se pudo completar el avance rápido."})
+						break
+					if op == "advance":
+						var status_data: Dictionary = response.get("data", {})
+						var next_year := int(status_data.get("year", -999999))
+						if status_data.get("schema", "") != "asabiya/advance-status-v1" or next_year != int(fast["year"]) + 1:
+							_push({"_error":"El avance rápido perdió un límite anual; no se reintentará."})
+							break
+						fast["year"] = next_year
+						fast["remaining"] = int(fast["remaining"]) - 1
+						fast["since"] = int(fast["since"]) + 1
+						_mutex.lock()
+						_fast_progress = {"year":next_year,"remaining":fast["remaining"]}
+						_mutex.unlock()
+					else:
+						var frame: HistoryFrame = response.get("_frame")
+						if frame == null or frame.year != int(fast["year"]):
+							_push({"_error":"El estado visual no coincide con el año calculado."})
+							break
+						_mutex.lock()
+						var done: bool = _fast_cancel or int(fast["remaining"]) <= 0
+						_mutex.unlock()
+						_push({"_fast_frame":frame,"done":done})
+						fast["since"] = 0
+						if done: fast.clear()
+				else:
+					_push(response)
 				inflight = {}
 				if terminal: break
 		else:
@@ -518,6 +594,7 @@ func shutdown() -> void:
 func close() -> void:
 	_closing = true
 	stop_live()
+	_fast_active = false
 	_remaining = 0
 	_since_publication = 0
 	_paused = true
@@ -546,3 +623,24 @@ func close() -> void:
 		for name: String in ["geography.bin", "manifest.json"]:
 			DirAccess.remove_absolute(_directory.path_join("world").path_join(name))
 		DirAccess.remove_absolute(_directory.path_join("world"))
+
+## Explicit fast-forward uses existing one-year status requests. Only the worker
+## chains them, serially, without waiting for the graphics thread between years.
+func start_fast_forward(years_count: int, publish_every: int) -> void:
+	if not can_advance() or _fast_active: return
+	stop_live()
+	_remaining = 0
+	_paused = false
+	busy = true
+	_fast_active = true
+	fast_remaining = clampi(years_count, 1, 10000)
+	var id := str(_next_id)
+	_next_id += 1
+	_mutex.lock()
+	_fast_cancel = false
+	_fast_progress = {}
+	_outgoing.append({"_fast_start":true,"id":id,"years":fast_remaining,"every":clampi(publish_every, 1, 100)})
+	_mutex.unlock()
+
+func is_fast_forward() -> bool:
+	return _fast_active

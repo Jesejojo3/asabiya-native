@@ -10,6 +10,7 @@ signal toggle_changed(name: String, on: bool)
 signal year_requested(year: int)
 signal advance_requested(years: int)
 signal play_toggled(on: bool)
+signal fast_forward_requested(years_count: int, publish_every: int)
 signal playback_rate_changed(years_per_second: int)
 signal fly_to(cell: int)
 signal entity_requested(kind: String, id: int)
@@ -46,6 +47,11 @@ var hover_tip: PanelContainer
 var hover_label: Label
 var status_label: Label
 var help_panel: PanelContainer
+var fast_dialog: ConfirmationDialog
+var fast_years: SpinBox
+var fast_interval: OptionButton
+var _throughput_started := 0
+var _throughput_initial_year := 0
 var world_dialog: ConfirmationDialog
 var world_seed_edit: LineEdit
 var advance_years := 1
@@ -101,6 +107,7 @@ func build(application: Node) -> void:
 	_build_hover_tip()
 	_build_help()
 	_build_world_dialog()
+	_build_fast_dialog()
 	_build_stats()
 	_build_atlas_navigation()
 	_build_notice()
@@ -182,6 +189,7 @@ func _build_top_bar() -> void:
 	var pm := menu.get_popup()
 	pm.add_item("Generar mundo…", 0)
 	pm.add_item("Estadísticas", 1)
+	pm.add_item("Simulación rápida…", 5)
 	pm.add_item("Centrar mapa (Inicio)", 2)
 	pm.add_separator("Interfaz")
 	pm.add_check_item("Reducir animaciones", 30)
@@ -227,6 +235,8 @@ func _on_menu(id: int) -> void:
 			info_panel.modulate.a = 1.0
 		0: world_dialog.popup_centered(Vector2i(420, 160))
 		1: toggle_stats()
+		5:
+			if app.source.can_advance(): fast_dialog.popup_centered(Vector2i(520, 300))
 		2: app.map_view.camera.reset_view()
 		3: help_panel.visible = not help_panel.visible
 		4: app._request_close()
@@ -581,7 +591,7 @@ func _build_timeline() -> void:
 	for rate in [1, 2, 5, 10, 25, 50, 0]:
 		speed_option.add_item("Máxima" if rate == 0 else "%d año%s/s" % [rate, "" if rate == 1 else "s"], rate)
 	speed_option.select(3)
-	speed_option.tooltip_text = "Años por segundo. Máxima utiliza el ritmo que permita el equipo."
+	speed_option.tooltip_text = "Límite de observación, no rendimiento garantizado. Máxima publica cada año sin demora artificial. Para omitir estados visuales intermedios usa Menú → Simulación rápida."
 	speed_option.focus_mode = Control.FOCUS_NONE
 	speed_option.item_selected.connect(func(_index: int): playback_rate_changed.emit(speed()))
 	transport.add_child(speed_option)
@@ -676,6 +686,7 @@ func refresh_timeline(source: HistorySource, year: int) -> void:
 		timeline_label.text = "EN DIRECTO" if _playing else ("PAUSA" if year == ys[ys.size() - 1] else "ARCHIVO")
 		if source is BridgeSource and (source as BridgeSource).busy:
 			timeline_label.text = "CALCULANDO…" if _playing else "FINALIZANDO AÑO"
+		if source is BridgeSource and (source as BridgeSource).is_fast_forward(): timeline_label.text = "RÁPIDO" if _playing else "FINALIZANDO AÑO"
 		timeline_slider.tooltip_text = "Años recibidos: %s — %s. Caché limitada; no es un archivo completo." % [fmt_year(ys[0]), fmt_year(ys[ys.size() - 1])]
 		timeline_hint.visible = false
 	sim_buttons["advance"].disabled = not source.can_advance() or _playing
@@ -1237,3 +1248,37 @@ static func fmt_era(index: int, names: Array = []) -> String:
 func era_name(index: int) -> String:
 	var names: Array = (app.source as BridgeSource).era_names if app.source is BridgeSource else []
 	return fmt_era(index, names)
+
+func _build_fast_dialog() -> void:
+	fast_dialog = ConfirmationDialog.new()
+	fast_dialog.title = "Simulación rápida · años completos"
+	fast_dialog.ok_button_text = "Calcular"
+	var box := VBoxContainer.new()
+	box.custom_minimum_size.x = 470
+	box.add_child(UiTheme.muted("Go calculará cada año en orden. El mapa sólo recibirá los estados separados por el intervalo elegido; no se inventan estados intermedios. Puedes pausar al terminar el año en curso.", 13))
+	box.add_child(UiTheme.muted("Años que calcular", 12))
+	fast_years = SpinBox.new()
+	fast_years.min_value = 1
+	fast_years.max_value = 10000
+	fast_years.value = 1000
+	box.add_child(fast_years)
+	box.add_child(UiTheme.muted("Publicar un estado visual cada…", 12))
+	fast_interval = OptionButton.new()
+	for years_count in [1,10,25,50,100]: fast_interval.add_item("%d años calculados" % years_count, years_count)
+	fast_interval.select(3)
+	box.add_child(fast_interval)
+	fast_dialog.add_child(box)
+	fast_dialog.confirmed.connect(func():
+		if not app.source.can_advance(): return
+		_playing = true
+		sim_buttons["play"].text = "Pausar"
+		sim_buttons["play"].icon = AtlasIcons.get_icon("pause")
+		_throughput_started = Time.get_ticks_usec()
+		_throughput_initial_year = (app.source as BridgeSource).calculated_year if app.source is BridgeSource else app.current_year
+		fast_forward_requested.emit(int(fast_years.value),fast_interval.get_selected_id()))
+	add_child(fast_dialog)
+
+func set_annual_progress(calculated: int, visualized: int, remaining: int) -> void:
+	var seconds := (Time.get_ticks_usec() - _throughput_started) / 1000000.0
+	var rate := maxf(0.0,calculated - _throughput_initial_year) / maxf(seconds,0.001)
+	set_status("Rápido · calculado %s · mapa %s · quedan %d · %.1f años/s reales" % [fmt_year(calculated),fmt_year(visualized),remaining,rate])

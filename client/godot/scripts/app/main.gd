@@ -258,6 +258,14 @@ func _build_scene() -> void:
 				(source as BridgeSource).start_live(hud.speed())
 			else:
 				(source as BridgeSource).pause())
+	hud.fast_forward_requested.connect(func(years_count: int, interval: int):
+		if source is BridgeSource:
+			_following_live = true
+			(source as BridgeSource).start_fast_forward(years_count, interval))
+	if source is BridgeSource:
+		(source as BridgeSource).progress_changed.connect(func(calculated: int, visualized: int, remaining: int):
+			hud.set_annual_progress(calculated, current_year, remaining)
+			_annual_trace.record("annual-progress", 0, {"calculatedYear":calculated,"visualizedYear":visualized,"remaining":remaining}))
 	hud.playback_rate_changed.connect(func(rate: int):
 		if source is BridgeSource: (source as BridgeSource).set_live_rate(rate))
 	hud.fly_to.connect(func(c: int): select_entity("cell", c, true))

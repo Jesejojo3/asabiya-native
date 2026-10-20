@@ -138,6 +138,7 @@ func (e *canonicalState) value(v reflect.Value) {
 		}
 	case reflect.Array, reflect.Slice:
 		e.u64(uint64(v.Len()))
+		if e.scalarSequence(v) { return }
 		for k := 0; k < v.Len(); k++ {
 			e.value(v.Index(k))
 		}
@@ -168,4 +169,27 @@ func (e *canonicalState) value(v reflect.Value) {
 	default:
 		panic("unsupported causal digest kind: " + v.Kind().String())
 	}
+}
+
+ // scalarSequence preserves every kind tag and bit pattern of value(), but
+ // batches primitive encoding instead of recursively dispatching per element.
+func (e *canonicalState) scalarSequence(v reflect.Value) bool {
+ kind:=v.Type().Elem().Kind()
+ switch kind {case reflect.Int,reflect.Int8,reflect.Int16,reflect.Int32,reflect.Int64,reflect.Uint,reflect.Uint8,reflect.Uint16,reflect.Uint32,reflect.Uint64,reflect.Float32,reflect.Float64:default:return false}
+ for i:=0;i<v.Len();i++ {
+  x:=v.Index(i);var bits uint64
+  switch kind {
+  case reflect.Int,reflect.Int8,reflect.Int16,reflect.Int32,reflect.Int64:bits=uint64(x.Int())
+  case reflect.Uint,reflect.Uint8,reflect.Uint16,reflect.Uint32,reflect.Uint64:bits=x.Uint()
+  case reflect.Float32:
+   b:=math.Float32bits(float32(x.Float()));if b&0x7f800000==0x7f800000 && b&0x007fffff!=0 {b=0x7fc00000};bits=uint64(b)
+  case reflect.Float64:
+   bits=math.Float64bits(x.Float());if bits&0x7ff0000000000000==0x7ff0000000000000 && bits&0x000fffffffffffff!=0 {bits=0x7ff8000000000000}
+  }
+  if cap(e.buffer)-len(e.buffer)<16 {e.flush()}
+  offset:=len(e.buffer);e.buffer=e.buffer[:offset+16]
+  binary.LittleEndian.PutUint64(e.buffer[offset:],uint64(kind))
+  binary.LittleEndian.PutUint64(e.buffer[offset+8:],bits)
+ }
+ return true
 }

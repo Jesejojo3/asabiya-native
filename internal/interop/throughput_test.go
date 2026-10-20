@@ -21,7 +21,7 @@ func throughputSession(t testing.TB, width, height int) *Session {
 }
 func BenchmarkAnnualThroughput(b *testing.B) {
  for _, size:=range [][2]int{{24,16},{400,200}} {
-  for _, mode:= range []string{"core","compact","json"} {
+  for _, mode:= range []string{"core","compact","json","columns"} {
    b.Run(fmt.Sprintf("%dx%d/%s",size[0],size[1],mode),func(b *testing.B){
     s:=throughputSession(b,size[0],size[1])
     s.simulation.EnableWorkProfile()
@@ -30,7 +30,7 @@ func BenchmarkAnnualThroughput(b *testing.B) {
     for i:=0;i<b.N;i++ {
      if mode=="core" { s.simulation.AdvanceYear(); continue }
      v:=s.filterMapDelta(s.simulation.AdvanceYearWithMapDelta())
-     if mode=="json" { p,e:=json.Marshal(v); if e!=nil {b.Fatal(e)}; wire+=len(p);runtime.KeepAlive(p) }
+     if mode=="json" || mode=="columns" { var data any=v;if mode=="columns" {data=packDelta(v)}; p,e:=json.Marshal(data); if e!=nil {b.Fatal(e)}; wire+=len(p);runtime.KeepAlive(p) }
     }
     b.StopTimer()
     b.ReportMetric(float64(wire)/float64(b.N),"wire-B/year")

@@ -74,6 +74,7 @@ func (s *Simulation) advanceYearWithDelta(mapOnly bool) (AnnualDelta, []MapProvi
 	for i, p := range mapBefore {
 		current := s.mapProvinceLocked(CellID(i))
 		if !sameMapProvinceView(p, current) {
+			if mapChanges==nil {mapChanges=make([]MapProvinceView,0,len(s.world.landList))}
 			mapChanges = append(mapChanges, current)
 		}
 	}

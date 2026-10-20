@@ -10,6 +10,8 @@ var started := 0
 var deadline := 0
 var config := {"seed":"Asabiya","width":400,"height":200,"detail":4,"landFraction":0.33}
 var use_app := false
+var fast_mode := false
+var initial_year := 0
 
 func _initialize() -> void: call_deferred("_run")
 func _run() -> void:
@@ -18,6 +20,7 @@ func _run() -> void:
 	config["height"] = int(args.get("height",200))
 	samples = int(args.get("samples",6))
 	use_app = args.has("app")
+	fast_mode = args.has("fast")
 	deadline = Time.get_ticks_msec() + 120000
 	if use_app:
 		App.pending_world = config.duplicate()
@@ -43,10 +46,12 @@ func _process(_dt: float) -> bool:
 	if phase == 1 and not source.years().is_empty() and not source.busy:
 		seen_year = source.years()[-1]
 		started = Time.get_ticks_usec()
-		source.advance(1)
+		initial_year = seen_year
+		if fast_mode: source.start_fast_forward(samples, 50)
+		elif not fast_mode: source.advance(1)
 		phase = 2
 	elif phase == 2 and not source.busy and source.years()[-1] > seen_year:
-		count += 1
+		count = source.years()[-1] - initial_year
 		seen_year = source.years()[-1]
 		if count >= samples:
 			phase = 0
@@ -57,7 +62,7 @@ func _process(_dt: float) -> bool:
 func _finish() -> void:
 	var elapsed := Time.get_ticks_usec() - started
 	var frame: HistoryFrame = source.frame(seen_year)
-	print("PIPELINE ", JSON.stringify({"width":config["width"],"height":config["height"],"app":use_app,"years":count,"elapsedMs":elapsed/1000.0,"msPerYear":elapsed/1000.0/count,"yearsPerSecond":count*1000000.0/elapsed,"staticBytes":Performance.get_monitor(Performance.MEMORY_STATIC),"digest":frame.state_digest,"headless":DisplayServer.get_name()=="headless"}))
+	print("PIPELINE ", JSON.stringify({"width":config["width"],"height":config["height"],"app":use_app,"fast":fast_mode,"years":count,"elapsedMs":elapsed/1000.0,"msPerYear":elapsed/1000.0/count,"yearsPerSecond":count*1000000.0/elapsed,"staticBytes":Performance.get_monitor(Performance.MEMORY_STATIC),"digest":frame.state_digest,"headless":DisplayServer.get_name()=="headless"}))
 	await source.shutdown()
 	if application != null: application.queue_free()
 	await process_frame

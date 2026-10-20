@@ -40,6 +40,8 @@ func consume(data: Dictionary, delta: bool) -> HistoryFrame:
 	if world == null:
 		return null
 	var schema: String = data.get("schema", "")
+	var columnar := schema in ["asabiya/map-columns-state-v1", "asabiya/map-columns-delta-v1"]
+	if columnar: schema = "asabiya/map-delta-v1" if schema.ends_with("delta-v1") else "asabiya/map-state-v1"
 	if not schema in (["asabiya/annual-delta-v1","asabiya/map-delta-v1"] if delta else ["asabiya/state-v1","asabiya/map-state-v1"]):
 		return null
 	var expected: String = world.header.get("world", {}).get("digest", "")
@@ -57,8 +59,9 @@ func consume(data: Dictionary, delta: bool) -> HistoryFrame:
 		entities = {}; events.clear(); narrative.clear()
 	elif int(data.get("fromYear", -999999)) != year:
 		return null
-	var provinces: Array = _array(data.get("provinces"))
-	if not delta and provinces.size() != world.cell_count():
+	var provinces: Array = [] if columnar else _array(data.get("provinces"))
+	if columnar and not _apply_columns(_object(data.get("provinces")), delta): return null
+	if not columnar and not delta and provinces.size() != world.cell_count():
 		return null
 	for p: Dictionary in provinces:
 		var i := int(p.get("id", -1))
@@ -183,3 +186,37 @@ func _publish() -> HistoryFrame:
 		f.world_population += value
 	_trace.record("publish-frame", started, {"year":year,"cells":population.size(),"events":f.events.size()})
 	return f
+
+func _apply_columns(rows: Dictionary, delta: bool) -> bool:
+	var ids: Array = _array(rows.get("id"))
+	var n := ids.size()
+	for key in ["ownerPolityId","peopleId","religionId","population","carryingCapacity","fortification","era"]:
+		if not rows.get(key) is Array or rows[key].size() != n: return false
+	if not delta and n != world.cell_count(): return false
+	for k in n:
+		var i := int(ids[k])
+		if i < 0 or i >= world.cell_count() or (not delta and i != k): return false
+		if k > 0 and i <= int(ids[k-1]): return false
+	if not delta:
+		owner = PackedInt32Array(rows["ownerPolityId"])
+		people = PackedInt32Array(rows["peopleId"])
+		religion = PackedInt32Array(rows["religionId"])
+		population = PackedFloat32Array(rows["population"])
+		carrying = PackedFloat32Array(rows["carryingCapacity"])
+		fortification = PackedFloat32Array(rows["fortification"])
+		era = PackedInt32Array(rows["era"])
+		for i in n: technology[i] = float(era[i]) / 7.0
+		return true
+	var owners: Array = rows["ownerPolityId"]
+	var peoples: Array = rows["peopleId"]
+	var faiths: Array = rows["religionId"]
+	var populations: Array = rows["population"]
+	var capacities: Array = rows["carryingCapacity"]
+	var forts: Array = rows["fortification"]
+	var eras: Array = rows["era"]
+	for k in n:
+		var i := int(ids[k])
+		owner[i] = int(owners[k]); people[i] = int(peoples[k]); religion[i] = int(faiths[k])
+		population[i] = float(populations[k]); carrying[i] = float(capacities[k]); fortification[i] = float(forts[k])
+		era[i] = int(eras[k]); technology[i] = float(era[i]) / 7.0
+	return true

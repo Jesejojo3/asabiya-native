@@ -130,7 +130,7 @@ func (s *Session) Handle(req Request) Response {
 		if err := decodePayload(req.Payload, &payload); err != nil {
 			return fail("invalid_arguments", err)
 		}
-		if payload.View != "" && payload.View != "map" {
+		if payload.View != "" && payload.View != "map" && payload.View != "map-columns-v1" {
 			return fail("invalid_arguments", fmt.Errorf("unknown state view"))
 		}
 		rules := sim.DefaultRules()
@@ -145,8 +145,8 @@ func (s *Session) Handle(req Request) Response {
         if s.trace != nil { s.simulation.EnableWorkProfile() }
 		s.generation++
 		response.Session = s.generation
-		if payload.View == "map" {
-			response.Data = s.cacheMapState(s.simulation.MapSnapshot())
+		if payload.View == "map" || payload.View == "map-columns-v1" {
+			view:=s.cacheMapState(s.simulation.MapSnapshot());if payload.View=="map-columns-v1" {response.Data=packState(view)}else{response.Data=view}
 		} else {
 			response.Data = s.simulation.Snapshot()
 		}
@@ -156,7 +156,7 @@ func (s *Session) Handle(req Request) Response {
 		}
 		response.Data = s.world.Summary()
 	case "get_catalog":
-		response.Data = map[string]any{"schema": "asabiya/catalog-v1", "technologies": sim.TechCatalog(), "eras": sim.Eras()}
+		response.Data = map[string]any{"schema": "asabiya/catalog-v1", "technologies": sim.TechCatalog(), "eras": sim.Eras(), "mapColumnsV1": true}
 	case "export_geography":
 		if s.world == nil {
 			return fail("not_ready", fmt.Errorf("create_world first"))
@@ -197,11 +197,11 @@ func (s *Session) Handle(req Request) Response {
 			if err := decodePayload(req.Payload, &payload); err != nil {
 				return fail("invalid_arguments", err)
 			}
-			if payload.View != "" && payload.View != "map" {
+			if payload.View != "" && payload.View != "map" && payload.View != "map-columns-v1" {
 				return fail("invalid_arguments", fmt.Errorf("unknown state view"))
 			}
-			if payload.View == "map" {
-				response.Data = s.cacheMapState(s.simulation.MapSnapshot())
+			if payload.View == "map" || payload.View == "map-columns-v1" {
+				view:=s.cacheMapState(s.simulation.MapSnapshot());if payload.View=="map-columns-v1" {response.Data=packState(view)}else{response.Data=view}
 			} else {
 				response.Data = s.simulation.Snapshot()
 			}
@@ -215,7 +215,7 @@ func (s *Session) Handle(req Request) Response {
 			if err := decodePayload(req.Payload, &payload); err != nil {
 				return fail("invalid_arguments", err)
 			}
-			if (payload.View != "" && payload.View != "map") || (payload.Publication != "" && payload.Publication != "status") {
+			if (payload.View != "" && payload.View != "map" && payload.View != "map-columns-v1") || (payload.Publication != "" && payload.Publication != "status") {
 				return fail("invalid_arguments", fmt.Errorf("unknown publication/view"))
 			}
 			if payload.Publication == "status" {
@@ -224,8 +224,8 @@ func (s *Session) Handle(req Request) Response {
 				status := s.simulation.Status()
 				response.Data = map[string]any{"schema": "asabiya/advance-status-v1", "year": status.Year, "rng": status.HistoryRNG}
 			} else {
-				if payload.View == "map" {
-					response.Data = s.filterMapDelta(s.simulation.AdvanceYearWithMapDelta())
+				if payload.View == "map" || payload.View == "map-columns-v1" {
+					view:=s.filterMapDelta(s.simulation.AdvanceYearWithMapDelta());if payload.View=="map-columns-v1" {response.Data=packDelta(view)}else{response.Data=view}
 				} else {
 					s.mapCache = nil
 					response.Data = s.simulation.AdvanceYearWithDelta()
