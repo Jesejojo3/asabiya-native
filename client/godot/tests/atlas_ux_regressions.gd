@@ -242,6 +242,23 @@ func _run() -> void:
 	hud.set_chronicle([{"id":1,"year":-100,"kind":"foundation","text":"Acontecimiento recibido","cell":1}])
 	hud._toggle_chronicle(true)
 	check(hud.chronicle_list.item_count == 1 and hud.chronicle_list.get_item_text(0).contains("Acontecimiento recibido"), "chronicle uses received event text")
+	hud.set_chronicle([
+		{"id":1,"year":-110,"kind":"foundation","text":"Acontecimiento recibido","cell":1},
+		{"id":2,"year":-105,"kind":"famine","text":"Mala cosecha","why":"Sequía prolongada","cell":2}
+	])
+	hud.chronicle_query.text = "sequía"
+	hud._fill_chronicle()
+	check(hud.chronicle_list.item_count == 1 and int(hud.chronicle_list.get_item_metadata(0)["event"]) == 2,
+		"chronicle searches original Go event context, not only title")
+	hud.chronicle_query.text = ""
+	hud._fill_chronicle()
+	check(hud.chronicle_list.item_count == 2, "chronicle shows both matching published records")
+	var many_events := []
+	for i in 501:
+		many_events.append({"id":i + 10, "year":-100, "kind":"famine", "text":"Sequía original", "cell":-1})
+	hud.set_chronicle(many_events)
+	check(hud.chronicle_list.item_count == 300 and hud.chronicle_matches.text.contains("501"),
+		"chronicle searches all retained records but limits displayed results to 300")
 	hud._toggle_maps(true)
 	check(not hud.chronicle_panel.visible and hud._layer_panel.visible, "right docks exclude each other")
 	hud.focus_search()
