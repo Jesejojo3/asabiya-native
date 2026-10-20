@@ -990,7 +990,7 @@ func _fill_disasters() -> void:
 			if not query.is_empty() and not name.to_lower().contains(query) and not place.to_lower().contains(query):
 				continue
 			found.append({"id":int(ident),"fields":fields,"year":year,"deaths":float(fields.get("deaths", 0.0))})
-		var most_deadly := kind == "outbreak" and disaster_sort.selected == 0
+		var most_deadly: bool = kind == "outbreak" and disaster_sort.selected == 0
 		found.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 			if most_deadly and float(a["deaths"]) != float(b["deaths"]):
 				return float(a["deaths"]) > float(b["deaths"])
