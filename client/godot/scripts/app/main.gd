@@ -155,6 +155,8 @@ func _accept_world(value: WorldData) -> void:
 	current_year = int(world.header.get("session", {}).get("year", -9000))
 	_build_scene()
 	hud.set_session(source, world)
+	if source is BridgeSource:
+		hud.set_command_catalog((source as BridgeSource).command_catalog)
 	if args.has("layer"):
 		requested_layer = str(args["layer"])
 	_on_frames_changed()
@@ -232,7 +234,10 @@ func _build_scene() -> void:
 		if c < 0:
 			_deselect()
 		else:
-			select_entity("cell", c, false))
+			var targeted: Dictionary = hud.consume_omen_target(c) if hud != null else {}
+			select_entity("cell", c, false)
+			if not targeted.is_empty():
+				_issue_command("cast_omen", targeted))
 	map_view.entity_clicked.connect(func(kind: String, id: int): select_entity(kind, id, false))
 	var layer := CanvasLayer.new()
 	layer.name = "UI"
@@ -276,11 +281,31 @@ func _build_scene() -> void:
 	hud.entity_requested.connect(func(kind: String, id: int): select_entity(kind, id, false))
 	hud.world_requested.connect(_generate_world)
 	hud.deselect_requested.connect(_deselect)
+	hud.command_requested.connect(_issue_command)
+	hud.command_context_requested.connect(func():
+		if source is BridgeSource:
+			(source as BridgeSource).refresh_command_context())
+	if source is BridgeSource:
+		var command_bridge := source as BridgeSource
+		command_bridge.command_context_changed.connect(hud.set_command_context)
+		command_bridge.command_result_received.connect(hud.set_command_outcome)
+		command_bridge.command_pending_changed.connect(hud.set_command_pending)
 	hud.setting_changed.connect(func(k: String, v: Variant):
 		settings[k] = v
 		_save_settings()
 		_apply_settings(k == "relief"))
 	_apply_settings(false)
+
+
+func _issue_command(kind_name: String, payload: Dictionary) -> void:
+	if not source is BridgeSource or current_frame == null:
+		hud.set_command_outcome({"accepted":false, "error":"Esta vista no dispone de un motor Go activo."})
+		return
+	var known_years: PackedInt32Array = source.years()
+	if not _following_live or known_years.is_empty() or current_year != known_years[known_years.size() - 1]:
+		hud.set_command_outcome({"accepted":false, "error":"Vuelve al último año calculado antes de intervenir. No se modifica el pasado observado."})
+		return
+	(source as BridgeSource).submit_command(kind_name, payload)
 
 
 func _apply_initial_view() -> void:
