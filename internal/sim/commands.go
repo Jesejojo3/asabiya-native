@@ -64,6 +64,25 @@ func cloneCommand(c Command) Command {
 	}
 	return c
 }
+// CommandContext is a lightweight, atomic snapshot for validated UI commands.
+type CommandContext struct {
+	Year        int     `json:"year"`
+	NextSequence uint64 `json:"nextSequence"`
+	RulesSHA256 string  `json:"rulesSHA256"`
+	Rules       Rules   `json:"rules"`
+	Favor       float64 `json:"favor"`
+}
+
+func (s *Simulation) CommandContext() CommandContext {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return CommandContext{
+		Year: s.h.year, NextSequence: s.commandSequence + 1,
+		RulesSHA256: s.rulesDigestLocked(),
+		Rules: s.h.rules.clone(), Favor: s.h.favor,
+	}
+}
+
 func (s *Simulation) NextSequence() uint64 {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
