@@ -176,6 +176,7 @@ func (e *canonicalState) value(v reflect.Value) {
 func (e *canonicalState) scalarSequence(v reflect.Value) bool {
  kind:=v.Type().Elem().Kind()
  switch kind {case reflect.Int,reflect.Int8,reflect.Int16,reflect.Int32,reflect.Int64,reflect.Uint,reflect.Uint8,reflect.Uint16,reflect.Uint32,reflect.Uint64,reflect.Float32,reflect.Float64:default:return false}
+ if e.fastScalarSequence(v, kind) { return true }
  for i:=0;i<v.Len();i++ {
   x:=v.Index(i);var bits uint64
   switch kind {
