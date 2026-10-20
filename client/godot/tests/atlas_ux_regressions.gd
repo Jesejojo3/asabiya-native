@@ -104,6 +104,12 @@ func _run() -> void:
 			"search navigates archived " + historical_kinds[i])
 	hud._on_search("astrónoma")
 	check(hud._search_targets == [["engine:figure",100]], "figure titles are searchable as in HTML v0.6")
+	observer.current_frame.entity_records["omen"][200] = {"type":"kindle", "year":-100, "cellId":1}
+	observer.current_frame.entity_records["route"][201] = {"born":-120, "fromCellId":1,"toCellId":2}
+	hud._on_search("presagio kindle")
+	check(hud._search_targets == [["engine:omen",200]], "unnamed native omen is searchable by actual type")
+	hud._on_search("ruta comercial #201")
+	check(hud._search_targets == [["engine:route",201]], "unnamed native trade route is searchable by ID")
 	hud._on_search("archivo histórico")
 	hud._on_search_pick(0)
 	check(observer.selection == {"kind":"engine:figure","id":100}, "figure search opens a Go-backed record")
