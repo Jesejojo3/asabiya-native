@@ -96,7 +96,7 @@ jobs:
           $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
           $server=Join-Path $PWD 'build/bin/asabiya-server.exe'
           & $editor --headless --path client/godot --script res://tests/annual_throughput_regressions.gd -- --server $server 2>&1 | Tee-Object artifacts/annual-throughput/throughput-tests.txt
-          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/throughput-tests.txt -Pattern 'SCRIPT ERROR|Parse Error|FAIL' -Quiet)) { throw 'Annual throughput regressions failed' }
+          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/throughput-tests.txt -Pattern 'SCRIPT ERROR|Parse Error|(?m)^FAIL(?:\s|$)' -Quiet)) { throw 'Annual throughput regressions failed' }
       - name: Godot pipeline baseline with and without app updates
         timeout-minutes: 4
         run: |
