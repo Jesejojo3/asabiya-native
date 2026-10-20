@@ -6,12 +6,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Jesejojo3/asabiya-native/internal/telemetry"
+	"io"
 	"net"
 	"path/filepath"
 	"sync"
- "time"
- "io"
- "github.com/Jesejojo3/asabiya-native/internal/telemetry"
+	"time"
 
 	"github.com/Jesejojo3/asabiya-native/internal/mapsource"
 	"github.com/Jesejojo3/asabiya-native/internal/sim"
@@ -40,15 +40,15 @@ type Response struct {
 	Error   *ProtocolError `json:"error,omitempty"`
 }
 type Session struct {
- trace *telemetry.Trace
-	mu           sync.Mutex
-	generation   uint64
-	world        *sim.World
-	surface      *sim.Surface
-	simulation   *sim.Simulation
-	mapCache     []mapProvince
-	mapCacheYear int
-	entityCache map[string]map[int]sim.EntityRecord
+	trace           *telemetry.Trace
+	mu              sync.Mutex
+	generation      uint64
+	world           *sim.World
+	surface         *sim.Surface
+	simulation      *sim.Simulation
+	mapCache        []mapProvince
+	mapCacheYear    int
+	entityCache     map[string]map[int]sim.EntityRecord
 	entityCacheYear int
 }
 
@@ -68,10 +68,14 @@ func (s *Session) Handle(req Request) Response {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.trace != nil {
-		start:=time.Now()
-		defer func(){ fields:=map[string]any{"op":req.Op}
-			if s.simulation!=nil { fields["year"]=s.simulation.Status().Year;fields["profile"]=s.simulation.WorkProfile() }
-			s.trace.Record("handle",time.Since(start),fields)
+		start := time.Now()
+		defer func() {
+			fields := map[string]any{"op": req.Op}
+			if s.simulation != nil {
+				fields["year"] = s.simulation.Status().Year
+				fields["profile"] = s.simulation.WorkProfile()
+			}
+			s.trace.Record("handle", time.Since(start), fields)
 		}()
 	}
 	response := Response{Schema: LocalSchema, ID: req.ID, Session: s.generation}
@@ -146,11 +150,18 @@ func (s *Session) Handle(req Request) Response {
 			return fail("invalid_arguments", err)
 		}
 		s.simulation = history
-        if s.trace != nil { s.simulation.EnableWorkProfile() }
+		if s.trace != nil {
+			s.simulation.EnableWorkProfile()
+		}
 		s.generation++
 		response.Session = s.generation
 		if payload.View == "map" || payload.View == "map-columns-v1" {
-			view:=s.cacheMapState(s.simulation.MapSnapshot());if payload.View=="map-columns-v1" {response.Data=packState(view)}else{response.Data=view}
+			view := s.cacheMapState(s.simulation.MapSnapshot())
+			if payload.View == "map-columns-v1" {
+				response.Data = packState(view)
+			} else {
+				response.Data = view
+			}
 		} else {
 			response.Data = s.simulation.Snapshot()
 		}
@@ -160,7 +171,7 @@ func (s *Session) Handle(req Request) Response {
 		}
 		response.Data = s.world.Summary()
 	case "get_catalog":
-		response.Data = map[string]any{"schema": "asabiya/catalog-v1", "technologies": sim.TechCatalog(), "eras": sim.Eras(), "mapColumnsV1": true, "entityChangesV1": true, "digestCheckpointsV1": 25}
+		response.Data = map[string]any{"schema": "asabiya/catalog-v1", "technologies": sim.TechCatalog(), "eras": sim.Eras(), "mapColumnsV1": true, "entityChangesV1": true, "digestCheckpointsV1": 25, "mapFieldChangesV1": true}
 	case "export_geography":
 		if s.world == nil {
 			return fail("not_ready", fmt.Errorf("create_world first"))
@@ -205,7 +216,12 @@ func (s *Session) Handle(req Request) Response {
 				return fail("invalid_arguments", fmt.Errorf("unknown state view"))
 			}
 			if payload.View == "map" || payload.View == "map-columns-v1" {
-				view:=s.cacheMapState(s.simulation.MapSnapshot());if payload.View=="map-columns-v1" {response.Data=packState(view)}else{response.Data=view}
+				view := s.cacheMapState(s.simulation.MapSnapshot())
+				if payload.View == "map-columns-v1" {
+					response.Data = packState(view)
+				} else {
+					response.Data = view
+				}
 			} else {
 				response.Data = s.simulation.Snapshot()
 			}
@@ -213,20 +229,21 @@ func (s *Session) Handle(req Request) Response {
 			response.Data = map[string]any{"status": s.simulation.Status(), "nextSequence": s.simulation.NextSequence(), "rulesSHA256": s.simulation.RulesDigest()}
 		case "advance":
 			var payload struct {
-				View        string `json:"view"`
-				Publication string `json:"publication"`
-				EntityMode string `json:"entityMode"`
-				DigestMode string `json:"digestMode"`
+				View         string `json:"view"`
+				Publication  string `json:"publication"`
+				EntityMode   string `json:"entityMode"`
+				DigestMode   string `json:"digestMode"`
+				ProvinceMode string `json:"provinceMode"`
 			}
 			if err := decodePayload(req.Payload, &payload); err != nil {
 				return fail("invalid_arguments", err)
 			}
-			if (payload.View != "" && payload.View != "map" && payload.View != "map-columns-v1") || (payload.Publication != "" && payload.Publication != "status") || (payload.EntityMode != "" && (payload.EntityMode != "changed" || payload.View != "map-columns-v1" || payload.Publication != "")) || (payload.DigestMode != "" && (payload.DigestMode != "checkpoint-v1" || payload.View != "map-columns-v1" || payload.Publication != "")) {
+			if (payload.ProvinceMode != "" && (payload.ProvinceMode != "changed-fields-v1" || payload.View != "map-columns-v1" || payload.Publication != "")) || (payload.View != "" && payload.View != "map" && payload.View != "map-columns-v1") || (payload.Publication != "" && payload.Publication != "status") || (payload.EntityMode != "" && (payload.EntityMode != "changed" || payload.View != "map-columns-v1" || payload.Publication != "")) || (payload.DigestMode != "" && (payload.DigestMode != "checkpoint-v1" || payload.View != "map-columns-v1" || payload.Publication != "")) {
 				return fail("invalid_arguments", fmt.Errorf("unknown publication/view"))
 			}
 			if payload.Publication == "status" {
 				s.mapCache = nil
-		s.entityCache = nil
+				s.entityCache = nil
 				s.simulation.AdvanceYear()
 				status := s.simulation.Status()
 				response.Data = map[string]any{"schema": "asabiya/advance-status-v1", "year": status.Year, "rng": status.HistoryRNG}
@@ -238,7 +255,7 @@ func (s *Session) Handle(req Request) Response {
 					} else {
 						publication = s.simulation.AdvanceYearWithMapDelta()
 					}
-					view := s.filterMapDelta(publication)
+					view := publication
 					if payload.EntityMode == "changed" {
 						s.filterEntityChanges(&view)
 					} else {
@@ -246,20 +263,22 @@ func (s *Session) Handle(req Request) Response {
 						// always restart the entity baseline from a full snapshot.
 						s.entityCache = nil
 					}
-					if payload.View == "map-columns-v1" {
-						response.Data = packDelta(view)
+					if payload.ProvinceMode == "changed-fields-v1" {
+						response.Data = s.packFieldDelta(view)
+					} else if payload.View == "map-columns-v1" {
+						response.Data = packDelta(s.filterMapDelta(view))
 					} else {
-						response.Data = view
+						response.Data = s.filterMapDelta(view)
 					}
 				} else {
 					s.mapCache = nil
-		s.entityCache = nil
+					s.entityCache = nil
 					response.Data = s.simulation.AdvanceYearWithDelta()
 				}
 			}
 		case "apply_command":
 			s.mapCache = nil
-		s.entityCache = nil
+			s.entityCache = nil
 			var command sim.Command
 			if err := decodePayload(req.Payload, &command); err != nil {
 				return fail("invalid_arguments", err)
@@ -396,7 +415,7 @@ func serveConnection(ctx context.Context, conn net.Conn, session *Session) (bool
 	}()
 	scanner := bufio.NewScanner(conn)
 	scanner.Buffer(make([]byte, 4096), 16*1024*1024)
-	counter:=&timedWriter{writer:conn,enabled:session.trace!=nil}
+	counter := &timedWriter{writer: conn, enabled: session.trace != nil}
 	encoder := json.NewEncoder(counter)
 	for scanner.Scan() {
 		var req Request
@@ -408,11 +427,17 @@ func serveConnection(ctx context.Context, conn net.Conn, session *Session) (bool
 		}
 		response := session.Handle(req)
 		var encodeStart time.Time
-		if session.trace != nil {encodeStart=time.Now();counter.elapsed=0;counter.bytes=0}
+		if session.trace != nil {
+			encodeStart = time.Now()
+			counter.elapsed = 0
+			counter.bytes = 0
+		}
 		if err := encoder.Encode(response); err != nil {
 			return false, err
 		}
-		if session.trace!=nil { session.trace.Record("json",time.Since(encodeStart)-counter.elapsed,map[string]any{"op":req.Op,"bytes":counter.bytes,"socketWriteUs":counter.elapsed.Microseconds()}) }
+		if session.trace != nil {
+			session.trace.Record("json", time.Since(encodeStart)-counter.elapsed, map[string]any{"op": req.Op, "bytes": counter.bytes, "socketWriteUs": counter.elapsed.Microseconds()})
+		}
 		if req.Op == "shutdown" && response.OK {
 			return true, nil
 		}
@@ -420,5 +445,20 @@ func serveConnection(ctx context.Context, conn net.Conn, session *Session) (bool
 	return false, scanner.Err()
 }
 
-type timedWriter struct {writer io.Writer;enabled bool;elapsed time.Duration;bytes int}
-func(w *timedWriter)Write(p []byte)(int,error){if !w.enabled{return w.writer.Write(p)};start:=time.Now();n,e:=w.writer.Write(p);w.elapsed+=time.Since(start);w.bytes+=n;return n,e}
+type timedWriter struct {
+	writer  io.Writer
+	enabled bool
+	elapsed time.Duration
+	bytes   int
+}
+
+func (w *timedWriter) Write(p []byte) (int, error) {
+	if !w.enabled {
+		return w.writer.Write(p)
+	}
+	start := time.Now()
+	n, e := w.writer.Write(p)
+	w.elapsed += time.Since(start)
+	w.bytes += n
+	return n, e
+}

@@ -1,3 +1,7 @@
+# Misión vigente: rendimiento e integridad (20 de octubre de 2026)
+
+El usuario autoriza expresamente perfilar, ejecutar pruebas Go/Godot, validar gráficamente, comprobar CI y producir un paquete Windows. Esta misión sustituye las restricciones de testeo r3–r5 de abajo. Continuar en `perf/deep-throughput-v2`; no hacer merge. Conservar referencia, fixtures, calendario, RNG y formato/valores de los digests. Las huellas diferidas requieren marcador explícito y no son huellas históricas válidas; la observación normal retiene SHA anual exacto. No afirmar validación de Windows ni rendimiento en el equipo del usuario sin evidencia de esa plataforma.
+
 # Instrucción vigente de entrega
 
 Actualización r5: el usuario precisa que el avance de años es lento. Aumentar los ritmos disponibles y quitar trabajo repetido de publicación/render, manteniendo todos los años consecutivos, pausa y mecánicas. No volver a lotes con años ocultos. Se conserva el testeo a cargo del usuario: compilar/exportar, sin ejecutar nuevas pruebas, partidas ni CI. No hacer merge a main.

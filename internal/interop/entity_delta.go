@@ -1,6 +1,7 @@
 package interop
 
 import (
+	"math"
 	"reflect"
 
 	"github.com/Jesejojo3/asabiya-native/internal/sim"
@@ -40,7 +41,7 @@ func (s *Session) filterEntityChanges(delta *mapDelta) {
 		var changed []sim.EntityRecord
 		for _, record := range records {
 			old, seen := baseline[record.ID]
-			if !seen || !reflect.DeepEqual(old.Fields, record.Fields) {
+			if !seen || !sameEntityValue(reflect.ValueOf(old.Fields), reflect.ValueOf(record.Fields)) {
 				changed = append(changed, record)
 			}
 			baseline[record.ID] = record
@@ -52,4 +53,69 @@ func (s *Session) filterEntityChanges(delta *mapDelta) {
 		}
 	}
 	s.entityCacheYear = delta.Year
+}
+
+// DeepEqual treats +0 and -0 as equal, although JSON and the causal digest
+// distinguish them. Compare the owned JSON projection recursively by float bits.
+// Unsupported future kinds conservatively resend the record.
+func sameEntityValue(a, b reflect.Value) bool {
+	if !a.IsValid() || !b.IsValid() {
+		return a.IsValid() == b.IsValid()
+	}
+	if a.Type() != b.Type() {
+		return false
+	}
+	switch a.Kind() {
+	case reflect.Float32:
+		return math.Float32bits(float32(a.Float())) == math.Float32bits(float32(b.Float()))
+	case reflect.Float64:
+		return math.Float64bits(a.Float()) == math.Float64bits(b.Float())
+	case reflect.Bool:
+		return a.Bool() == b.Bool()
+	case reflect.String:
+		return a.String() == b.String()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return a.Int() == b.Int()
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return a.Uint() == b.Uint()
+	case reflect.Interface, reflect.Pointer:
+		if a.IsNil() || b.IsNil() {
+			return a.IsNil() == b.IsNil()
+		}
+		return sameEntityValue(a.Elem(), b.Elem())
+	case reflect.Map:
+		if a.IsNil() != b.IsNil() || a.Len() != b.Len() {
+			return false
+		}
+		it := a.MapRange()
+		for it.Next() {
+			other := b.MapIndex(it.Key())
+			if !other.IsValid() || !sameEntityValue(it.Value(), other) {
+				return false
+			}
+		}
+		return true
+	case reflect.Slice, reflect.Array:
+		if a.Kind() == reflect.Slice && a.IsNil() != b.IsNil() {
+			return false
+		}
+		if a.Len() != b.Len() {
+			return false
+		}
+		for i := 0; i < a.Len(); i++ {
+			if !sameEntityValue(a.Index(i), b.Index(i)) {
+				return false
+			}
+		}
+		return true
+	case reflect.Struct:
+		for i := 0; i < a.NumField(); i++ {
+			if !sameEntityValue(a.Field(i), b.Field(i)) {
+				return false
+			}
+		}
+		return true
+	default:
+		return false
+	}
 }

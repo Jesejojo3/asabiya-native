@@ -243,3 +243,37 @@ static func build(id: String, w: WorldData, frame: HistoryFrame) -> Dictionary:
 						put.call(i, ramp(frame.wealth[i]), 0.8)
 				legend = {"kind": "ramp", "min": "baja", "max": "alta"}
 	return {"colors": colors, "keys": keys, "legend": legend}
+
+## Immutable inputs that determine the rendered overlay. Changes to rulers,
+## chronicles or population cannot invalidate a purely political/cultural map.
+## World identity prevents reuse across sessions with different geography.
+static func signature(id: String, world: WorldData, frame: HistoryFrame) -> Dictionary:
+	var key := {"layer":id,"world":world.get_instance_id()}
+	if frame == null:
+		key["frame"] = false
+		return key
+	var records: Dictionary = {}
+	match id:
+		"states":
+			key["cells"] = frame.owner
+			for i: int in frame.states: records[i] = frame.states[i].get("rgb",id_color(i))
+		"wars":
+			key["cells"] = frame.owner
+			key["participants"] = war_participants(frame.wars)
+			var fronts := []
+			for war: Dictionary in frame.wars: fronts.append(war.get("front",PackedInt32Array()))
+			key["fronts"] = fronts
+		"peoples","cultures","languages":
+			key["cells"] = frame.people
+			for i: int in frame.peoples:
+				var p: Dictionary = frame.peoples[i]
+				records[i] = p.get("rgb",id_color(i)) if id=="peoples" else (p.get("culture") if id=="cultures" else p.get("family",i))
+		"religions":
+			key["cells"] = frame.religion
+			for i: int in frame.religions: records[i] = frame.religions[i].get("rgb",id_color(i))
+		"population": key["values"] = frame.population
+		"carrying": key["values"] = frame.carrying
+		"technology": key["values"] = frame.technology; key["population"] = frame.population
+		"economy": key["values"] = frame.wealth
+	key["records"] = records
+	return key

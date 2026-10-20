@@ -43,7 +43,15 @@ func (s *Simulation) advanceYearWithDelta(mapOnly bool, digestEvery int) (Annual
 	var before []ProvinceView
 	var mapBefore []MapProvinceView
 	if mapOnly {
-		mapBefore = s.mapProvincesLocked()
+		// Capture every province again, including sea cells. Reuse only storage:
+		// no assumption about which commands or systems may change a field.
+		if len(s.mapBefore) != s.world.Len() {
+			s.mapBefore = make([]MapProvinceView, s.world.Len())
+		}
+		mapBefore = s.mapBefore
+		for i := range mapBefore {
+			mapBefore[i] = s.mapProvinceLocked(CellID(i))
+		}
 	} else {
 		before = make([]ProvinceView, s.world.Len())
 		for i := range before {
@@ -82,7 +90,9 @@ func (s *Simulation) advanceYearWithDelta(mapOnly bool, digestEvery int) (Annual
 	for i, p := range mapBefore {
 		current := s.mapProvinceLocked(CellID(i))
 		if !sameMapProvinceView(p, current) {
-			if mapChanges==nil {mapChanges=make([]MapProvinceView,0,len(s.world.landList))}
+			if mapChanges == nil {
+				mapChanges = make([]MapProvinceView, 0, len(s.world.landList))
+			}
 			mapChanges = append(mapChanges, current)
 		}
 	}

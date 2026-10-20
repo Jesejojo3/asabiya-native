@@ -41,7 +41,7 @@ func _test_columns() -> void:
 		var p := {"id":i,"ownerPolityId":i%3,"peopleId":1,"religionId":-1,"population":float(i*10),"carryingCapacity":float(i*20),"fortification":0.0,"era":i%8}
 		rows.append(p)
 		for key in cols: cols[key].append(p[key])
-	var base := {"schema":"asabiya/map-state-v1","worldSHA256":"fixture","stateSHA256":"same","year":-9000,"provinces":rows}
+	var base := {"schema":"asabiya/map-state-v1","worldSHA256":"fixture","stateSHA256":"a".repeat(64),"year":-9000,"provinces":rows}
 	var column: Dictionary=base.duplicate(true)
 	column["schema"]="asabiya/map-columns-state-v1";column["provinces"]=cols
 	var a:=NativeFrameDecoder.new(world)
@@ -51,7 +51,7 @@ func _test_columns() -> void:
 	check(x!=null and y!=null,"legacy and column snapshots decode")
 	check(x.owner==y.owner and x.population==y.population and x.technology==y.technology and x.world_population==y.world_population,"lossless numeric columns")
 	var old_pop:=y.population.duplicate()
-	var delta:= {"schema":"asabiya/map-columns-delta-v1","fromYear":-9000,"year":-8999,"stateSHA256":"next","provinces":{}}
+	var delta:= {"schema":"asabiya/map-columns-delta-v1","fromYear":-9000,"year":-8999,"stateSHA256":"b".repeat(64),"provinces":{}}
 	for key in cols: delta["provinces"][key]=[cols[key][2]]
 	delta["provinces"]["population"][0]=123.5
 	var next:=b.consume(delta,true)
@@ -74,7 +74,8 @@ func _test_fast(server: String) -> void:
 	check(a._advance_payload().get("entityMode", "") == "changed", "annual publications request sparse changes")
 	var initial:int=a.years()[0]
 	var shown:Array=[]
-	b.frames_changed.connect(func():shown.append(b.years()[-1]))
+	var record_frame := func(): shown.append(b.years()[-1])
+	b.frames_changed.connect(record_frame)
 	for i in 125:
 		a.advance(1)
 		var advanced:bool=await _wait(a,func():return a.can_advance() and a.years()[-1]==initial+i+1)
@@ -111,9 +112,11 @@ func _test_fast(server: String) -> void:
 	var pid:int=b._pid
 	var request_id:int=b._next_id
 	OS.kill(pid)
+	b._pid = -1 # The test has already killed and reaped the owned process.
 	var failed:bool=await _wait(b,func():return b._stopped())
 	check(failed and not b.is_live(),"transport loss terminates fast scheduling")
 	check(b._next_id==request_id and b._outgoing.is_empty(),"uncertain fast advance is never retried")
 	await a.shutdown()
+	b.frames_changed.disconnect(record_frame)
 	b.close()
 	check(a._thread==null and b._thread==null,"all session workers are joined")

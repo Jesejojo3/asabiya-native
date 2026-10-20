@@ -14,7 +14,9 @@ const SimulationVersion = "native/history-init-v1"
 // newHistory. The mutex serializes complete years, commands and read-only
 // copies. Rendering and transport never access mutable history directly.
 type Simulation struct {
-	workProfile *workAccumulator
+	// Reused scratch projection; never exposed or included in causal history.
+	mapBefore       []MapProvinceView
+	workProfile     *workAccumulator
 	commandSequence uint64
 	commandLog      []CommandResult
 	initialRules    Rules

@@ -10,6 +10,7 @@ var year := 0
 
 var world_digest := ""
 var state_digest := ""
+var digest_mode := "" # deferred-v1 means no fingerprint exists in this publication.
 var entity_records: Dictionary = {}
 var stats: Array = []
 var regional: Dictionary = {}

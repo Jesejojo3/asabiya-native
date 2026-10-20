@@ -12,6 +12,10 @@ var config := {"seed":"Asabiya","width":400,"height":200,"detail":4,"landFractio
 var use_app := false
 var fast_mode := false
 var initial_year := 0
+var exact_digest := false
+var columns_only := false
+var checkpoint_digest := false
+var map_layer := "terrain"
 
 func _initialize() -> void: call_deferred("_run")
 func _run() -> void:
@@ -21,6 +25,10 @@ func _run() -> void:
 	samples = int(args.get("samples",6))
 	use_app = args.has("app")
 	fast_mode = args.has("fast")
+	exact_digest = args.has("exact")
+	columns_only = args.has("columns")
+	checkpoint_digest = args.has("checkpoints")
+	map_layer = str(args.get("layer","terrain"))
 	deadline = Time.get_ticks_msec() + 120000
 	if use_app:
 		App.pending_world = config.duplicate()
@@ -45,6 +53,10 @@ func _process(_dt: float) -> bool:
 		printerr("PIPELINE TIMEOUT");source.close();quit(1);phase=0;return false
 	if phase == 1 and not source.years().is_empty() and not source.busy:
 		seen_year = source.years()[-1]
+		if use_app: application.set_layer(map_layer)
+		if exact_digest: source._digest_checkpoints = false
+		if checkpoint_digest: source._digest_checkpoints = true
+		if columns_only: source.set("_field_changes",false)
 		started = Time.get_ticks_usec()
 		initial_year = seen_year
 		if fast_mode: source.start_fast_forward(samples, 50)
@@ -62,7 +74,17 @@ func _process(_dt: float) -> bool:
 func _finish() -> void:
 	var elapsed := Time.get_ticks_usec() - started
 	var frame: HistoryFrame = source.frame(seen_year)
-	print("PIPELINE ", JSON.stringify({"width":config["width"],"height":config["height"],"app":use_app,"fast":fast_mode,"years":count,"elapsedMs":elapsed/1000.0,"msPerYear":elapsed/1000.0/count,"yearsPerSecond":count*1000000.0/elapsed,"staticBytes":Performance.get_monitor(Performance.MEMORY_STATIC),"digest":frame.state_digest,"headless":DisplayServer.get_name()=="headless"}))
+	# Obtain a real SHA after the timed interval, including non-checkpoint years.
+	var proof: Dictionary = {}
+	source.request("get_replay",{},func(response:Dictionary): proof.assign(response.get("data",{})))
+	var proof_deadline := Time.get_ticks_msec()+30000
+	while proof.is_empty() and Time.get_ticks_msec()<proof_deadline and not source._stopped():
+		if not use_app: source.poll()
+		await process_frame
+	if proof.is_empty() or proof.get("finalYear") != seen_year:
+		printerr("PIPELINE ERROR final integrity query failed")
+		source.close();quit(1);return
+	print("PIPELINE ", JSON.stringify({"width":config["width"],"height":config["height"],"app":use_app,"layer":map_layer,"fast":fast_mode,"exact":exact_digest,"years":count,"elapsedMs":elapsed/1000.0,"msPerYear":elapsed/1000.0/count,"yearsPerSecond":count*1000000.0/elapsed,"staticBytes":Performance.get_monitor(Performance.MEMORY_STATIC),"digest":proof.get("finalSHA256"),"publicationDigest":frame.state_digest,"digestMode":frame.get("digest_mode") if frame.get("digest_mode") != null else "","headless":DisplayServer.get_name()=="headless"}))
 	await source.shutdown()
 	if application != null: application.queue_free()
 	await process_frame

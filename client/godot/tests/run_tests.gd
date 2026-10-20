@@ -218,7 +218,7 @@ func _fixture_frame(n: int) -> Dictionary:
 	var provinces := []
 	for i in n:
 		provinces.append({"id":i,"ownerPolityId":7 if i == world.land_cells[0] else 0,"peopleId":-1,"religionId":-1,"population":0.0,"carryingCapacity":0.0,"era":0,"fortification":0.0})
-	return {"schema":"asabiya/map-state-v1","year":-2500,"worldSHA256":world.header["world"]["digest"],"stateSHA256":"fixture",
+	return {"schema":"asabiya/map-state-v1","year":-2500,"worldSHA256":world.header["world"]["digest"],"stateSHA256":"a".repeat(64),
 		"provinces":provinces,"entities":{"polity":[{"id":7,"fields":{"name":"Prueba","alive":true,"rgb":[10,20,30]}}]}}
 
 

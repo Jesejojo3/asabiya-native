@@ -27,7 +27,10 @@ var tech_catalog: Array = []
 var era_names: Array = []
 var _map_view := "map"
 var _sparse_entities := false
+# Exact fingerprints are required for retained observation frames. The wire
+# checkpoint mode remains supported for explicitly opted-in external consumers.
 var _digest_checkpoints := false
+var _field_changes := false
 var _fast_active := false
 var _fast_cancel := true
 var _fast_progress: Dictionary = {}
@@ -107,6 +110,7 @@ func start(_extra_args := PackedStringArray()) -> bool:
 	_stop = false
 	_sparse_entities = false
 	_digest_checkpoints = false
+	_field_changes = false
 	connected = false
 	busy = false
 	_live_running = false
@@ -175,7 +179,7 @@ func _on_catalog(response: Dictionary) -> void:
 	era_names = data.get("eras", [])
 	_map_view = "map-columns-v1" if data.get("mapColumnsV1", false) else "map"
 	_sparse_entities = _map_view == "map-columns-v1" and bool(data.get("entityChangesV1", false))
-	_digest_checkpoints = _map_view == "map-columns-v1" and int(data.get("digestCheckpointsV1", 0)) == 25
+	_field_changes = _map_view == "map-columns-v1" and bool(data.get("mapFieldChangesV1", false))
 	request("export_geography", {"directory":_directory.path_join("world")}, _on_geography)
 
 func _on_geography(response: Dictionary) -> void:
@@ -256,6 +260,8 @@ func _advance_payload() -> Dictionary:
 	var payload: Dictionary = {"view":_map_view}
 	if _sparse_entities:
 		payload["entityMode"] = "changed"
+	if _field_changes:
+		payload["provinceMode"] = "changed-fields-v1"
 	if _digest_checkpoints:
 		payload["digestMode"] = "checkpoint-v1"
 	return payload
@@ -455,7 +461,8 @@ func _worker() -> void:
 	if peer.connect_to_host("127.0.0.1", parts[1].to_int()) != OK:
 		_push({"_error":"No se pudo conectar con el motor local."})
 		return
-	var incoming := PackedByteArray()
+	var incoming := LocalResponseBuffer.new()
+	incoming.limit = MAX_RESPONSE_BYTES
 	var pending_bytes := PackedByteArray()
 	var sent := 0
 	var session := 0
@@ -521,17 +528,16 @@ func _worker() -> void:
 				_push({"_error":"No se pudo recibir la respuesta del motor."})
 				break
 			var raw: PackedByteArray = chunk[1]
-			incoming.append_array(raw)
-			if incoming.size() > MAX_RESPONSE_BYTES:
-				_push({"_error":"La respuesta del motor supera el límite de memoria del cliente."})
+			incoming.append(raw)
+			if incoming.error != "":
+				_push({"_error":incoming.error})
 				break
 			# Requests are serialized: one complete NDJSON record per response.
-			if not incoming.is_empty() and incoming[incoming.size() - 1] == 10:
+			if incoming.complete:
 				var parse_started := trace.begin()
-				var response_bytes := incoming.size()
-				var value: Variant = JSON.parse_string(incoming.get_string_from_utf8())
+				var response_bytes := incoming.bytes.size()
+				var value: Variant = JSON.parse_string(incoming.take_text())
 				trace.record("json-parse", parse_started, {"bytes":response_bytes})
-				incoming.clear()
 				if not value is Dictionary:
 					_push({"_error":"El motor envió JSON inválido."})
 					break

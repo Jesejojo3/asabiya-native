@@ -41,9 +41,9 @@ jobs:
       - name: Bounded Go baseline profiles and integrity
         timeout-minutes: 5
         run: |
-          go test -count=1 ./internal/sim -run '^(TestWorkProfileNeutral|TestMapPublicationReconstructsFullState|TestCanonicalScalarEncodingParity)$' 2>&1 | Tee-Object artifacts/annual-throughput/integrity.txt
+          go test -count=1 ./internal/sim -run '^(TestWorkProfileNeutral|TestMapPublicationReconstructsFullState|TestCanonicalScalarEncodingParity|TestCanonicalBlocksMatchOriginalBytes)$' 2>&1 | Tee-Object artifacts/annual-throughput/integrity.txt
           if ($LASTEXITCODE -ne 0) { throw 'Integrity failed' }
-          go test -count=1 ./internal/interop -run '^(TestMapColumnsLossless|TestStatusYearsPreserveHistory|TestSparseEntityPublicationPreservesFramesAndHistory|TestCheckpointAnnualEquivalence)$' 2>&1 | Tee-Object artifacts/annual-throughput/column-integrity.txt
+          go test -count=1 ./internal/interop -run '^(TestMapColumnsLossless|TestStatusYearsPreserveHistory|TestSparseEntityPublicationPreservesFramesAndHistory|TestSparseEntitySignedZeroInNestedFields|TestCheckpointAnnualEquivalence|TestFieldPublicationReconstructionAndRecovery|TestFieldPatchesPreserveAllBitsAndPublicationOwnership)$' 2>&1 | Tee-Object artifacts/annual-throughput/column-integrity.txt
           if ($LASTEXITCODE -ne 0) { throw 'Column integrity failed' }
           go test -run TestNoTestsShouldMatch -bench BenchmarkCheckpointAnnualPublication -benchtime=50x -count=1 -cpu=2 -benchmem ./internal/interop 2>&1 | Tee-Object artifacts/annual-throughput/checkpoint-benchmark.txt
           if ($LASTEXITCODE -ne 0) { throw 'Digest checkpoint benchmark failed' }
@@ -55,14 +55,28 @@ jobs:
           go tool pprof -top -alloc_space -nodecount=20 artifacts/annual-throughput/memory.pprof | Out-File artifacts/annual-throughput/alloc-top.txt
           Get-Content artifacts/annual-throughput/cpu-top.txt | Select-Object -First 55
           Get-Content artifacts/annual-throughput/alloc-top.txt | Select-Object -First 40
-      - name: Bounded first state formation measurement
-        if: contains(github.event.head_commit.message, '[profile]')
+      - name: Exact field publication wire benchmark
         timeout-minutes: 3
+        run: |
+          go test -run '^$' -bench BenchmarkFieldWirePublication -benchtime=50x -count=3 -cpu=2 -benchmem ./internal/interop 2>&1 | Tee-Object artifacts/annual-throughput/field-benchmark.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Field publication benchmark failed' }
+      - name: Natural first state and mature publication window
+        if: contains(github.event.head_commit.message, '[profile]')
+        timeout-minutes: 6
         run: |
           $env:ASABIYA_FIRST_STATE='1'
           go test -count=1 -v ./internal/interop -run '^TestAnnualFirstStateWindow$' 2>&1 | Tee-Object artifacts/annual-throughput/first-state.txt
           Remove-Item Env:ASABIYA_FIRST_STATE
           if ($LASTEXITCODE -ne 0) { throw 'First state measurement failed' }
+          $env:ASABIYA_MATURE_PUBLICATION='1'
+          go test -count=1 -v ./internal/interop -run '^TestMatureFieldPublicationWindow$' 2>&1 | Tee-Object artifacts/annual-throughput/mature-publication.txt
+          Remove-Item Env:ASABIYA_MATURE_PUBLICATION
+          if ($LASTEXITCODE -ne 0) { throw 'Mature publication integrity failed' }
+      - name: Complete Go regressions and immutable Windows golden
+        timeout-minutes: 8
+        run: |
+          go test -count=1 ./... 2>&1 | Tee-Object artifacts/annual-throughput/all-go-tests.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Go regressions failed' }
       - name: Compile and export the Windows package
         run: |
           New-Item -ItemType Directory -Force -Path build/client | Out-Null
@@ -103,6 +117,20 @@ jobs:
           $server=Join-Path $PWD 'build/bin/asabiya-server.exe'
           & $editor --headless --path client/godot --script res://tests/annual_throughput_regressions.gd -- --server $server 2>&1 | Tee-Object artifacts/annual-throughput/throughput-tests.txt
           if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/throughput-tests.txt -Pattern 'SCRIPT ERROR|Parse Error|(?m)^FAIL(?:\s|$)' -Quiet)) { throw 'Annual throughput regressions failed' }
+      - name: Fragmented NDJSON, exact fingerprints and field decoding
+        timeout-minutes: 2
+        run: |
+          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
+          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
+          & $editor --headless --path client/godot --script res://tests/deep_publication_regressions.gd 2>&1 | Tee-Object artifacts/annual-throughput/deep-publication.txt
+          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/deep-publication.txt -Pattern 'SCRIPT ERROR|Parse Error|(?m)^FAIL(?:\s|$)' -Quiet)) { throw 'Deep publication regressions failed' }
+      - name: Fast-forward dialog bounds at desktop sizes and DPI
+        timeout-minutes: 2
+        run: |
+          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
+          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
+          & $editor --headless --path client/godot --script res://tests/fast_dialog_visual_regressions.gd 2>&1 | Tee-Object artifacts/annual-throughput/dialog-layout.txt
+          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/annual-throughput/dialog-layout.txt -Pattern 'SCRIPT ERROR|Parse Error|(?m)^FAIL(?:\s|$)' -Quiet)) { throw 'Dialog layout regressions failed' }
       - name: Godot pipeline baseline with and without app updates
         timeout-minutes: 4
         run: |
@@ -115,11 +143,17 @@ jobs:
               $env:ASABIYA_THROUGHPUT_DIR=Join-Path $PWD "artifacts/annual-throughput/$tag"
               $extra=@()
               if ($appMode) { $extra=@('--app') }
-              & $editor --headless --path client/godot --script res://tests/annual_pipeline_benchmark.gd -- --server $server --width $size[0] --height $size[1] --samples 6 @extra 2>&1 | Tee-Object "artifacts/annual-throughput/pipeline-$tag.txt"
+              & $editor --headless --path client/godot --script res://tests/annual_pipeline_benchmark.gd -- --server $server --width $size[0] --height $size[1] --samples 50 --exact @extra 2>&1 | Tee-Object "artifacts/annual-throughput/pipeline-$tag.txt"
               if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath "artifacts/annual-throughput/pipeline-$tag.txt" -Pattern 'SCRIPT ERROR|Parse Error|PIPELINE ERROR|TIMEOUT' -Quiet)) { throw 'Pipeline benchmark failed' }
             }
           }
           Remove-Item Env:ASABIYA_THROUGHPUT_DIR
+      - name: Reproduce exact columns and fields with atlas updates
+        timeout-minutes: 4
+        run: |
+          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
+          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
+          ./tools/benchmark-publication.ps1 -Editor $editor -Server build/bin/asabiya-server.exe -Samples 50 -Repeats 1 -OutputDirectory artifacts/annual-throughput/equal-layouts
       - name: Explicit fast-forward pipeline
         timeout-minutes: 3
         run: |

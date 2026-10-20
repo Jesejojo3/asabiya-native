@@ -1253,9 +1253,13 @@ func _build_fast_dialog() -> void:
 	fast_dialog = ConfirmationDialog.new()
 	fast_dialog.title = "Simulación rápida · años completos"
 	fast_dialog.ok_button_text = "Calcular"
+	fast_dialog.cancel_button_text = "Cancelar"
 	var box := VBoxContainer.new()
 	box.custom_minimum_size.x = 350
-	box.add_child(UiTheme.muted("Go calcula todos los años en orden. El mapa se actualiza al intervalo elegido. Puedes pausar al terminar el año actual.", 13))
+	# Fixed lines avoid an autowrap minimum-height feedback loop on first open:
+	# the label can be measured before its container has received a width.
+	var description := UiTheme.muted("Se calculan todos los años en orden.\nEl mapa se actualiza al intervalo elegido.\nPuedes pausar al terminar el año actual.", 13)
+	box.add_child(description)
 	box.add_child(UiTheme.muted("Años que calcular", 12))
 	fast_years = SpinBox.new()
 	fast_years.min_value = 1
@@ -1267,6 +1271,8 @@ func _build_fast_dialog() -> void:
 	for years_count in [1,10,25,50,100]: fast_interval.add_item("%d años calculados" % years_count, years_count)
 	fast_interval.select(3)
 	box.add_child(fast_interval)
+	for child: Node in box.get_children():
+		if child is Label: child.autowrap_mode = TextServer.AUTOWRAP_OFF
 	fast_dialog.add_child(box)
 	fast_dialog.confirmed.connect(func():
 		if not app.source.can_advance(): return
