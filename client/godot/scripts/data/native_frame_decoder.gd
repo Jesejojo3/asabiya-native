@@ -1,8 +1,10 @@
 class_name NativeFrameDecoder
 extends RefCounted
 ## Worker-owned publication adapter for asabiya/state-v1 / annual-delta-v1.
-## No simulation rules live here. Packed arrays use copy-on-write when a frame
-## is published; UI code treats every published HistoryFrame as immutable.
+## No simulation rules live here. Packed arrays are copied explicitly when
+## published; UI code treats every HistoryFrame as immutable.
+
+const MAX_VISIBLE_EVENTS := 1000
 
 var world: WorldData
 var year := 0
@@ -25,6 +27,12 @@ var regional: Dictionary = {}
 func _init(w: WorldData = null) -> void:
 	world = w
 
+static func _array(value: Variant) -> Array:
+	return value if value is Array else []
+
+static func _object(value: Variant) -> Dictionary:
+	return value if value is Dictionary else {}
+
 func consume(data: Dictionary, delta: bool) -> HistoryFrame:
 	if world == null:
 		return null
@@ -32,6 +40,7 @@ func consume(data: Dictionary, delta: bool) -> HistoryFrame:
 	if not schema in (["asabiya/annual-delta-v1","asabiya/map-delta-v1"] if delta else ["asabiya/state-v1","asabiya/map-state-v1"]):
 		return null
 	var expected: String = world.header.get("world", {}).get("digest", "")
+	var previous_entities: Dictionary = entities.duplicate()
 	if not delta:
 		world_digest = str(data.get("worldSHA256", ""))
 		if world_digest != expected:
@@ -42,10 +51,10 @@ func consume(data: Dictionary, delta: bool) -> HistoryFrame:
 		religion.resize(n); religion.fill(-1)
 		population.resize(n); carrying.resize(n)
 		technology.resize(n); fortification.resize(n); era.resize(n)
-		entities.clear(); events.clear(); narrative.clear()
+		entities = {}; events.clear(); narrative.clear()
 	elif int(data.get("fromYear", -999999)) != year:
 		return null
-	var provinces: Array = data.get("provinces", [])
+	var provinces: Array = _array(data.get("provinces"))
 	if not delta and provinces.size() != world.cell_count():
 		return null
 	for p: Dictionary in provinces:
@@ -60,15 +69,18 @@ func consume(data: Dictionary, delta: bool) -> HistoryFrame:
 		fortification[i] = float(p.get("fortification", 0.0))
 		era[i] = int(p.get("era", 0))
 		technology[i] = float(era[i]) / 7.0 # display scale of the Go-provided era
-	var upserts: Dictionary = data.get("entityUpserts" if delta else "entities", {})
+	var upserts: Dictionary = _object(data.get("entityUpserts" if delta else "entities"))
 	for kind: String in upserts:
 		if not entities.has(kind):
 			entities[kind] = {}
-		for record: Dictionary in upserts[kind]:
-			entities[kind][int(record["id"])] = record.get("fields", {})
-	for e: Dictionary in data.get("events", []):
+		for record: Dictionary in _array(upserts[kind]):
+			var id := int(record["id"])
+			var fields: Dictionary = _object(record.get("fields"))
+			var prior: Dictionary = _object(previous_entities.get(kind, {}).get(id))
+			entities[kind][id] = prior if prior == fields else fields
+	for e: Dictionary in _array(data.get("events")):
 		events[int(e["id"])] = e
-	for t: Dictionary in data.get("narrative", []):
+	for t: Dictionary in _array(data.get("narrative")):
 		narrative[int(t["eventId"])] = t
 	if delta:
 		var first := int(data.get("firstRetainedEventId", 0))
@@ -77,8 +89,8 @@ func consume(data: Dictionary, delta: bool) -> HistoryFrame:
 				events.erase(id); narrative.erase(id)
 	year = int(data["year"])
 	digest = str(data.get("stateSHA256", ""))
-	stats = data.get("stats", [])
-	regional = data.get("earth", {})
+	stats = _array(data.get("stats"))
+	regional = _object(data.get("earth"))
 	return _publish()
 
 static func _color(value: Variant, id: int) -> Color:
@@ -107,6 +119,13 @@ func _publish() -> HistoryFrame:
 		state["ruler"] = rulers.get(int(p.get("rulerId", -1)), {}).get("name")
 		var metrics: Dictionary = p.get("metrics", {})
 		if metrics.has("cohesion"): state["cohesion"] = metrics["cohesion"]
+		var census: Array = _array(p.get("censusHistory"))
+		var observations := []
+		for k in range(maxi(0, census.size() - 24), census.size() - 1, 2):
+			var y := int(census[k])
+			var date := "%d a. C." % (1 - y) if y <= 0 else "%d d. C." % y
+			observations.append("%s · %d provincias" % [date, int(census[k + 1])])
+		state["history"] = observations
 		f.states[id] = state
 	for id: int in entities.get("people", {}):
 		var p: Dictionary = entities["people"][id]
@@ -136,8 +155,8 @@ func _publish() -> HistoryFrame:
 	for id: int in entities.get("war", {}):
 		var war: Dictionary = entities["war"][id]
 		if not war.get("active", false): continue
-		var attackers: Array = war.get("attackers", [])
-		var defenders: Array = war.get("defenders", [])
+		var attackers: Array = _array(war.get("attackers"))
+		var defenders: Array = _array(war.get("defenders"))
 		var w: Dictionary = war.duplicate()
 		w["id"] = id; w["a"] = int(attackers[0]) if not attackers.is_empty() else 0
 		w["b"] = int(defenders[0]) if not defenders.is_empty() else 0
@@ -147,13 +166,13 @@ func _publish() -> HistoryFrame:
 	for id: int in entities.get("route", {}):
 		var r: Dictionary = entities["route"][id]
 		if r.get("active", false):
-			f.routes.append({"id":id,"cells":PackedInt32Array(r.get("path", [])),"from":r.get("fromCellId"),"to":r.get("toCellId")})
+			f.routes.append({"id":id,"cells":PackedInt32Array(_array(r.get("path"))),"from":r.get("fromCellId"),"to":r.get("toCellId")})
 	var ids: Array = events.keys(); ids.sort()
-	for id: int in ids:
+	for id: int in ids.slice(maxi(0, ids.size() - MAX_VISIBLE_EVENTS)):
 		var e: Dictionary = events[id].duplicate()
 		e["text"] = narrative.get(id, {}).get("text", "")
 		e["why"] = narrative.get(id, {}).get("why", "")
-		e["refs"] = e.get("entities", [])
+		e["refs"] = _array(e.get("entities"))
 		f.events.append(e)
 	for value: float in population:
 		f.world_population += value

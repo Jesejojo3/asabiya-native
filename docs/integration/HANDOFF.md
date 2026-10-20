@@ -30,3 +30,7 @@ El juego exportado no fue abierto. La misión se entrega para comprobación manu
 10. Comprobar el paquete en la GPU y configuración Windows reales. No se afirma soporte gráfico de un dispositivo que no se haya utilizado.
 
 No hay merge a main ni aprobación de una auditoría externa nueva. La integración definitiva requiere autorización del usuario.
+
+## Corrección del adaptador tras la primera entrega
+
+El adaptador acepta listas nulas de Go como listas vacías, limita a 1 000 los eventos de cada publicación visible y comparte registros históricos idénticos entre vistas. El panel de Estados usa sus censos reales para mostrar las observaciones disponibles. Comprobar manualmente un avance anual sin acontecimientos, publicaciones sucesivas y el cambio de año en esos paneles. Esta corrección se compila/exporta sin ejecutar las pruebas ni el juego. La entrega se produce desde una copia aislada de la revisión publicada para conservar una edición local ajena a la PR.
