@@ -27,6 +27,7 @@ var tech_catalog: Array = []
 var era_names: Array = []
 var _map_view := "map"
 var _sparse_entities := false
+var _digest_checkpoints := false
 var _fast_active := false
 var _fast_cancel := true
 var _fast_progress: Dictionary = {}
@@ -105,6 +106,7 @@ func start(_extra_args := PackedStringArray()) -> bool:
 	_closing = false
 	_stop = false
 	_sparse_entities = false
+	_digest_checkpoints = false
 	connected = false
 	busy = false
 	_live_running = false
@@ -173,6 +175,7 @@ func _on_catalog(response: Dictionary) -> void:
 	era_names = data.get("eras", [])
 	_map_view = "map-columns-v1" if data.get("mapColumnsV1", false) else "map"
 	_sparse_entities = _map_view == "map-columns-v1" and bool(data.get("entityChangesV1", false))
+	_digest_checkpoints = _map_view == "map-columns-v1" and int(data.get("digestCheckpointsV1", 0)) == 25
 	request("export_geography", {"directory":_directory.path_join("world")}, _on_geography)
 
 func _on_geography(response: Dictionary) -> void:
@@ -253,6 +256,8 @@ func _advance_payload() -> Dictionary:
 	var payload: Dictionary = {"view":_map_view}
 	if _sparse_entities:
 		payload["entityMode"] = "changed"
+	if _digest_checkpoints:
+		payload["digestMode"] = "checkpoint-v1"
 	return payload
 
 func _next_advance() -> void:
