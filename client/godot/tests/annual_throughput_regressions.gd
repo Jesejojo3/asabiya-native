@@ -70,6 +70,8 @@ func _test_fast(server: String) -> void:
 	check(ready_a and ready_b,"real initial frames load")
 	if not ready_a or not ready_b: a.close();b.close();return
 	check(a._map_view=="map-columns-v1" and b._map_view=="map-columns-v1","new view negotiated through catalog")
+	check(a._sparse_entities and b._sparse_entities, "sparse entity capability explicitly negotiated")
+	check(a._advance_payload().get("entityMode", "") == "changed", "annual publications request sparse changes")
 	var initial:int=a.years()[0]
 	var shown:Array=[]
 	b.frames_changed.connect(func():shown.append(b.years()[-1]))
