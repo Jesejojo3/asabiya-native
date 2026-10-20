@@ -160,7 +160,7 @@ func (s *Session) Handle(req Request) Response {
 		}
 		response.Data = s.world.Summary()
 	case "get_catalog":
-		response.Data = map[string]any{"schema": "asabiya/catalog-v1", "technologies": sim.TechCatalog(), "eras": sim.Eras(), "mapColumnsV1": true, "entityChangesV1": true}
+		response.Data = map[string]any{"schema": "asabiya/catalog-v1", "technologies": sim.TechCatalog(), "eras": sim.Eras(), "mapColumnsV1": true, "entityChangesV1": true, "digestCheckpointsV1": 25}
 	case "export_geography":
 		if s.world == nil {
 			return fail("not_ready", fmt.Errorf("create_world first"))
@@ -216,11 +216,12 @@ func (s *Session) Handle(req Request) Response {
 				View        string `json:"view"`
 				Publication string `json:"publication"`
 				EntityMode string `json:"entityMode"`
+				DigestMode string `json:"digestMode"`
 			}
 			if err := decodePayload(req.Payload, &payload); err != nil {
 				return fail("invalid_arguments", err)
 			}
-			if (payload.View != "" && payload.View != "map" && payload.View != "map-columns-v1") || (payload.Publication != "" && payload.Publication != "status") || (payload.EntityMode != "" && (payload.EntityMode != "changed" || payload.View != "map-columns-v1" || payload.Publication != "")) {
+			if (payload.View != "" && payload.View != "map" && payload.View != "map-columns-v1") || (payload.Publication != "" && payload.Publication != "status") || (payload.EntityMode != "" && (payload.EntityMode != "changed" || payload.View != "map-columns-v1" || payload.Publication != "")) || (payload.DigestMode != "" && (payload.DigestMode != "checkpoint-v1" || payload.View != "map-columns-v1" || payload.Publication != "")) {
 				return fail("invalid_arguments", fmt.Errorf("unknown publication/view"))
 			}
 			if payload.Publication == "status" {
@@ -231,7 +232,13 @@ func (s *Session) Handle(req Request) Response {
 				response.Data = map[string]any{"schema": "asabiya/advance-status-v1", "year": status.Year, "rng": status.HistoryRNG}
 			} else {
 				if payload.View == "map" || payload.View == "map-columns-v1" {
-					view := s.filterMapDelta(s.simulation.AdvanceYearWithMapDelta())
+					var publication sim.MapAnnualDelta
+					if payload.DigestMode == "checkpoint-v1" {
+						publication = s.simulation.AdvanceYearWithMapDeltaCheckpoints(25)
+					} else {
+						publication = s.simulation.AdvanceYearWithMapDelta()
+					}
+					view := s.filterMapDelta(publication)
 					if payload.EntityMode == "changed" {
 						s.filterEntityChanges(&view)
 					} else {
