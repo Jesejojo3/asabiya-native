@@ -1,0 +1,45 @@
+# Matriz de paridad funcional HTML v0.6 → Go/Godot
+
+Fuente: `reference/v0.6/Asabiya History Engine (Copy).html` (inmutable). Base auditada: `perf/deep-throughput-v2@dc5e59de`. Esta matriz registra **paridad por capacidad**, no certifica paridad total ni ejecución gráfica. En las evidencias, `HTML:n` significa línea del archivo de referencia; rutas de Go/Godot son relativas al repositorio.
+
+Clases: **A** implementada/accesible (con prueba de contrato existente o añadida); **B** Go implementado, sin control Godot; **C** accesible parcialmente o no equivalente; **D** ausente; **E** capacidad del navegador sustituida correctamente. `CI pendiente` indica que una prueba añadida todavía no tiene resultado verificado.
+
+| ID | Capacidad del HTML | Clase | Evidencia (HTML · motor · cliente/prueba) | Estado / diferencia |
+|---|---|:---:|---|---|
+| PAR-001 | Provincia, coordenadas y propiedad del territorio | A | HTML:2691–2701 · `internal/sim/queries.go:Province`, `internal/interop/protocol.go:get_province` · `client/godot/scripts/app/main.gd:_show_cell,_request_province_details` · `client/godot/tests/atlas_ux_regressions.gd` | Ficha y propietario navegable; propiedades consultadas bajo demanda |
+| PAR-002 | Historia observada del dueño provincial | A | HTML:3000–3021 · `internal/sim/queries.go:OwnershipHistory` · `main.gd:_request_province_details` | Observación histórica decenal, no fecha exacta de conquista |
+| PAR-003 | Estados, gobernantes, dinastías y relaciones | C | HTML:2702–2729 · `internal/sim/queries.go:entityLocked(polity,ruler)` · `main.gd:_show_state,_entity_sections` | Fichas navegables; faltan árbol familiar, crisis, censo y episodios equivalentes |
+| PAR-004 | Pueblos, linaje y vocabulario lingüístico | C | HTML:2730–2739 · `internal/sim/queries.go:entityLocked(people)` · `main.gd:_show_people,_entity_sections` | El motor expone padres, hijos, léxico y cambios fonéticos; la ficha aún no los muestra como en HTML |
+| PAR-005 | Religiones, cismas y adopción estatal | C | HTML:2740–2748 · `internal/sim/queries.go:entityLocked(religion)` · `main.gd:_entity_sections` | Consulta directa disponible; linajes, consejos y estados de adopción incompletos |
+| PAR-006 | Ciudades y capitales | C | HTML:2697,2703,2760–2788 · `internal/sim/queries.go:entityLocked(city)` · `main.gd:_show_settlement,_show_state` | Ciudad causal real y capital; representación 3D no implica edificios simulados |
+| PAR-007 | Guerras, coaliciones, resultados | C | HTML:2709–2714,2760–2788 · `internal/sim/queries.go:entityLocked(war)` · `main.gd:_entity_sections` | Guerra consultable y buscable; detalle geográfico/narrativo incompleto |
+| PAR-008 | Migraciones y recorridos | C | HTML:2819–2824 · `internal/sim/queries.go:entityLocked(migration)` · `main.gd:_entity_sections` | Datos y ficha disponibles; mapa de trayectoria equivalente sin portar |
+| PAR-009 | Rutas comerciales históricas | C | HTML:2660–2662,2685–2788 · `internal/sim/queries.go:entityLocked(route)` · `client/godot/scripts/map/map_layers.gd` | Capa/mapa y ficha presentes; relaciones y trayectorias completas pendientes |
+| PAR-010 | Índice de figuras históricas, cinco filtros y búsqueda | A | HTML:2858–2871,1197 · `internal/sim/queries.go:entityLocked(figure)` · `client/godot/scripts/ui/hud.gd:_build_figures,_fill_figures,_figure_score` · `atlas_ux_regressions.gd` | Restaurado; hasta 120 fichas puntuadas, filtros por tipo y nombre/título; **CI pendiente** |
+| PAR-011 | Ficha de figuras con hazañas y vínculos | C | HTML:2749–2755 · `internal/sim/queries.go:entityLocked(figure)` · `main.gd:_entity_sections` | Falta presentación de deeds y renombre completo |
+| PAR-012 | Exploración de registros históricos desde buscador | A | HTML:2839–2856 · `internal/sim/queries.go:EntityKinds` · `hud.gd:_on_search` · `atlas_ux_regressions.gd` | Ampliada a figuras, gobernantes, guerras, rutas, migraciones, epidemias, presagios, cataclismos y pueblos/estados extintos; 40 resultados; **CI pendiente** |
+| PAR-013 | Epidemias, ordenación y mapa | C | HTML:2873–2889,2825–2832 · `internal/sim/queries.go:entityLocked(outbreak)` · `hud.gd:_on_search`, `main.gd:_entity_sections` | Buscar y abrir ficha sí; índice ordenado por muertes/recencia y mapa dedicados pendientes |
+| PAR-014 | Cataclismos, consecuencias y mapa | C | HTML:2793–2802,2876–2889 · `internal/sim/queries.go:entityLocked(cataclysm)` · `main.gd:_entity_sections` | Ficha parcial; faltan mapa y catálogo cronológico |
+| PAR-015 | Crónica con categorías y navegación | C | HTML:2834–2856 · `internal/sim/queries.go:Events` · `hud.gd:_build_chronicle,_fill_chronicle` | Filtro por clase y enlace; falta consulta de texto por crónica independiente y límite de retención distinto |
+| PAR-016 | Estadísticas mundiales/era | C | HTML:2594–2645 · `internal/sim/queries.go:Stats` · `hud.gd:_fill_stats` | Panel resumen disponible; curva histórica interactiva no equivalente |
+| PAR-017 | Controles reproducción, pausa y avance | A | HTML:2985–2992 · `internal/interop/protocol.go:advance,pause` · `hud.gd:_build_timeline`, `client/godot/tests/atlas_ux_regressions.gd` | Godot envía solicitudes, no calcula años; Fast-Forward conservado |
+| PAR-018 | Editor de reglas (PDEF) en sesión | B | HTML:2963–2977 · `internal/sim/catalog.go:ParameterDef`, `internal/sim/commands.go:change_rules` · `client/godot/scripts/ui/hud.gd` | Sin editor; debe publicar comandos validados con sequence/year/hash y replay |
+| PAR-019 | Sandbox | B | HTML:3034–3040 · `internal/sim/commands.go:set_sandbox` · `client/godot/scripts/ui/hud.gd` | Sin toggle causal en Godot |
+| PAR-020 | Lanzar presagios sobre provincias | B | HTML:3030–3058 · `internal/sim/commands.go:cast_omen` · `main.gd` | El motor implementa; faltan selector de presagio, apuntado y retroalimentación del rechazo |
+| PAR-021 | Catálogo/costes de presagios | B | HTML:3031–3039 · `internal/sim/intervention_catalog.go` · `internal/interop/protocol.go:get_catalog` | Dados en Go; todavía no son un panel de juego |
+| PAR-022 | Reglas de nuevo mundo y semilla | C | HTML:2963–2977,3103–3130 · `internal/sim/world.go`, `internal/interop/protocol.go:create_world,start_history` · `hud.gd:_build_world_dialog` | Existe seed; interfaz no expone todas las opciones de mundo/inicio del HTML |
+| PAR-023 | Mundo Tierra y fuentes importadas | B | HTML:3103–3128 · `internal/sim/world_source.go`, `internal/mapsource/load.go` · `client/godot/scripts/data/bridge_source.gd` | Motor admite fuentes; sin selector/importador integrado en la creación normal del juego |
+| PAR-024 | Controles CDEF, ajuste y evaluación climática | C | HTML:2893–2962 · `internal/sim/climate_configured.go`, `internal/sim/world_source.go` · `hud.gd:_build_world_dialog` | Motor tiene parámetros de clima; sliders/evaluación gráfica/autoTune no expuestos |
+| PAR-025 | Consulta de capas históricas decenales retenidas | B | HTML:3000–3021 · `internal/sim/historical_queries.go:HistoricalLayer`, `internal/interop/protocol.go:get_historical_layer` · `client/godot/scripts/data/bridge_source.gd` | La línea de tiempo usa frames publicados, no todas las capas históricas retenidas |
+| PAR-026 | Capas políticas, pueblos, religiones, población, era, terreno | A | HTML:2315–2321,2467–2542 · `internal/sim/map_publication.go` · `client/godot/scripts/map/map_layers.gd:DEFS,build` | Capas 3D accesibles y dependientes de estado real |
+| PAR-027 | Capas alianzas, cohesión, desigualdad, enfermedad y anomalías | C | HTML:2315–2321,2391–2461 · `internal/sim/queries.go:ProvinceView` · `map_layers.gd:DEFS` | Modos específicos del HTML no equivalentes/ausentes en Godot; evitar consultas O(80k)/frame |
+| PAR-028 | Navegación en mapa, zoom, click y selección | E | HTML:2467–2544,3062–3099 · `client/godot/scripts/camera/strategy_camera.gd`, `client/godot/scripts/map/map_view.gd` | Canvas 2D sustituido por Godot 3D/Atlas UX conservando CellID |
+| PAR-029 | Persistencia local de preferencias y enlace compartido web | E | HTML:2985–2988,3131 · `client/godot/scripts/app/main.gd:SETTINGS_PATH` | Preferencias locales nativas; URL de navegador no es formato de guardado nativo |
+| PAR-030 | Reproducción exacta y trazabilidad de comandos causales | A | HTML:1910–1927,3053–3058 · `internal/sim/commands.go:ApplyCommand,ReplayOnWorld` · `internal/interop/protocol.go:apply_command,get_replay` | Solo el motor modifica estado; suite nativa de replay existente |
+
+## Límites y procedimiento de cierre
+
+- Las clases describen **disponibilidad funcional**, no resultados gráficos ni aprobación final. Una clase A añadida en esta rama se considera *provisional hasta CI*; las pruebas headless no equivalen a validación visual en Windows.
+- En los bloques C no debe sustituirse un dato causal ausente por una conjetura de Godot.
+- La matriz de funcionalidades aún no es certificación exhaustiva de todo el DOM; ampliar por cada bloque verificado, con la evidencia fuente pertinente.
+- Mantener las 80 000 provincias, el campo-delta, las entidades dispersas, Fast-Forward y la inmutabilidad de `reference/v0.6`.
