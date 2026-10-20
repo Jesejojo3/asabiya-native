@@ -159,7 +159,7 @@ func _compute_tile(key: int, clearings: Array, math: MapMath) -> Dictionary:
 		if absf(math.wrap_x_near(cc.x, tile_c.x) - tile_c.x) <= band_width * 0.5 + radius and absf(cc.y - tile_c.y) <= band_width * 0.5 + radius:
 			local_clear.append(c)
 	for cz in range(cz0, mini(cz0 + n, world.height)):
-		for cxi in range(cx0, cx0 + n):
+		for cxi in range(cx0, mini(cx0 + n, world.width)):
 			var cid := world.cell_id(cxi, cz)
 			if cid < 0 or world.land[cid] != 1:
 				continue

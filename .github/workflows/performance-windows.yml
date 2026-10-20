@@ -46,6 +46,12 @@ jobs:
           ./tools/package-windows.ps1 -OutputDirectory build/client -SourceRevision "${{ github.sha }}" -ValidationSummary 'targeted Go protocol/publication checks passed; graphical runtime not executed'
           Compress-Archive -Path build/client/* -DestinationPath build/AsabiyaNative-Windows-x64-performance.zip
           Get-FileHash -Algorithm SHA256 build/AsabiyaNative-Windows-x64-performance.zip | Format-List | Out-File artifacts/performance/package-sha256.txt
+      - name: Focused Godot geometry and worker regressions
+        run: |
+          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
+          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
+          & $editor --headless --path client/godot --script res://tests/performance_regressions.gd 2>&1 | Tee-Object artifacts/performance/godot.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Godot technical regressions failed' }
       - name: Publish Windows package
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:

@@ -22,7 +22,8 @@ El workflow `Performance and Windows package` ejecuta en Windows x64:
 1. Regresiones de `internal/interop`, incluida r3.
 2. Reconstrucción durante 30 años con dos semillas: publicaciones completas y compactas deben conservar metadatos, provincias, RNG, digest y replay; comprobación de inmutabilidad y signo del cero. Incluye el caso concurrente de consultas y escritor anual.
 3. Benchmark de tres años de cada camino, con inicio fuera de la región medida. Publica ns/op, B/op, allocs/op y bytes de JSON. El mundo es 400×200, detalle 4, sin superficie fina porque el benchmark mide publicación anual.
-4. Compilación con Go 1.27.2, importación/exportación con Godot 4.7.2 fijado por SHA-256, ZIP Windows y manifest de archivos.
+4. Comprobaciones Godot headless de topología LOD, muestreo bicúbico, desalojo de tiles, claros selectivos e invalidación de una tarea real.
+5. Compilación con Go 1.27.2, importación/exportación con Godot 4.7.2 fijado por SHA-256, ZIP Windows y manifest de archivos.
 
 Los resultados de ejecución se consultan en Actions, no se deducen del análisis de código. El ZIP sólo se publica si las comprobaciones y la exportación terminan correctamente. No se lanza el juego exportado.
 
