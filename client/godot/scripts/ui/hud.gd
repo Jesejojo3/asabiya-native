@@ -42,6 +42,8 @@ var timeline_hint: Label
 var chronicle_panel: PanelContainer
 var chronicle_list: ItemList
 var chronicle_filter: OptionButton
+var chronicle_query: LineEdit
+var chronicle_matches: Label
 var figures_panel: PanelContainer
 var disasters_panel: PanelContainer
 var disaster_query: LineEdit
@@ -741,6 +743,13 @@ func _build_chronicle() -> void:
 	chronicle_filter.item_selected.connect(func(_i: int): _fill_chronicle())
 	h.add_child(chronicle_filter)
 	v.add_child(h)
+	chronicle_query = LineEdit.new()
+	chronicle_query.placeholder_text = "Buscar en la crónica o en sus causas"
+	chronicle_query.clear_button_enabled = true
+	chronicle_query.text_changed.connect(func(_text: String): _fill_chronicle())
+	v.add_child(chronicle_query)
+	chronicle_matches = UiTheme.muted("", 11)
+	v.add_child(chronicle_matches)
 	chronicle_list = ItemList.new()
 	chronicle_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	chronicle_list.item_activated.connect(_on_chronicle_activated)
@@ -768,15 +777,30 @@ func set_chronicle(events: Array) -> void:
 func _fill_chronicle() -> void:
 	chronicle_list.clear()
 	var f := chronicle_filter.get_item_text(chronicle_filter.selected) if chronicle_filter.item_count > 0 else "Todos"
+	var query := chronicle_query.text.strip_edges().to_lower()
 	if _chronicle_events.is_empty():
+		chronicle_matches.text = "0 acontecimientos"
 		chronicle_list.add_item("Todavía no hay acontecimientos registrados.", null, false)
 		return
-	for k in range(_chronicle_events.size() - 1, maxi(-1, _chronicle_events.size() - 501), -1):
+	var matches := 0
+	# Search the entire *retained* Go publication, not just its newest 500.
+	# Display a bounded 300 rows as in the original HTML chronicle.
+	for k in range(_chronicle_events.size() - 1, -1, -1):
 		var e: Dictionary = _chronicle_events[k]
 		if f != "Todos" and str(e.get("kind", "otros")) != f:
 			continue
-		var idx := chronicle_list.add_item("%s — %s" % [fmt_year(int(e.get("year", 0))), str(e.get("text", ""))])
+		var entry_text := str(e.get("text", ""))
+		var context := str(e.get("why", ""))
+		if not query.is_empty() and not entry_text.to_lower().contains(query) and not context.to_lower().contains(query):
+			continue
+		matches += 1
+		if matches > 300:
+			continue
+		var idx := chronicle_list.add_item("%s — %s" % [fmt_year(int(e.get("year", 0))), entry_text])
 		chronicle_list.set_item_metadata(idx, {"cell":int(e.get("cell", -1)),"event":int(e.get("id", -1))})
+	chronicle_matches.text = "%d coincidencias%s" % [matches, " · mostrando 300" if matches > 300 else ""]
+	if matches == 0:
+		chronicle_list.add_item("No hay acontecimientos que coincidan.", null, false)
 
 
 func _on_chronicle_activated(i: int) -> void:
