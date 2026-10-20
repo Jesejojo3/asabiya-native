@@ -39,6 +39,7 @@ var source: HistorySource
 var current_frame: HistoryFrame
 var current_year := -9000
 var current_layer := "terrain"
+var _applied_layer := ""
 var requested_layer := "terrain"   # last mode the user asked for; restored when data arrives
 var overlay_opacity := 0.85
 var toggles := {"borders": true, "labels": true, "settlements": true, "events": true, "vegetation": true}
@@ -350,7 +351,8 @@ func _load_frame() -> void:
 		label_mode = "religions"
 	history.rebuild(current_frame, label_mode)
 	hud.set_chronicle(_collect_events())
-	_apply_layer()
+	if _applied_layer != current_layer or MapLayers.def(current_layer).get("requires", "") != "":
+		_apply_layer()
 	_refresh_ui()
 	if selection["kind"] != "":
 		select_entity(selection["kind"], selection["id"], false)
@@ -378,6 +380,7 @@ func set_layer(id: String) -> void:
 
 func _apply_layer() -> void:
 	var r := MapLayers.build(current_layer, world, current_frame)
+	_applied_layer = current_layer
 	map_view.terrain.set_overlay(r["colors"], r["keys"])
 	hud.set_legend(MapLayers.def(current_layer).get("name", ""), r["legend"])
 	_apply_layer_style()

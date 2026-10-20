@@ -43,7 +43,7 @@ var _closing := false
 var _paused := false
 var _live_running := false
 var _live_advance_pending := false
-var _live_interval_us := 1000000
+var _live_interval_us := 100000
 var _live_due_us := 0
 
 func _init(w: WorldData = null, executable := "") -> void:
@@ -172,7 +172,7 @@ func is_live() -> bool:
 
 
 func set_live_rate(years_per_second: int) -> void:
-	_live_interval_us = int(1000000.0 / clampi(years_per_second, 1, 10))
+	_live_interval_us = 0 if years_per_second == 0 else int(1000000.0 / clampi(years_per_second, 1, 50))
 	_live_due_us = Time.get_ticks_usec() + _live_interval_us
 
 

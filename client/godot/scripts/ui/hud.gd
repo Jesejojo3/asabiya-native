@@ -197,7 +197,7 @@ func playing() -> bool:
 
 
 func speed() -> int:
-	return [1, 2, 5, 10][speed_option.selected]
+	return speed_option.get_item_id(speed_option.selected)
 
 
 func stop_playing() -> void:
@@ -472,9 +472,10 @@ func _build_timeline() -> void:
 	transport.add_child(play)
 	sim_buttons["play"] = play
 	speed_option = OptionButton.new()
-	for rate in [1, 2, 5, 10]:
-		speed_option.add_item("%d año%s/s" % [rate, "" if rate == 1 else "s"])
-	speed_option.tooltip_text = "Ritmo de la simulación continua"
+	for rate in [1, 2, 5, 10, 25, 50, 0]:
+		speed_option.add_item("Máxima" if rate == 0 else "%d año%s/s" % [rate, "" if rate == 1 else "s"], rate)
+	speed_option.select(3)
+	speed_option.tooltip_text = "Años por segundo. Máxima utiliza el ritmo que permita el equipo."
 	speed_option.focus_mode = Control.FOCUS_NONE
 	speed_option.item_selected.connect(func(_index: int): playback_rate_changed.emit(speed()))
 	transport.add_child(speed_option)

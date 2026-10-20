@@ -176,6 +176,13 @@ func test_precision_wheel_and_live_pacing() -> void:
 	live._live_due_us = 0
 	live.poll()
 	check(not live.is_live() and live._outgoing.is_empty(), "stopping continuous play stops scheduling")
+	live.set_live_rate(50)
+	check(live._live_interval_us == 20000, "50 years per second uses a 20ms target interval")
+	live.start_live(0)
+	check(live._live_interval_us == 0, "maximum speed has no artificial year delay")
+	live.poll()
+	live.poll()
+	check(live._outgoing.size() == 1, "maximum speed still keeps one pending year")
 	live.close()
 
 

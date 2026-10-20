@@ -37,11 +37,13 @@ type Response struct {
 	Error   *ProtocolError `json:"error,omitempty"`
 }
 type Session struct {
-	mu         sync.Mutex
-	generation uint64
-	world      *sim.World
-	surface    *sim.Surface
-	simulation *sim.Simulation
+	mu           sync.Mutex
+	generation   uint64
+	world        *sim.World
+	surface      *sim.Surface
+	simulation   *sim.Simulation
+	mapCache     []mapProvince
+	mapCacheYear int
 }
 
 func decodePayload(raw json.RawMessage, target any) error {
@@ -72,6 +74,7 @@ func (s *Session) Handle(req Request) Response {
 	}
 	switch req.Op {
 	case "create_world":
+		s.mapCache = nil
 		var payload struct {
 			World  *sim.WorldConfig `json:"world"`
 			Fine   *bool            `json:"fine"`
@@ -104,6 +107,7 @@ func (s *Session) Handle(req Request) Response {
 		response.Session = s.generation
 		response.Data = w.Summary()
 	case "start_history":
+		s.mapCache = nil
 		if s.world == nil {
 			return fail("not_ready", fmt.Errorf("create_world first"))
 		}
@@ -130,7 +134,7 @@ func (s *Session) Handle(req Request) Response {
 		s.generation++
 		response.Session = s.generation
 		if payload.View == "map" {
-			response.Data = projectState(s.simulation.Snapshot())
+			response.Data = s.projectMapState(s.simulation.Snapshot())
 		} else {
 			response.Data = s.simulation.Snapshot()
 		}
@@ -186,7 +190,7 @@ func (s *Session) Handle(req Request) Response {
 			}
 			view := s.simulation.Snapshot()
 			if payload.View == "map" {
-				response.Data = projectState(view)
+				response.Data = s.projectMapState(view)
 			} else {
 				response.Data = view
 			}
@@ -204,18 +208,21 @@ func (s *Session) Handle(req Request) Response {
 				return fail("invalid_arguments", fmt.Errorf("unknown publication/view"))
 			}
 			if payload.Publication == "status" {
+				s.mapCache = nil
 				s.simulation.AdvanceYear()
 				status := s.simulation.Status()
 				response.Data = map[string]any{"schema": "asabiya/advance-status-v1", "year": status.Year, "rng": status.HistoryRNG}
 			} else {
 				delta := s.simulation.AdvanceYearWithDelta()
 				if payload.View == "map" {
-					response.Data = projectDelta(delta)
+					response.Data = s.projectMapDelta(delta)
 				} else {
+					s.mapCache = nil
 					response.Data = delta
 				}
 			}
 		case "apply_command":
+			s.mapCache = nil
 			var command sim.Command
 			if err := decodePayload(req.Payload, &command); err != nil {
 				return fail("invalid_arguments", err)

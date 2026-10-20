@@ -6,7 +6,8 @@ dos programas ni configurar puertos.
 
 La simulación comienza con pueblos fundadores: no hay Estados ni ciudades
 preinventados. Usa Continuar para iniciar el avance continuo y Pausar para
-detenerlo. Elige 1, 2, 5 o 10 años/s; el ritmo real depende del cálculo.
+detenerlo. Arranca a 10 años/s. Puedes elegir 1, 2, 5, 10, 25, 50 o Máxima;
+Máxima quita la espera entre años. El ritmo real depende del equipo.
 El botón 1 año hace un único paso en pausa. No hay ráfagas para recuperar
 retrasos. Cada año sigue siendo completo y atómico en Go.
 Usa Mundo > Ayuda para los controles originales de cámara y selección.
@@ -32,9 +33,9 @@ Corrección r3: el protocolo acepta enteros JSON escritos como 4.0, 400.0 y
 200.0 sin redondear fracciones. Incluye configuración, sesión, comandos,
 años e identificadores. Conserva los límites y la validación del motor.
 En r3 se ejecutaron las pruebas específicas del protocolo solicitadas por el
-usuario. r4 cambia el cliente, la cámara y la reproducción: se compila/exporta,
+usuario. r5 aumenta ritmos y reduce trabajo repetido: se compila/exporta,
 pero NO se abrió el juego ni se ejecutaron pruebas nuevas. El testeo visual,
 de juego, reproducibilidad histórica y rendimiento queda a su cargo.
-Descomprime todo el ZIP r4 en una carpeta nueva y abre AsabiyaNative.exe.
+Descomprime todo el ZIP r5 en una carpeta nueva y abre AsabiyaNative.exe.
 Evita mezclar sus archivos con los de entregas anteriores.
 No se ha integrado nada en main.

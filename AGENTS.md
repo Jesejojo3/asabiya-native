@@ -1,5 +1,7 @@
 # Instrucción vigente de entrega
 
+Actualización r5: el usuario precisa que el avance de años es lento. Aumentar los ritmos disponibles y quitar trabajo repetido de publicación/render, manteniendo todos los años consecutivos, pausa y mecánicas. No volver a lotes con años ocultos. Se conserva el testeo a cargo del usuario: compilar/exportar, sin ejecutar nuevas pruebas, partidas ni CI. No hacer merge a main.
+
 Actualización r4: el usuario reasigna también el trabajo del cliente a Codex y solicita corregir la interfaz, el zoom irregular y la reproducción a saltos. Mantener terreno 3D y simulación Go; implementar presentación sobria, rueda de precisión coherente y reproducción continua con años atómicos. El testeo visual y de juego sigue a cargo del usuario; compilar/exportar sin lanzar el juego, suites ni CI. No integrar a main.
 
 Actualización r3: el usuario autorizó expresamente pruebas específicas de serialización/deserialización del protocolo Go–Godot para corregir los enteros JSON decimales. Ejecutar sólo esa cobertura y las regresiones esenciales del protocolo. El testeo visual y de juego, las suites históricas extensas y CI siguen reservados al usuario. No lanzar el juego exportado ni integrar a main.

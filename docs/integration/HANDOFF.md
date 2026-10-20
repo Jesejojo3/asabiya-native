@@ -1,5 +1,7 @@
 # Entrega para el testeo del usuario
 
+Actualización r5: el usuario precisa que lo lento es el avance anual. Ritmo inicial 10 años/s; opciones 25, 50 y Máxima, sin omitir años ni acumular ráfagas. Se evitan filas de mapa idénticas y repintado de capas estáticas. Ver [CLIENT_R5.md](CLIENT_R5.md). Compilación/exportación sin pruebas nuevas ni juego; validación y medida del ritmo efectivo a cargo del usuario.
+
 Actualización r4: Codex asume el cliente completo y revisa interfaz, cámara y reproducción a petición del usuario. Ver [cambios y casos pendientes](CLIENT_R4.md). Se produce un ZIP r4 independiente; se mantienen r2/r3. Se compila/importa/exporta, sin abrir el juego ni ejecutar pruebas nuevas. La comprobación visual y de comportamiento con el ratón del usuario sigue pendiente. Continuar solicita años consecutivos con ritmo 1/2/5/10 años/s; el botón 1 año conserva el paso manual. Ya no presenta saltos de lotes como reproducción continua.
 
 Actualización r3: el usuario solicitó corregir los enteros JSON del protocolo y autorizó sus pruebas específicas. Se ejecutó esa cobertura y las dos regresiones esenciales previas del protocolo; ver [evidencia y contrato](JSON_INTEGER_FIX.md). El testeo visual y de juego sigue a su cargo. No se ejecutaron suites históricas extensas, oráculos, CI ni el juego exportado. Compilar Go, importar recursos y exportar Godot son pasos de producción del artefacto y no se presentan como aprobación visual.
@@ -23,7 +25,7 @@ El juego exportado no fue abierto. La misión se entrega para comprobación manu
 1. Abrir AsabiyaNative.exe, observar arranque de Go sin configurar puertos y generación del relieve.
 2. Mover cámara y hacer zoom continental/provincial; seleccionar tierra, costa, océano y costura longitudinal.
 3. Pausar en un año publicado; comparar provincia seleccionada con su consulta directa al servidor, incluidos IDs y año.
-4. Avanzar 1, 10, 100 y 1 000 años; comprobar población, propietarios, pueblos, religiones, ciudades, crónica y censos. Una historia nueva requiere evolucionar para que aparezcan Estados.
+4. Usar Continuar a 10/25/50 años/s y Máxima, pausar y probar el paso de 1 año; comprobar población, propietarios, pueblos, religiones, ciudades, crónica y censos. Una historia nueva requiere evolucionar para que aparezcan Estados.
 5. Comprobar que cámara/render siguen respondiendo durante cálculo, decodificación y recepción. Medir FPS y memoria, que no se han validado.
 6. Consultar gobernantes, conflictos, rutas, acontecimientos y observaciones históricas; probar regreso a publicaciones antiguas disponibles.
 7. Pausar durante un lote, generar un mundo nuevo, cerrar la ventana y comprobar salida de Go. Interrumpir Go y confirmar el error y reinicio explícito, sin reintento de un avance incierto.
