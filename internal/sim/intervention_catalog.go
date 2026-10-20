@@ -55,6 +55,11 @@ var interventions = func() *struct {
 	return &c
 }()
 
+// OmenDefs returns the engine-owned catalog in stable reference order.
+func OmenDefs() []OmenDef {
+	return append([]OmenDef(nil), interventions.Omens...)
+}
+
 func omenDef(key string) *OmenDef {
 	for i := range interventions.Omens {
 		if interventions.Omens[i].Key == key {
