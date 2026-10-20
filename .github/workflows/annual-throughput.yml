@@ -1,7 +1,7 @@
 name: Annual throughput profiling and Windows package
 on:
   push:
-    branches: ['mission/annual-throughput', 'fix/annual-throughput-finalization', 'perf/publication-transfer-audit']
+    branches: ['mission/annual-throughput', 'fix/annual-throughput-finalization', 'perf/publication-transfer-audit', 'perf/deep-throughput-v2']
   workflow_dispatch:
 permissions:
   contents: read
@@ -51,6 +51,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Benchmark failed' }
           go tool pprof -top -nodecount=30 artifacts/annual-throughput/cpu.pprof | Out-File artifacts/annual-throughput/cpu-top.txt
           go tool pprof -top -alloc_space -nodecount=20 artifacts/annual-throughput/memory.pprof | Out-File artifacts/annual-throughput/alloc-top.txt
+          Get-Content artifacts/annual-throughput/cpu-top.txt | Select-Object -First 55
+          Get-Content artifacts/annual-throughput/alloc-top.txt | Select-Object -First 40
       - name: Bounded first state formation measurement
         if: contains(github.event.head_commit.message, '[profile]')
         timeout-minutes: 3
