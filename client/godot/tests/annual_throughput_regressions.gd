@@ -4,7 +4,9 @@ var failures := 0
 
 func check(ok: bool, text: String) -> void:
 	checks += 1
-	if not ok: printerr("FAIL ", text)
+	if not ok:
+		failures += 1
+		printerr("FAIL ", text)
 func _initialize() -> void: call_deferred("_run")
 func _wait(bridge: BridgeSource, condition: Callable) -> bool:
 	var end := Time.get_ticks_msec() + 30000
