@@ -26,6 +26,7 @@ var history_seed := "1"
 var tech_catalog: Array = []
 var era_names: Array = []
 var _map_view := "map"
+var _sparse_entities := false
 var _fast_active := false
 var _fast_cancel := true
 var _fast_progress: Dictionary = {}
@@ -103,6 +104,7 @@ func start(_extra_args := PackedStringArray()) -> bool:
 		return false
 	_closing = false
 	_stop = false
+	_sparse_entities = false
 	connected = false
 	busy = false
 	_live_running = false
@@ -170,6 +172,7 @@ func _on_catalog(response: Dictionary) -> void:
 	tech_catalog = data.get("technologies", [])
 	era_names = data.get("eras", [])
 	_map_view = "map-columns-v1" if data.get("mapColumnsV1", false) else "map"
+	_sparse_entities = _map_view == "map-columns-v1" and bool(data.get("entityChangesV1", false))
 	request("export_geography", {"directory":_directory.path_join("world")}, _on_geography)
 
 func _on_geography(response: Dictionary) -> void:
@@ -246,13 +249,19 @@ func advance(count: int) -> void:
 	_since_publication = 0
 	_next_advance()
 
+func _advance_payload() -> Dictionary:
+	var payload: Dictionary = {"view":_map_view}
+	if _sparse_entities:
+		payload["entityMode"] = "changed"
+	return payload
+
 func _next_advance() -> void:
 	if _remaining <= 0:
 		fetch_frame()
 		return
 	if _remaining == 1 and _since_publication == 0:
 		_remaining = 0
-		request("advance", {"view":_map_view}, _on_frame)
+		request("advance", _advance_payload(), _on_frame)
 		return
 	request("advance", {"publication":"status"}, func(response: Dictionary) -> void:
 		_remaining = maxi(0, _remaining - 1)
@@ -352,7 +361,7 @@ func poll() -> void:
 		_live_due_us = Time.get_ticks_usec() + _live_interval_us
 		_live_advance_pending = true
 		busy = true
-		request("advance", {"view":_map_view}, func(response: Dictionary):
+		request("advance", _advance_payload(), func(response: Dictionary):
 			_live_advance_pending = false
 			_on_frame(response))
 
