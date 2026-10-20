@@ -1,0 +1,59 @@
+name: Compare original JavaScript V8 and Go historical engines
+on:
+  push:
+    branches: ['research/js-v8-vs-go-benchmark']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: js-go-benchmark-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  windows-comparison:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    env:
+      GOTOOLCHAIN: local
+      GOOS: windows
+      GOARCH: amd64
+      GOAMD64: v1
+      CGO_ENABLED: '0'
+      GOMAXPROCS: '2'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version-file: '.go-version'
+          check-latest: false
+      - name: Immutable reference and benchmark environment
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts/js-go-benchmark | Out-Null
+          node --version | Tee-Object artifacts/js-go-benchmark/environment.txt
+          go version | Tee-Object -Append artifacts/js-go-benchmark/environment.txt
+          Write-Output "CPU: $((Get-CimInstance Win32_Processor | Select-Object -First 1).Name)" | Tee-Object -Append artifacts/js-go-benchmark/environment.txt
+          node tools/verify-reference.mjs
+          if ($LASTEXITCODE -ne 0) { throw 'Immutable HTML verification failed' }
+      - name: Original HTML JavaScript V8 core annual benchmark (20+100 years, 2 repetitions)
+        timeout-minutes: 5
+        run: |
+          node tools/benchmark-legacy-throughput.mjs --years=100 --warmup=20 --repeats=2 2>&1 | Tee-Object artifacts/js-go-benchmark/javascript-v8.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Original JS engine benchmark failed' }
+      - name: Native Go core annual benchmark (20+100 years, 2 repetitions)
+        timeout-minutes: 5
+        run: |
+          go test -run '^$' -bench '^BenchmarkCoreComparable$' -benchtime=100x -count=2 -cpu=2 -benchmem ./internal/interop 2>&1 | Tee-Object artifacts/js-go-benchmark/go.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Native Go engine benchmark failed' }
+      - name: Publish read-only benchmark data
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: js-v8-vs-go-core-windows-comparison
+          path: artifacts/js-go-benchmark/**
+          if-no-files-found: warn
+          retention-days: 14
