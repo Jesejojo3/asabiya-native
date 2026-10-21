@@ -1298,6 +1298,7 @@ func _build_hover_tip() -> void:
 
 
 func set_hover(text: String) -> void:
+	if hover_label.text == text: return
 	hover_tip.visible = text != ""
 	hover_label.text = text
 	hover_tip.reset_size()

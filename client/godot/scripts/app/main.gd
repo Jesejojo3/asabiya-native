@@ -400,7 +400,6 @@ func _load_frame() -> void:
 	if current_frame != null:
 		current_year = current_frame.year
 	current_layer = requested_layer if MapLayers.available(requested_layer, source, current_frame) else "terrain"
-	_performance_trace.set_context({"year":current_year,"layer":current_layer,"playing":hud.playing()})
 	var stage_started := _performance_trace.begin()
 	var settlements_start := _annual_trace.begin()
 	settlements.set_settlements(current_frame.settlements if current_frame != null else [])
@@ -429,6 +428,7 @@ func _load_frame() -> void:
 	var hud_start := _annual_trace.begin()
 	_refresh_ui()
 	_annual_trace.record("hud", hud_start)
+	if map_view.hovered_cell >= 0: _on_cell_hovered(map_view.hovered_cell)
 	if selection["kind"] != "":
 		select_entity(selection["kind"], selection["id"], false)
 	_annual_trace.record("frame-applied", frame_started, {"year":current_year})
@@ -487,6 +487,8 @@ func _update_zoom_style(z: float) -> void:
 
 func _refresh_ui() -> void:
 	var started := _performance_trace.begin()
+	if _performance_trace.enabled():
+		_performance_trace.set_context({"year":current_year,"layer":current_layer,"playing":hud.playing()})
 	hud.refresh_layers(source, current_frame, current_layer)
 	hud.refresh_timeline(source, current_year)
 	hud.set_frame_stats(current_frame, current_year)
