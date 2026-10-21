@@ -22,6 +22,9 @@ var _label_root: Node3D
 var _settlements := []
 var _clear_radius := {}   # settlement id -> footprint radius (for decoration)
 var _presentation := {}
+var _tile_members := {}
+var _label_view_valid := false
+var _label_camera_x := INF
 
 
 func setup_settlements(w: WorldData, math: MapMath) -> void:
@@ -53,40 +56,50 @@ func set_settlements(list: Array) -> void:
 	var presentation := {}
 	for settlement: Dictionary in list:
 		presentation[int(settlement["id"])] = [settlement.get("cell"), tier_of(settlement), features(settlement), settlement.get("era", 2), settlement.get("name", "")]
-	if presentation == _presentation and (_cache.size() == presentation.size()):
-		return
+	if presentation == _presentation and _cache.size() == presentation.size(): return
 	_presentation = presentation
-	var by_tile := {}
+	var next_members := {}
+	var dirty_tiles := {}
 	var live := {}
-	for s in list:
-		var id := int(s["id"])
+	for settlement: Dictionary in list:
+		var id := int(settlement["id"])
+		var cell := int(settlement["cell"])
+		if cell < 0 or cell >= world.cell_count(): continue
 		live[id] = true
-		var cell := int(s["cell"])
-		if cell < 0 or cell >= world.cell_count():
-			continue
-		var sig := "%d|%s|%d|%d" % [tier_of(s), str(features(s)), cell, int(s.get("era", 2))]
-		if not _cache.has(id) or _cache[id]["sig"] != sig:
-			_cache[id] = {"sig": sig, "kinds": _layout(s)}
-		var c := world.cell_center(cell)
-		var key := band_of(c.x, c.y)
-		if not by_tile.has(key):
-			by_tile[key] = {}
-		var merged: Dictionary = by_tile[key]
-		var kinds: Dictionary = _cache[id]["kinds"]
-		for k in kinds:
-			if not merged.has(k):
-				merged[k] = []
-			(merged[k] as Array).append_array(kinds[k])
-	for id in _cache.keys():
+		var center := world.cell_center(cell)
+		var tile := band_of(center.x, center.y)
+		if not next_members.has(tile): next_members[tile] = []
+		(next_members[tile] as Array).append(id)
+		# Names/population within a tier do not change building geometry.
+		var signature := [tier_of(settlement), features(settlement), cell, int(settlement.get("era", 2))]
+		if not _cache.has(id) or _cache[id]["sig"] != signature:
+			dirty_tiles[tile] = true
+			_cache[id] = {"sig":signature,"kinds":_layout(settlement)}
+	for id: int in _cache.keys():
+		if not live.has(id): _cache.erase(id)
+	for id: int in _anchors.keys():
 		if not live.has(id):
-			_cache.erase(id)
 			_anchors.erase(id)
 			_clear_radius.erase(id)
-	clear()
-	for key in by_tile:
-		set_band(key, by_tile[key])
+	# Includes the old tile on moves/deletions and the new tile on insertions.
+	for tile: int in _tile_members:
+		if _tile_members[tile] != next_members.get(tile, []): dirty_tiles[tile] = true
+	for tile: int in next_members:
+		if next_members[tile] != _tile_members.get(tile, []): dirty_tiles[tile] = true
+	_tile_members = next_members
+	for tile: int in dirty_tiles:
+		if not _tile_members.has(tile):
+			clear_band(tile)
+			continue
+		var merged := {}
+		for id: int in _tile_members[tile]:
+			var kinds: Dictionary = _cache[id]["kinds"]
+			for kind: String in kinds:
+				if not merged.has(kind): merged[kind] = []
+				(merged[kind] as Array).append_array(kinds[kind])
+		set_band(tile, merged)
 	_rebuild_labels()
-	layout_changed.emit()
+	if not dirty_tiles.is_empty(): layout_changed.emit()
 
 
 func _layout(s: Dictionary) -> Dictionary:
@@ -186,40 +199,53 @@ func _layout(s: Dictionary) -> Dictionary:
 
 
 func _rebuild_labels() -> void:
-	for l in _labels.values():
-		(l as Node).queue_free()
-	_labels.clear()
-	for s in _settlements:
-		var id := int(s["id"])
-		if not _anchors.has(id):
-			continue
-		var tier := tier_of(s)
-		var l := Label3D.new()
-		l.text = str(s.get("name", "#%d" % id))
-		l.font_size = 40 + tier * 10
-		l.pixel_size = 0.0022 + tier * 0.0004
-		l.outline_size = 10
-		l.outline_modulate = Color(0.05, 0.04, 0.03, 0.85)
-		l.modulate = Color(1.0, 0.96, 0.86)
-		l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		l.no_depth_test = false
-		l.fixed_size = false
-		l.visibility_range_end = 40.0 + tier * 45.0
-		l.visibility_range_end_margin = 10.0
-		l.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
-		l.set_meta("anchor", _anchors[id])
-		l.set_meta("tier", tier)
-		_label_root.add_child(l)
-		_labels[id] = l
+	var live := {}
+	for settlement: Dictionary in _settlements:
+		var id := int(settlement["id"])
+		if not _anchors.has(id): continue
+		live[id] = true
+		var tier := tier_of(settlement)
+		var text := str(settlement.get("name", "#%d" % id))
+		var signature := [text, tier, _anchors[id]]
+		var label: Label3D = _labels.get(id)
+		if label != null and label.get_meta("presentation", []) == signature: continue
+		if label == null:
+			label = Label3D.new()
+			label.outline_size = 10
+			label.outline_modulate = Color(0.05, 0.04, 0.03, 0.85)
+			label.modulate = Color(1.0, 0.96, 0.86)
+			label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			label.no_depth_test = false
+			label.fixed_size = false
+			label.visibility_range_end_margin = 10.0
+			label.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+			_label_root.add_child(label)
+			_labels[id] = label
+		label.text = text
+		label.font_size = 40 + tier * 10
+		label.pixel_size = 0.0022 + tier * 0.0004
+		label.visibility_range_end = 40.0 + tier * 45.0
+		label.set_meta("anchor", _anchors[id])
+		label.set_meta("tier", tier)
+		label.set_meta("presentation", signature)
+		_label_view_valid = false
+	for id: int in _labels.keys():
+		if not live.has(id):
+			(_labels[id] as Label3D).queue_free()
+			_labels.erase(id)
 
 
 func update_view(cam: Camera3D) -> void:
 	super.update_view(cam)
 	var cx := cam.global_position.x
+	if _label_view_valid and cx == _label_camera_x: return
+	_label_view_valid = true
+	_label_camera_x = cx
 	for id in _labels:
 		var l: Label3D = _labels[id]
 		var a: Vector3 = l.get_meta("anchor")
-		l.position = Vector3(mm.wrap_x_near(a.x, cx), a.y + 0.35 + int(l.get_meta("tier")) * 0.08, a.z)
+		var position_next := Vector3(mm.wrap_x_near(a.x, cx), a.y + 0.35 + int(l.get_meta("tier")) * 0.08, a.z)
+		if l.position != position_next: l.position = position_next
 
 
 func clearings() -> Array:

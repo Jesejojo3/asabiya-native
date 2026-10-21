@@ -169,10 +169,13 @@ static func build(id: String, w: WorldData, frame: HistoryFrame) -> Dictionary:
 			legend = {"kind": "ramp", "min": "0", "max": "1"}
 		"states":
 			if frame != null and frame.has_layer("owner"):
+				var palette := {}
+				for state: int in frame.states:
+					palette[state] = frame.states[state].get("rgb", id_color(state))
 				for i in w.land_cells:
 					var s := frame.owner[i]
 					if s >= 0 and frame.states.has(s):
-						put.call(i, frame.states[s].get("rgb", id_color(s)), 0.62)
+						put.call(i, palette[s], 0.62)
 						keys[i] = s
 		"wars":
 			if frame != null and frame.has_layer("owner"):
@@ -188,32 +191,36 @@ static func build(id: String, w: WorldData, frame: HistoryFrame) -> Dictionary:
 						put.call(c, Color8(240, 40, 25), 0.85)
 		"peoples", "cultures", "languages":
 			if frame != null and frame.has_layer("people"):
-				for i in w.land_cells:
-					var p := frame.people[i]
-					if p < 0 or not frame.peoples.has(p):
-						continue
-					var info: Dictionary = frame.peoples[p]
-					var k := p
-					var c: Color = info.get("rgb", id_color(p))
+				# Validate cultural vectors / convert HSV once per entity, not
+				# once per province. Keep the same colours and grouping keys.
+				var palette := {}
+				for people: int in frame.peoples:
+					var info: Dictionary = frame.peoples[people]
+					var group := people
+					var color: Variant = info.get("rgb", id_color(people))
 					if id == "cultures":
-						k = p
-						var cultural_color: Variant = culture_color(info.get("culture"))
-						if cultural_color == null:
-							continue
-						c = cultural_color
+						color = culture_color(info.get("culture"))
 					elif id == "languages":
-						k = int(info.get("family", p))
-						c = id_color(k * 7 + 3, 0.6, 0.78)
-					put.call(i, c, 0.62)
-					keys[i] = k
+						group = int(info.get("family", people))
+						color = id_color(group * 7 + 3, 0.6, 0.78)
+					if color != null: palette[people] = [color, group]
+				for i in w.land_cells:
+					var people := frame.people[i]
+					if people < 0 or not palette.has(people): continue
+					var entry: Array = palette[people]
+					put.call(i, entry[0], 0.62)
+					keys[i] = entry[1]
 				if id == "cultures":
 					legend = {"kind":"text", "text":"Color: componentes 1–3 del vector cultural. Consulta los seis valores en cada pueblo; límites por pueblo."}
 		"religions":
 			if frame != null and frame.has_layer("religion"):
+				var palette := {}
+				for religion: int in frame.religions:
+					palette[religion] = frame.religions[religion].get("rgb", id_color(religion))
 				for i in w.land_cells:
 					var r := frame.religion[i]
 					if r >= 0 and frame.religions.has(r):
-						put.call(i, frame.religions[r].get("rgb", id_color(r)), 0.65)
+						put.call(i, palette[r], 0.65)
 						keys[i] = r
 		"population":
 			if frame != null and frame.has_layer("population"):
@@ -231,8 +238,9 @@ static func build(id: String, w: WorldData, frame: HistoryFrame) -> Dictionary:
 				legend = {"kind": "ramp", "min": "0,01 /km²", "max": "100 /km²"}
 		"technology":
 			if frame != null and frame.has_layer("technology"):
+				var has_population := frame.has_layer("population")
 				for i in w.land_cells:
-					if frame.has_layer("population") and frame.population[i] < 1.0:
+					if has_population and frame.population[i] < 1.0:
 						continue
 					put.call(i, ramp(frame.technology[i]), 0.8)
 				legend = {"kind": "ramp", "min": "inicial", "max": "avanzada"}

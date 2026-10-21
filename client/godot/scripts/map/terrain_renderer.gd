@@ -339,14 +339,19 @@ func update_view(cam: Camera3D) -> void:
 ## Replaces the per-cell overlay (colours with alpha, group keys). Cheap: two
 ## 400×200 texture uploads, no geometry work.
 func set_overlay(colors: PackedByteArray, keys: PackedFloat32Array) -> void:
-	if colors != _overlay_colors:
+	var colors_changed := colors != _overlay_colors
+	var keys_changed := keys != _overlay_keys
+	var changed := colors_changed or keys_changed
+	var started := _trace.begin() if changed and _trace != null else 0
+	if colors_changed:
 		color_img.set_data(world.width, world.height, false, Image.FORMAT_RGBA8, colors)
 		color_tex.update(color_img)
 		_overlay_colors = colors.duplicate()
-	if keys != _overlay_keys:
+	if keys_changed:
 		key_img.set_data(world.width, world.height, false, Image.FORMAT_RF, keys.to_byte_array())
 		key_tex.update(key_img)
 		_overlay_keys = keys.duplicate()
+	if _trace != null: _trace.end("terrain-overlay-upload", started)
 
 
 func set_overlay_style(opacity: float, key_border: float, province_border: float) -> void:

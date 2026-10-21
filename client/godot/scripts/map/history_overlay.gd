@@ -16,6 +16,11 @@ var label_mode := "states"   # states | peoples | religions
 var _label_signature: Variant = null
 var _marker_signature: Variant = null
 var _route_signature: Variant = null
+var _view_valid := false
+var _view_x := INF
+var _view_zoom := INF
+var _marker_materials := {}
+var _route_material: StandardMaterial3D
 
 
 func setup(w: WorldData, math: MapMath) -> void:
@@ -24,6 +29,7 @@ func setup(w: WorldData, math: MapMath) -> void:
 
 
 func clear() -> void:
+	_view_valid = false
 	for n in _labels:
 		n.queue_free()
 	for n in _markers:
@@ -58,6 +64,7 @@ func rebuild(frame: HistoryFrame, mode: String) -> void:
 		for node in _labels: node.queue_free()
 		_labels.clear()
 		_build_labels(frame)
+		_view_valid = false
 		_label_signature = labels
 	var recent := []
 	for event: Dictionary in frame.events:
@@ -67,17 +74,19 @@ func rebuild(frame: HistoryFrame, mode: String) -> void:
 	for war: Dictionary in frame.wars:
 		var front: PackedInt32Array = war.get("front", PackedInt32Array())
 		if not front.is_empty(): fronts.append(front)
-	var markers := {"enabled":show_events,"events":recent,"fronts":fronts,"relief":mm.land_scale}
+	var markers := {"enabled":show_events,"events":recent,"fronts":fronts,"relief":Vector3(mm.land_scale, mm.ocean_scale, mm.relief_detail)}
 	if markers != _marker_signature:
 		for node in _markers: node.queue_free()
 		_markers.clear()
 		_build_markers(frame)
+		_view_valid = false
 		_marker_signature = markers
-	var routes := {"enabled":show_routes,"routes":frame.routes,"relief":mm.land_scale}
+	var routes := {"enabled":show_routes,"routes":frame.routes,"relief":Vector3(mm.land_scale, mm.ocean_scale, mm.relief_detail)}
 	if routes != _route_signature:
 		for node in _routes: node.queue_free()
 		_routes.clear()
 		_build_routes(frame)
+		_view_valid = false
 		_route_signature = routes
 
 
@@ -182,9 +191,12 @@ func _add_marker(cell: int, col: Color, glyph: String) -> void:
 	var root := Node3D.new()
 	var mi := MeshInstance3D.new()
 	mi.mesh = ModelLibrary.get_mesh("banner")
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = col
-	mat.vertex_color_use_as_albedo = true
+	var mat: StandardMaterial3D = _marker_materials.get(col)
+	if mat == null:
+		mat = StandardMaterial3D.new()
+		mat.albedo_color = col
+		mat.vertex_color_use_as_albedo = true
+		_marker_materials[col] = mat
 	mi.material_override = mat
 	mi.scale = Vector3.ONE * 2.2
 	root.add_child(mi)
@@ -208,11 +220,13 @@ func _build_routes(frame: HistoryFrame) -> void:
 	if not show_routes or frame.routes.is_empty():
 		return
 	var im := ImmediateMesh.new()
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.albedo_color = Color(0.95, 0.78, 0.35, 0.85)
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.vertex_color_use_as_albedo = false
+	if _route_material == null:
+		_route_material = StandardMaterial3D.new()
+		_route_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_route_material.albedo_color = Color(0.95, 0.78, 0.35, 0.85)
+		_route_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_route_material.vertex_color_use_as_albedo = false
+	var mat := _route_material
 	for r in frame.routes:
 		var cells: PackedInt32Array = r.get("cells", PackedInt32Array())
 		if cells.size() < 2:
@@ -246,15 +260,22 @@ func _build_routes(frame: HistoryFrame) -> void:
 
 func update_view(cam: Camera3D, zoom: float) -> void:
 	var cx := cam.global_position.x
+	if _view_valid and cx == _view_x and zoom == _view_zoom: return
+	_view_valid = true
+	_view_x = cx
+	_view_zoom = zoom
+	var fade := smoothstep(0.40, 0.56, zoom)
 	for l in _labels:
 		var a: Vector3 = l.get_meta("anchor")
-		l.position = Vector3(mm.wrap_x_near(a.x, cx), a.y, a.z)
+		var position_next := Vector3(mm.wrap_x_near(a.x, cx), a.y, a.z)
+		if l.position != position_next: l.position = position_next
 		# names belong to the world/regional views
-		var fade := smoothstep(0.40, 0.56, zoom)
-		l.visible = fade > 0.01
-		l.modulate.a = fade * 0.95
+		if l.visible != (fade > 0.01): l.visible = fade > 0.01
+		if l.modulate.a != fade * 0.95: l.modulate.a = fade * 0.95
 	for m in _markers:
 		var a2: Vector3 = m.get_meta("anchor")
-		m.position = Vector3(mm.wrap_x_near(a2.x, cx), a2.y, a2.z)
+		var position_next := Vector3(mm.wrap_x_near(a2.x, cx), a2.y, a2.z)
+		if m.position != position_next: m.position = position_next
 	for k in _routes.size():
-		_routes[k].position.x = (roundf(cx / mm.map_w) + (k - 1)) * mm.map_w
+		var wrapped := (roundf(cx / mm.map_w) + (k - 1)) * mm.map_w
+		if _routes[k].position.x != wrapped: _routes[k].position.x = wrapped
