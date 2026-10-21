@@ -7,6 +7,8 @@ extends RefCounted
 const MAX_VISIBLE_EVENTS := 1000
 
 var _trace := AnnualTrace.new("decoder")
+var _visual_index := FrameVisualIndex.new()
+var profile_enabled := false
 
 var world: WorldData
 var year := 0
@@ -203,6 +205,9 @@ func _publish(total_population: Variant = null) -> HistoryFrame:
 		f.world_population = float(total_population)
 	else:
 		for value: float in population: f.world_population += value
+	var index_started := Time.get_ticks_usec() if profile_enabled else 0
+	f.visual_index = _visual_index.build(world, f)
+	if profile_enabled: f.visual_index["buildUsec"] = Time.get_ticks_usec() - index_started
 	_trace.record("publish-frame", started, {"year":year,"cells":population.size(),"events":f.events.size()})
 	return f
 

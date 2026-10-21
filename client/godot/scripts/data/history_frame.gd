@@ -7,6 +7,8 @@ extends RefCounted
 ## engine; the client never fills these with invented values.
 
 var year := 0
+# Optional worker-built, immutable presentation sidecar; never part of SHA/replay.
+var visual_index: Dictionary = {}
 
 var world_digest := ""
 var state_digest := ""
@@ -63,7 +65,37 @@ func state_count() -> int:
 
 
 func settlement_by_id(id: int) -> Dictionary:
+	if visual_index.has("settlementsById"): return visual_index["settlementsById"].get(id, {})
 	for s in settlements:
 		if int(s["id"]) == id:
 			return s
 	return {}
+
+
+func settlements_in_cell(cell: int) -> Array:
+	if visual_index.has("settlementsByCell"): return visual_index["settlementsByCell"].get(cell, [])
+	var found := []
+	for settlement: Dictionary in settlements:
+		if int(settlement["cell"]) == cell: found.append(settlement)
+	return found
+
+
+func state_totals(world: WorldData, id: int) -> Array:
+	if visual_index.has("stateTotals"): return visual_index["stateTotals"].get(id, [0, 0.0, 0.0])
+	var result := [0, 0.0, 0.0]
+	for cell in world.land_cells:
+		if owner[cell] == id:
+			result[0] += 1
+			result[1] += world.area[cell]
+			if has_layer("population"): result[2] += population[cell]
+	return result
+
+
+func people_totals(world: WorldData, id: int) -> Array:
+	if visual_index.has("peopleTotals"): return visual_index["peopleTotals"].get(id, [0, 0.0])
+	var result := [0, 0.0]
+	for cell in world.land_cells:
+		if people[cell] == id:
+			result[0] += 1
+			if has_layer("population"): result[1] += population[cell]
+	return result
