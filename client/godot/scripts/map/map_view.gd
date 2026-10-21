@@ -107,7 +107,6 @@ func _build_environment() -> void:
 
 func invalidate_view() -> void:
 	_view_dirty = true
-	_hover_dirty = true
 
 
 func _process(_dt: float) -> void:
@@ -115,7 +114,8 @@ func _process(_dt: float) -> void:
 	var started := profiler.begin() if profiler != null else 0
 	var viewport_size := get_viewport().get_visible_rect().size
 	var projection := camera.get_camera_projection()
-	if _view_dirty or camera.global_transform != _view_transform or projection != _view_projection or viewport_size != _view_size:
+	var camera_changed := camera.global_transform != _view_transform or projection != _view_projection or viewport_size != _view_size
+	if _view_dirty or camera_changed:
 		_view_dirty = false
 		_view_transform = camera.global_transform
 		_view_projection = projection
@@ -132,7 +132,7 @@ func _process(_dt: float) -> void:
 			_minor_rivers = minor
 			terrain.material.set_shader_parameter("minor_rivers", minor)
 		for listener in view_listeners: listener.call(camera, z)
-		_hover_dirty = true
+		if camera_changed: _hover_dirty = true
 		if profiler != null and profiler.enabled():
 			profiler.set_context({"cameraDistance":camera.distance,"zoom":z,"viewportWidth":viewport_size.x,"viewportHeight":viewport_size.y})
 	var mouse := get_viewport().get_mouse_position()
@@ -154,6 +154,15 @@ func _update_hover(mouse: Vector2) -> void:
 	var c := -1
 	if not _mouse_over_ui():
 		var hit = camera.ground_at_screen(mouse)
+		if profiler != null and profiler.enabled():
+			profiler.counter("hoverQueries")
+			if camera.last_pick_cached: profiler.counter("pickCacheHits")
+			else:
+				profiler.counter("pickSamples", mm.pick_samples)
+				profiler.counter("pickFullHeights", mm.pick_full_heights)
+				profiler.counter("pickBoundsSkipped", mm.pick_bounds_skipped)
+				profiler.counter("pickBoundsBuilt", mm.pick_bounds_built)
+				profiler.counter("pickNonpositive", mm.pick_nonpositive)
 		if hit != null:
 			c = mm.cell_at(world, hit.x, hit.z)
 	if c != hovered_cell:

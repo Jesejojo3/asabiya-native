@@ -40,6 +40,14 @@ var _ground_y := 0.0
 var _zoom_anchor := Vector3.ZERO
 var _zoom_screen := Vector2.ZERO
 var _zoom_anchored := false
+var _pick_cache_valid := false
+var _pick_screen := Vector2.ZERO
+var _pick_transform := Transform3D.IDENTITY
+var _pick_projection := Projection()
+var _pick_surface := Vector4.ZERO
+var _pick_world_revision := -1
+var _pick_hit: Variant
+var last_pick_cached := false
 var _pose_dirty := true
 var _applied_target := Vector3(INF, INF, INF)
 var _applied_orbit := Vector3(INF, INF, INF)
@@ -49,7 +57,9 @@ var _applied_surface := Vector4(INF, INF, INF, INF)
 
 func setup(math: MapMath, trace: PerformanceTrace = null) -> void:
 	profiler = trace
+	_pick_cache_valid = false
 	mm = math
+	mm.profile_picking = profiler != null and profiler.enabled()
 	# Camera easing precedes the map listener pass, including during playback.
 	process_priority = -1
 	_update_zoom_limits()
@@ -72,6 +82,7 @@ func _update_zoom_limits() -> void:
 
 
 func invalidate_view() -> void:
+	_pick_cache_valid = false
 	_pose_dirty = true
 	moved.emit()
 
@@ -230,9 +241,18 @@ func _text_focus() -> bool:
 
 ## Ground point under a screen position (terrain or sea surface).
 func ground_at_screen(screen: Vector2) -> Variant:
-	var o := project_ray_origin(screen)
-	var d := project_ray_normal(screen)
-	return mm.raycast(o, d, far)
+	var projection_value := get_camera_projection()
+	var surface := Vector4(mm.land_scale, mm.ocean_scale, mm.relief_detail, mm.warp_amp)
+	last_pick_cached = _pick_cache_valid and screen == _pick_screen and global_transform == _pick_transform and projection_value == _pick_projection and surface == _pick_surface and mm.geography_revision == _pick_world_revision
+	if last_pick_cached: return _pick_hit
+	_pick_screen = screen
+	_pick_transform = global_transform
+	_pick_projection = projection_value
+	_pick_surface = surface
+	_pick_world_revision = mm.geography_revision
+	_pick_hit = mm.raycast(project_ray_origin(screen), project_ray_normal(screen), far)
+	_pick_cache_valid = true
+	return _pick_hit
 
 
 func handle_input(event: InputEvent) -> bool:

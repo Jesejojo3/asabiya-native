@@ -10,6 +10,7 @@ extends RefCounted
 ## into the simulation.
 
 const OCEAN_REF_DEPTH := 5600.0
+const PICK_BLOCK := 8
 
 var map_w := 1600.0
 var map_h := 800.0
@@ -23,12 +24,25 @@ var ocean_scale := 1.8             # units at OCEAN_REF_DEPTH
 var relief_detail := 0.55          # amplitude of the visual micro-relief (units)
 var warp_amp := 0.85               # province border warp (units)
 
+var geography_revision := 0
+var profile_picking := false
+var pick_samples := 0
+var pick_full_heights := 0
+var pick_bounds_skipped := 0
+var pick_bounds_built := 0
+var pick_nonpositive := 0
+var _pick_bounds := PackedFloat64Array()
+var _pick_valid := PackedByteArray()
+var _pick_columns := 0
 var _fw := 0
 var _fh := 0
 var _elev := PackedFloat32Array()
 
 
 func setup(world: WorldData) -> void:
+	geography_revision += 1
+	_pick_bounds = PackedFloat64Array()
+	_pick_valid = PackedByteArray()
 	_fw = world.fine_width
 	_fh = world.fine_height
 	_elev = world.elevation_fine
@@ -219,6 +233,12 @@ func wrap_x_near(x: float, ref: float) -> float:
 
 ## Intersects a ray with the visual height field. Returns a Vector3 or null.
 func raycast(origin: Vector3, dir: Vector3, max_dist := 6000.0) -> Variant:
+	if profile_picking:
+		pick_samples = 0
+		pick_full_heights = 0
+		pick_bounds_skipped = 0
+		pick_bounds_built = 0
+		pick_nonpositive = 0
 	if dir.length_squared() < 1e-12:
 		return null
 	dir = dir.normalized()
@@ -266,7 +286,50 @@ func raycast(origin: Vector3, dir: Vector3, max_dist := 6000.0) -> Variant:
 func _surface_gap(p: Vector3) -> float:
 	if p.z < -2.0 or p.z > map_h + 2.0:
 		return 1.0
-	return p.y - maxf(height_at(p.x, clampf(p.z, 0.0, map_h)), 0.0)
+	if profile_picking: pick_samples += 1
+	# The search uses signs only. At/below sea level the gap cannot be positive.
+	if p.y <= 0.0:
+		if profile_picking: pick_nonpositive += 1
+		return p.y
+	var z := clampf(p.z, 0.0, map_h)
+	if p.y > _pick_height_upper(p.x, z):
+		if profile_picking: pick_bounds_skipped += 1
+		return 1.0
+	if profile_picking: pick_full_heights += 1
+	return p.y - maxf(height_at(p.x, z), 0.0)
+
+
+## Exact-sign acceleration, NOT a height approximation. Bicubic Catmull-Rom
+## weights in each axis have negative mass <= 1/8. In 2D negative mass is
+## <= 2*(9/8)*(1/8) = 9/32, so max + 9/32*(max-min) bounds every interpolation.
+## The block halo contains every bilinear/bicubic texel; noise adds at most
+## 1.1 * abs(relief_detail) * (0.10+1.30+0.35). Ambiguous points use height_at.
+func _pick_height_upper(px: float, pz: float) -> float:
+	if land_scale < 0.0 or ocean_scale < 0.0 or not is_finite(land_scale) or not is_finite(ocean_scale) or not is_finite(relief_detail) or _fw <= 0 or _fh <= 0: return INF
+	if _pick_valid.is_empty():
+		_pick_columns = ceili(float(_fw) / PICK_BLOCK)
+		var count := _pick_columns * ceili(float(_fh) / PICK_BLOCK)
+		_pick_bounds.resize(count)
+		_pick_valid.resize(count)
+	var tx := floori(fposmod(floorf(px - 0.5), float(_fw)) / PICK_BLOCK)
+	var tz := clampi(floori((pz - 0.5) / PICK_BLOCK), 0, ceili(float(_fh) / PICK_BLOCK) - 1)
+	var key := tz * _pick_columns + tx
+	if _pick_valid[key] == 0:
+		var low := INF
+		var high := -INF
+		for z in range(tz * PICK_BLOCK - 1, tz * PICK_BLOCK + PICK_BLOCK + 2):
+			for x in range(tx * PICK_BLOCK - 1, tx * PICK_BLOCK + PICK_BLOCK + 2):
+				var value := _texel(x, z)
+				low = minf(low, value)
+				high = maxf(high, value)
+		var upper := high + (9.0 / 32.0) * (high - low)
+		# Cover arithmetic rounding well beyond the interpolation's roundoff.
+		_pick_bounds[key] = upper + maxf(1.0, maxf(absf(low), absf(high))) * 1e-6
+		_pick_valid[key] = 1
+		if profile_picking: pick_bounds_built += 1
+	var elevation_upper := _pick_bounds[key]
+	if not is_finite(elevation_upper): return INF
+	return maxf(0.0, elevation_upper * land_scale) + absf(relief_detail) * 1.75 * 1.1 + 1e-6
 
 
 func _clamp_hit(p: Vector3) -> Vector3:
