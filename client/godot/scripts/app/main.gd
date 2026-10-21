@@ -19,6 +19,7 @@ static var pending_world: Dictionary = {}
 static var pending_source: Dictionary = {}
 
 var _annual_trace := AnnualTrace.new("main")
+var _performance_trace := PerformanceTrace.new()
 
 var _launch: LaunchScreen
 var _last_session_error := ""
@@ -205,11 +206,12 @@ func _build_scene() -> void:
 	map_view = MapView.new()
 	map_view.name = "Map"
 	add_child(map_view)
-	map_view.setup(world)
+	map_view.setup(world, _performance_trace)
 	vegetation = VegetationLayer.new()
 	vegetation.name = "Vegetation"
 	map_view.add_child(vegetation)
 	vegetation.setup_veg(world, map_view.mm)
+	vegetation.profiler = _performance_trace
 	settlements = SettlementLayer.new()
 	settlements.name = "Settlements"
 	map_view.add_child(settlements)
@@ -377,6 +379,7 @@ func set_year(y: int) -> void:
 
 func _load_frame() -> void:
 	var frame_started := _annual_trace.begin()
+	var profile_started := _performance_trace.begin()
 	var next_frame: HistoryFrame = source.frame_at(current_year) if source != null else null
 	if current_frame != null and next_frame != null and current_frame.year == next_frame.year and (current_frame == next_frame or (current_frame.state_digest != "" and current_frame.state_digest == next_frame.state_digest)):
 		var refresh_start := _annual_trace.begin()
@@ -384,14 +387,19 @@ func _load_frame() -> void:
 		_annual_trace.record("hud", refresh_start)
 		if not hud.playing() and selection.get("kind") == "cell":
 			_request_province_details(int(selection["id"]))
+		_performance_trace.end("frame-apply", profile_started)
 		return
 	current_frame = next_frame
 	if current_frame != null:
 		current_year = current_frame.year
 	current_layer = requested_layer if MapLayers.available(requested_layer, source, current_frame) else "terrain"
+	_performance_trace.set_context({"year":current_year,"layer":current_layer,"playing":hud.playing()})
+	var stage_started := _performance_trace.begin()
 	var settlements_start := _annual_trace.begin()
 	settlements.set_settlements(current_frame.settlements if current_frame != null else [])
 	_annual_trace.record("settlements", settlements_start)
+	_performance_trace.end("settlements-apply", stage_started)
+	stage_started = _performance_trace.begin()
 	var label_mode := "states"
 	if current_layer in ["peoples", "cultures", "languages"]:
 		label_mode = "peoples"
@@ -400,9 +408,12 @@ func _load_frame() -> void:
 	var annotations_start := _annual_trace.begin()
 	history.rebuild(current_frame, label_mode)
 	_annual_trace.record("annotations", annotations_start)
+	_performance_trace.end("annotations-apply", stage_started)
+	stage_started = _performance_trace.begin()
 	var chronicle_start := _annual_trace.begin()
 	hud.set_chronicle(_collect_events())
 	_annual_trace.record("chronicle", chronicle_start)
+	_performance_trace.end("chronicle", stage_started)
 	if _applied_layer != current_layer or MapLayers.def(current_layer).get("requires", "") != "":
 		var layers_start := _annual_trace.begin()
 		_apply_layer()
@@ -413,6 +424,7 @@ func _load_frame() -> void:
 	if selection["kind"] != "":
 		select_entity(selection["kind"], selection["id"], false)
 	_annual_trace.record("frame-applied", frame_started, {"year":current_year})
+	_performance_trace.end("frame-apply", profile_started)
 
 
 func _collect_events() -> Array:
@@ -436,6 +448,7 @@ func set_layer(id: String) -> void:
 
 
 func _apply_layer() -> void:
+	var started := _performance_trace.begin()
 	var signature := MapLayers.signature(current_layer, world, current_frame)
 	if signature != _layer_signature:
 		var r := MapLayers.build(current_layer, world, current_frame)
@@ -444,6 +457,7 @@ func _apply_layer() -> void:
 		_layer_signature = signature
 	_applied_layer = current_layer
 	_apply_layer_style()
+	_performance_trace.end("overlays", started)
 
 
 func _apply_layer_style() -> void:
@@ -463,9 +477,11 @@ func _update_zoom_style(z: float) -> void:
 
 
 func _refresh_ui() -> void:
+	var started := _performance_trace.begin()
 	hud.refresh_layers(source, current_frame, current_layer)
 	hud.refresh_timeline(source, current_year)
 	hud.set_frame_stats(current_frame, current_year)
+	_performance_trace.end("hud-refresh", started)
 
 
 func _on_toggle(key: String, on: bool) -> void:
@@ -485,6 +501,7 @@ func _on_toggle(key: String, on: bool) -> void:
 
 
 func _process(_dt: float) -> void:
+	var started := _performance_trace.begin()
 	if source is BridgeSource:
 		(source as BridgeSource).poll()
 		if hud != null and hud.playing() and not (source as BridgeSource).is_live():
@@ -493,6 +510,9 @@ func _process(_dt: float) -> void:
 		if hud != null and not bridge.connected and bridge.last_error != "" and _last_session_error != bridge.last_error:
 			_last_session_error = bridge.last_error
 			hud.show_session_error(bridge.last_error)
+
+	_performance_trace.end("bridge-poll", started)
+	_performance_trace.frame()
 
 
 # ---------------------------------------------------------------- selection & panels
@@ -836,6 +856,7 @@ func _request_close() -> void:
 
 
 func _exit_tree() -> void:
+	_performance_trace.close()
 	if source != null:
 		source.close()
 

@@ -10,6 +10,7 @@ const BUILD_RADIUS := 150.0
 # Keep one extra tile ring to avoid churn at the construction boundary.
 const RETAIN_RADIUS := BUILD_RADIUS + 80.0
 
+var profiler: PerformanceTrace
 var world: WorldData
 var enabled := true
 var _task := -1

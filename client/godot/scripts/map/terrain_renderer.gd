@@ -7,7 +7,6 @@ extends Node3D
 ## Geography textures are uploaded once. Historical data only touches the small
 ## per-cell textures (400×200), so political changes never rebuild geometry.
 
-const Trace := preload("res://scripts/data/performance_trace.gd")
 const TerrainShader := preload("res://shaders/terrain.gdshader")
 const WaterShader := preload("res://shaders/water.gdshader")
 
@@ -54,28 +53,24 @@ var _overlay_style := Vector3(INF, INF, INF)
 var _selection := Vector3(INF, INF, INF)
 
 
-func setup(w: WorldData, math: MapMath) -> void:
+func setup(w: WorldData, math: MapMath, trace: PerformanceTrace = null) -> void:
 	_view_valid = false
 	_overlay_colors.clear()
 	_overlay_keys.clear()
 	world = w
 	mm = math
-	_trace = Trace.new()
-	set_process(_trace.enabled())
+	_trace = trace
 	var started := Time.get_ticks_usec()
 	_build_textures()
-	_trace.record("terrain-textures", {"elapsedUsec":Time.get_ticks_usec() - started})
+	if _trace != null: _trace.record("terrain-textures", {"elapsedUsec":Time.get_ticks_usec() - started})
 	started = Time.get_ticks_usec()
 	_build_material()
 	_build_lod_meshes()
 	_build_chunks()
 	_build_water()
-	_trace.record("terrain-geometry", {"elapsedUsec":Time.get_ticks_usec() - started,
-		"chunks":chunks.size(),"lodLevels":lod_meshes.size()})
-
-
-func _process(_dt: float) -> void:
-	_trace.frame()
+	if _trace != null:
+		_trace.record("terrain-geometry", {"elapsedUsec":Time.get_ticks_usec() - started,
+			"chunks":chunks.size(),"lodLevels":lod_meshes.size()})
 
 
 func _build_textures() -> void:
@@ -286,6 +281,7 @@ func update_view(cam: Camera3D) -> void:
 	var projection := Vector3(vh, cam.fov, target_pixels_per_quad)
 	if _view_valid and cp == _view_position and projection == _view_projection:
 		return
+	var started := _trace.begin() if _trace != null else 0
 	_view_valid = true
 	_view_position = cp
 	_view_projection = projection
@@ -318,6 +314,7 @@ func update_view(cam: Camera3D) -> void:
 		water_planes[k].position.x = mm.wrap_x_near(mm.map_w * 0.5, cp.x) + (k - 1) * mm.map_w
 	stats["triangles"] = tris
 	stats["chunks"] = chunks.size()
+	if _trace != null: _trace.end("terrain-lod", started)
 
 
 # ---------------------------------------------------------------- overlays

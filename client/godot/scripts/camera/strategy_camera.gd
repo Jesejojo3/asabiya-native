@@ -20,6 +20,7 @@ signal moved
 @export var edge_scroll := false
 @export var yaw_limit_deg := 60.0
 
+var profiler: PerformanceTrace
 var mm: MapMath
 var target := Vector3(800, 0, 400)
 var distance := 900.0
@@ -41,7 +42,8 @@ var _zoom_screen := Vector2.ZERO
 var _zoom_anchored := false
 
 
-func setup(math: MapMath) -> void:
+func setup(math: MapMath, trace: PerformanceTrace = null) -> void:
+	profiler = trace
 	mm = math
 	_update_zoom_limits()
 	get_viewport().size_changed.connect(_update_zoom_limits)
@@ -100,6 +102,7 @@ func pitch() -> float:
 
 
 func _process(dt: float) -> void:
+	var started := profiler.begin() if profiler != null else 0
 	var step_time := minf(dt, 0.05)
 	var move := Vector2.ZERO
 	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
@@ -163,6 +166,7 @@ func _process(dt: float) -> void:
 			_zoom_anchored = false
 	if not before.is_equal_approx(global_transform):
 		moved.emit()
+	if profiler != null: profiler.end("camera", started)
 
 
 func _clamp_goal() -> void:

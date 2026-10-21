@@ -7,6 +7,7 @@ signal cell_hovered(cell: int)
 signal cell_clicked(cell: int)
 signal entity_clicked(kind: String, id: int)
 
+var profiler: PerformanceTrace
 var world: WorldData
 var mm: MapMath
 var terrain: TerrainRenderer
@@ -27,7 +28,8 @@ var view_listeners: Array[Callable] = []
 var pick_handlers: Array[Callable] = []
 
 
-func setup(w: WorldData) -> void:
+func setup(w: WorldData, trace: PerformanceTrace = null) -> void:
+	profiler = trace
 	world = w
 	mm = MapMath.new()
 	mm.setup(w)
@@ -35,12 +37,12 @@ func setup(w: WorldData) -> void:
 	terrain = TerrainRenderer.new()
 	terrain.name = "Terrain"
 	add_child(terrain)
-	terrain.setup(w, mm)
+	terrain.setup(w, mm, profiler)
 	camera = StrategyCamera.new()
 	camera.name = "Camera"
 	camera.fov = 38.0
 	add_child(camera)
-	camera.setup(mm)
+	camera.setup(mm, profiler)
 	camera.make_current()
 	camera.moved.connect(func(): _hover_dirty = true)
 	if DisplayServer.get_name() != "headless":
