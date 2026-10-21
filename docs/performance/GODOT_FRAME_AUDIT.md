@@ -16,7 +16,7 @@ Remotos consultados el 21-10-2026: consolidación `79035761f1e61041a3ccbf74b6485
 
 `VegetationLayer.update_view` poda y busca tiles repetidamente, aunque ya no falte ninguno. Un worker calcula transformaciones; `InstanceBands.set_band` todavía convierte y envía cada instancia por separado en el hilo principal. Hay un máximo de un worker y un tile publicado por frame, pero no un límite temporal estricto para una subida GPU.
 
-`SettlementLayer.set_settlements` reutiliza layouts individuales, pero cualquier cambio de presentación reconstruye todas las bandas y todas las etiquetas; un renombre basta para dispararlo. `HistoryOverlay` ya tiene firmas separadas; su actualización de vista sigue recorriendo todos los nodos cada frame y recrea materiales iguales al reconstruir marcadores/rutas.
+`SettlementLayer.set_settlements` reutiliza layouts individuales, pero cualquier cambio de presentación reconstruye todas las bandas y todas las etiquetas; un renombre basta para dispararlo. `HistoryOverlay` recalcula centroides al cambiar nombres y repite seno/coseno para celdas de una misma longitud. Ya tiene firmas separadas; su actualización de vista sigue recorriendo todos los nodos cada frame y recrea materiales iguales al reconstruir marcadores/rutas.
 
 `Hud.refresh_layers` depende de la identidad del frame aunque disponibilidad sólo dependa de sistemas y existencia de datos. `set_frame_stats` vuelve a rellenar desastres al repetir un refresh; `set_view_scale` reasigna controles/textos sin cambios. Chronicle ya compara eventos y las capas geográficas ya se conservan entre años; no se reescriben esos mecanismos.
 
