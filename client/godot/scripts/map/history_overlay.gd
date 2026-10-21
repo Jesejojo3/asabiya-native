@@ -4,6 +4,10 @@ extends Node3D
 ## terrain, war markers, recent events and trade routes. Rebuilt only when the
 ## frame changes; positions follow the longitude wrap every frame.
 
+var profiler: PerformanceTrace
+var _label_nodes := {}
+var _label_values := {}
+var _marker_nodes := {}
 var world: WorldData
 var mm: MapMath
 var _labels: Array[Label3D] = []
@@ -52,6 +56,9 @@ func clear() -> void:
 	for n in _routes:
 		n.queue_free()
 	_labels.clear()
+	_label_nodes.clear()
+	_label_values.clear()
+	_marker_nodes.clear()
 	_markers.clear()
 	_routes.clear()
 	_label_signature = null
@@ -75,12 +82,12 @@ func rebuild(frame: HistoryFrame, mode: String) -> void:
 	var names := {}
 	for id: int in records: names[id] = records[id].get("name", "")
 	var labels := {"enabled":show_labels,"mode":mode,"ids":ids,"names":names}
+	if profiler != null: profiler.counter("annotationsPublications")
 	if labels != _label_signature:
-		for node in _labels: node.queue_free()
-		_labels.clear()
 		_build_labels(frame)
 		_view_valid = false
 		_label_signature = labels
+	elif profiler != null: profiler.counter("labelLayerCacheHits")
 	var recent := []
 	for event: Dictionary in frame.events:
 		if frame.year - int(event.get("year", frame.year)) <= 50 and int(event.get("cell", -1)) >= 0:
@@ -91,18 +98,21 @@ func rebuild(frame: HistoryFrame, mode: String) -> void:
 		if not front.is_empty(): fronts.append(front)
 	var markers := {"enabled":show_events,"events":recent,"fronts":fronts,"relief":Vector3(mm.land_scale, mm.ocean_scale, mm.relief_detail)}
 	if markers != _marker_signature:
-		for node in _markers: node.queue_free()
-		_markers.clear()
 		_build_markers(frame)
 		_view_valid = false
 		_marker_signature = markers
-	var routes := {"enabled":show_routes,"routes":frame.routes,"relief":Vector3(mm.land_scale, mm.ocean_scale, mm.relief_detail)}
+	elif profiler != null: profiler.counter("markerLayerCacheHits")
+	var paths := []
+	for route: Dictionary in frame.routes:
+		paths.append([route.get("cells", PackedInt32Array()), route.get("volume", 0.5)])
+	var routes := {"enabled":show_routes,"routes":paths,"relief":Vector3(mm.land_scale, mm.ocean_scale, mm.relief_detail)}
 	if routes != _route_signature:
 		for node in _routes: node.queue_free()
 		_routes.clear()
 		_build_routes(frame)
 		_view_valid = false
 		_route_signature = routes
+	elif profiler != null: profiler.counter("routeLayerCacheHits")
 
 
 ## Wrap-aware centroid and extent of groups of cells.
@@ -134,78 +144,112 @@ func _group_shapes(ids: PackedInt32Array) -> Dictionary:
 
 
 func _build_labels(frame: HistoryFrame) -> void:
-	if not show_labels:
-		return
-	var ids := PackedInt32Array()
-	var names := {}
-	match label_mode:
-		"peoples":
-			ids = frame.people
-			for k in frame.peoples:
-				names[k] = frame.peoples[k].get("name", "")
-		"religions":
-			ids = frame.religion
-			for k in frame.religions:
-				names[k] = frame.religions[k].get("name", "")
-		_:
-			ids = frame.owner
-			for k in frame.states:
-				names[k] = frame.states[k].get("name", "")
-	if ids.is_empty():
-		return
-	if ids != _shape_ids:
-		_shapes = _group_shapes(ids)
-		_shape_ids = ids
-	var shapes := _shapes
-	for g in shapes:
-		var sh: Dictionary = shapes[g]
-		if int(sh["n"]) < 6 or str(names.get(g, "")) == "":
-			continue
-		var l := Label3D.new()
-		l.text = str(names[g]).to_upper()
-		var size := sqrt(float(sh["n"]))
-		l.font_size = 96
-		# CK-style: the name spans a good part of the territory it labels
-		var chars := maxf(4.0, float(l.text.length()))
-		l.pixel_size = clampf(size * 3.2 / (chars * 0.62 * 96.0) * 1.0, 0.012, 0.25)
-		l.outline_size = 14
-		l.modulate = Color(0.98, 0.94, 0.84, 0.95)
-		l.outline_modulate = Color(0.06, 0.05, 0.04, 0.75)
-		l.rotation_degrees = Vector3(-90, 0, 0)  # lies on the map, CK-style
-		l.double_sided = true
-		l.no_depth_test = true
-		l.render_priority = 2
-		l.modulate.a = 0.95
-		l.visibility_range_begin = size * 1.6
-		l.visibility_range_begin_margin = size * 1.0
-		l.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
-		l.set_meta("anchor", Vector3(sh["x"], 12.0, sh["z"]))
-		add_child(l)
-		_labels.append(l)
+	var ids := frame.owner if label_mode == "states" else (frame.people if label_mode == "peoples" else frame.religion)
+	var records := frame.states if label_mode == "states" else (frame.peoples if label_mode == "peoples" else frame.religions)
+	var indexed: Dictionary = frame.visual_index.get("shapes", {})
+	var shapes: Dictionary = {}
+	if show_labels and not ids.is_empty():
+		if indexed.has(label_mode):
+			shapes = indexed[label_mode]
+		else:
+			# Legacy/manual frames retain the original exact computation.
+			if ids != _shape_ids:
+				_shapes = _group_shapes(ids)
+				_shape_ids = ids
+			shapes = _shapes
+	var live := {}
+	_labels.clear()
+	for group: int in shapes:
+		var shape: Dictionary = shapes[group]
+		var text := str(records.get(group, {}).get("name", "")).to_upper()
+		if int(shape["n"]) < 6 or text == "": continue
+		live[group] = true
+		var size := sqrt(float(shape["n"]))
+		var pixel_size := clampf(size * 3.2 / (maxf(4.0, float(text.length())) * 0.62 * 96.0), 0.012, 0.25)
+		var anchor := Vector3(shape["x"], 12.0, shape["z"])
+		var values := [text, pixel_size, anchor, size]
+		var label: Label3D = _label_nodes.get(group)
+		if label == null:
+			label = Label3D.new()
+			label.font_size = 96
+			label.outline_size = 14
+			label.modulate = Color(0.98, 0.94, 0.84, 0.95)
+			label.outline_modulate = Color(0.06, 0.05, 0.04, 0.75)
+			label.rotation_degrees = Vector3(-90, 0, 0)
+			label.double_sided = true
+			label.no_depth_test = true
+			label.render_priority = 2
+			label.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+			add_child(label)
+			_label_nodes[group] = label
+			if profiler != null: profiler.counter("labelsCreated")
+		var previous: Array = _label_values.get(group, [])
+		if previous != values:
+			if previous.is_empty() or previous[0] != text: label.text = text
+			if previous.is_empty() or previous[1] != pixel_size: label.pixel_size = pixel_size
+			if previous.is_empty() or previous[3] != size:
+				label.visibility_range_begin = size * 1.6
+				label.visibility_range_begin_margin = size
+			if previous.is_empty() or previous[2] != anchor: label.set_meta("anchor", anchor)
+			_label_values[group] = values
+			if profiler != null: profiler.counter("labelsUpdated")
+		elif profiler != null: profiler.counter("labelsReused")
+		_labels.append(label)
+	for group: int in _label_nodes.keys():
+		if not live.has(group):
+			(_label_nodes[group] as Label3D).queue_free()
+			_label_nodes.erase(group)
+			_label_values.erase(group)
+			if profiler != null: profiler.counter("labelsRemoved")
 
 
 func _build_markers(frame: HistoryFrame) -> void:
-	if not show_events:
-		return
-	for wv in frame.wars:
-		var front: PackedInt32Array = wv.get("front", PackedInt32Array())
-		if front.is_empty():
-			continue
-		_add_marker(front[front.size() / 2], Color8(210, 40, 30), "⚔")
-	for ev in frame.events:
-		var y := int(ev.get("year", frame.year))
-		if frame.year - y > 50 or int(ev.get("cell", -1)) < 0:
-			continue
-		var col := Color8(220, 190, 90)
-		match str(ev.get("kind", "")):
-			"war", "battle": col = Color8(210, 40, 30)
-			"collapse", "fall": col = Color8(90, 90, 90)
-			"founding", "foundation": col = Color8(60, 150, 220)
-			"plague", "catastrophe", "famine": col = Color8(140, 60, 160)
-		_add_marker(int(ev["cell"]), col, "")
+	var desired := {}
+	if show_events:
+		for index in frame.wars.size():
+			var war: Dictionary = frame.wars[index]
+			var front: PackedInt32Array = war.get("front", PackedInt32Array())
+			if not front.is_empty(): desired["w:%s" % str(war.get("id", index))] = [front[front.size() / 2], Color8(210, 40, 30), "⚔"]
+		for index in frame.events.size():
+			var event: Dictionary = frame.events[index]
+			if frame.year - int(event.get("year", frame.year)) > 50 or int(event.get("cell", -1)) < 0: continue
+			var color := Color8(220, 190, 90)
+			match str(event.get("kind", "")):
+				"war", "battle": color = Color8(210, 40, 30)
+				"collapse", "fall": color = Color8(90, 90, 90)
+				"founding", "foundation": color = Color8(60, 150, 220)
+				"plague", "catastrophe", "famine": color = Color8(140, 60, 160)
+			desired["e:%s" % str(event.get("id", index))] = [int(event["cell"]), color, ""]
+	_markers.clear()
+	var relief := Vector3(mm.land_scale, mm.ocean_scale, mm.relief_detail)
+	for key: String in desired:
+		var item: Array = desired[key]
+		var marker: Node3D = _marker_nodes.get(key)
+		var style := [item[1], item[2]]
+		if marker != null and marker.get_meta("style") != style:
+			marker.queue_free()
+			marker = null
+		if marker == null:
+			marker = _add_marker(item[0], item[1], item[2])
+			marker.set_meta("style", style)
+			marker.set_meta("surface", [item[0], relief])
+			_marker_nodes[key] = marker
+			if profiler != null: profiler.counter("markersCreated")
+		elif profiler != null: profiler.counter("markersReused")
+		var surface := [item[0], relief]
+		if marker.get_meta("surface", []) != surface:
+			var center := world.cell_center(item[0])
+			marker.set_meta("anchor", Vector3(center.x, maxf(mm.height_at(center.x, center.y), 0.0), center.y))
+			marker.set_meta("surface", surface)
+		_markers.append(marker)
+	for key: String in _marker_nodes.keys():
+		if not desired.has(key):
+			(_marker_nodes[key] as Node3D).queue_free()
+			_marker_nodes.erase(key)
+			if profiler != null: profiler.counter("markersRemoved")
 
 
-func _add_marker(cell: int, col: Color, glyph: String) -> void:
+func _add_marker(cell: int, col: Color, glyph: String) -> Node3D:
 	var root := Node3D.new()
 	var mi := MeshInstance3D.new()
 	mi.mesh = ModelLibrary.get_mesh("banner")
@@ -231,7 +275,7 @@ func _add_marker(cell: int, col: Color, glyph: String) -> void:
 	var c := world.cell_center(cell)
 	root.set_meta("anchor", Vector3(c.x, maxf(mm.height_at(c.x, c.y), 0.0), c.y))
 	add_child(root)
-	_markers.append(root)
+	return root
 
 
 func _build_routes(frame: HistoryFrame) -> void:
