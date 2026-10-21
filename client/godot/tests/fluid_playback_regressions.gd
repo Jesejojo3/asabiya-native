@@ -24,13 +24,14 @@ func _wait(bridge: BridgeSource, condition: Callable) -> bool:
 func _measure(server: String, fluid: bool, full_size: bool) -> Dictionary:
 	var bridge := BridgeSource.new(null, server)
 	bridge.world_config = {"seed":"Asabiya","width":400 if full_size else 24,"height":200 if full_size else 16,"detail":4,"landFraction":0.33}
-	bridge.fluid_playback = fluid
 	check(bridge.start(), "server starts")
 	var ready: bool = await _wait(bridge, func(): return bridge.can_advance() and not bridge.years().is_empty())
 	check(ready, "initial exact snapshot loads")
 	if not ready:
 		bridge.close()
 		return {}
+	# Diagnostic baseline simulates a server without checkpoint support.
+	if not fluid: bridge._digest_checkpoints = false
 	var start_year: int = bridge.years()[-1]
 	var count := 53 # Final pause deliberately falls between checkpoints.
 	var observed: Array[int] = []

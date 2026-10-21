@@ -61,7 +61,6 @@ func _process(_dt: float) -> bool:
 		initial_year = seen_year
 		if fast_mode: source.start_fast_forward(samples, 50)
 		elif checkpoint_digest:
-			source.fluid_playback = true
 			source.frames_changed.connect(func():
 				if source.years()[-1] >= initial_year + samples: source.stop_live())
 			source.start_live(0)

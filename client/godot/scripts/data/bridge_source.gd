@@ -34,7 +34,6 @@ var _sparse_entities := false
 # Fluid playback keeps all annual frames, with explicit deferred fingerprints.
 # Paused snapshots and individual steps always request an exact fingerprint.
 var _digest_checkpoints := false
-var fluid_playback := true
 var _pause_verifying := false
 var _field_changes := false
 var _fast_active := false
@@ -273,7 +272,7 @@ func _advance_payload() -> Dictionary:
 		payload["entityMode"] = "changed"
 	if _field_changes:
 		payload["provinceMode"] = "changed-fields-v1"
-	if _digest_checkpoints and fluid_playback and _live_running:
+	if _digest_checkpoints and _live_running:
 		payload["digestMode"] = "checkpoint-v1"
 	return payload
 
