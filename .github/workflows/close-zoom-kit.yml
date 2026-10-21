@@ -1,0 +1,52 @@
+name: Close zoom profiling kit (no target GPU benchmark)
+on:
+  pull_request:
+    paths:
+      - 'client/godot/tests/close_zoom_capture.gd'
+      - 'tools/profile-close-zoom.ps1'
+      - 'tools/package-close-zoom.py'
+      - 'tools/summarize-close-zoom.mjs'
+      - 'tools/test-close-zoom.mjs'
+      - '.github/workflows/close-zoom-kit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  kit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GOTOOLCHAIN: local
+      GOOS: windows
+      GOARCH: amd64
+      GOAMD64: v1
+      CGO_ENABLED: '0'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version-file: '.go-version'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.node-version'
+      - name: Analyze controlled samples; not game measurements
+        run: node --test tools/test-close-zoom.mjs
+      - name: Preserve baseline Go, contracts and reference
+        run: git diff --exit-code 2193a9d92400e7398c73c79105e311aae6397d3b -- internal cmd go.mod go.sum reference tests/native
+      - name: Build baseline server for Windows x64
+        run: go build -trimpath -buildvcs=false -o build/profile-server.exe ./cmd/asabiya-server
+      - name: Verify and bundle official Windows Godot editor
+        run: |
+          asset=Godot_v4.7.2-stable_win64.exe.zip
+          curl -fsSL --retry 2 -o build/godot-windows.zip "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/$asset"
+          python3 tools/package-close-zoom.py --editor-zip build/godot-windows.zip --server build/profile-server.exe --out build/close-zoom-kit
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: asabiya-close-zoom-baseline-2193a9d-windows-x64
+          path: build/close-zoom-kit/**
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14

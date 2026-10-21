@@ -1,4 +1,16 @@
-# Fase 2.2 vigente (20 de octubre de 2026, hora del usuario)
+# Misión actual: perfilado de zoom cercano, 30 FPS (21 de octubre de 2026)
+
+La nueva petición autoriza perfiles/pruebas y rama/PR independientes desde
+`2193a9d92400e7398c73c79105e311aae6397d3b`, sin actualizar PR #22 ni main ni merges.
+Primero capturar 1080p/720p, pausado/activo, en i5-1340P + Iris Xe + 16 GB Windows.
+Optimizar sólo costes justificados por mediciones; conservar fidelidad CKIII,
+Go/Godot y determinismo. Las restricciones anteriores de no ejecutar pruebas,
+no crear otras ramas y publicar con skip-ci quedan sustituidas en esta misión.
+Sin GPU objetivo accesible, preparar el circuito y declarar medición pendiente;
+no usar headless/software render como evidencia del portátil. Ver
+`docs/performance/CLOSE_ZOOM_30FPS.md`. No añadir Earth/edificios/ruinas.
+
+# Historial: Fase 2.2 (20 de octubre de 2026, hora del usuario)
 
 Continuar `perf/godot-frame-optimization` desde `238085832ea8fdd8d43e753908699d1810e40337`, actualizar sólo PR #22; no merge ni otras ramas. Priorizar índices derivados de HistoryFrame, escena diferencial, picking y telemetría inclusiva/exclusiva. Sin modificar Go, protocolo TCP, RNG, calendario, SHA, replay, golden o HTML. No ejecutar juego, editor, pruebas, headless, benchmarks, simulaciones ni CI. Sólo revisión estática e instrucciones de compilación Windows; no ZIP. La petición 2.2 autoriza restaurar el control visible Fluido, activado por defecto y explicado. Publicar commits con `[skip ci]` en el HEAD final para no disparar suites al actualizar la PR. La aprobación y mediciones corresponden al usuario/ChatGPT.
 
