@@ -53,10 +53,13 @@ static func features(s: Dictionary) -> Dictionary:
 
 func set_settlements(list: Array) -> void:
 	_settlements = list
+	if profiler != null: profiler.counter("settlementsConsidered", list.size())
 	var presentation := {}
 	for settlement: Dictionary in list:
 		presentation[int(settlement["id"])] = [settlement.get("cell"), tier_of(settlement), features(settlement), settlement.get("era", 2), settlement.get("name", "")]
-	if presentation == _presentation and _cache.size() == presentation.size(): return
+	if presentation == _presentation and _cache.size() == presentation.size():
+		if profiler != null: profiler.counter("settlementCacheHits", list.size())
+		return
 	_presentation = presentation
 	var next_members := {}
 	var dirty_tiles := {}
@@ -75,6 +78,7 @@ func set_settlements(list: Array) -> void:
 		if not _cache.has(id) or _cache[id]["sig"] != signature:
 			dirty_tiles[tile] = true
 			_cache[id] = {"sig":signature,"kinds":_layout(settlement)}
+			if profiler != null: profiler.counter("settlementLayoutsBuilt")
 	for id: int in _cache.keys():
 		if not live.has(id): _cache.erase(id)
 	for id: int in _anchors.keys():
@@ -87,6 +91,7 @@ func set_settlements(list: Array) -> void:
 	for tile: int in next_members:
 		if next_members[tile] != _tile_members.get(tile, []): dirty_tiles[tile] = true
 	_tile_members = next_members
+	if profiler != null: profiler.counter("settlementTilesDirty", dirty_tiles.size())
 	for tile: int in dirty_tiles:
 		if not _tile_members.has(tile):
 			clear_band(tile)

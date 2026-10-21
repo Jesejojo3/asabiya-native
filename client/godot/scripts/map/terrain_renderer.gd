@@ -346,10 +346,16 @@ func set_overlay(colors: PackedByteArray, keys: PackedFloat32Array) -> void:
 	if colors_changed:
 		color_img.set_data(world.width, world.height, false, Image.FORMAT_RGBA8, colors)
 		color_tex.update(color_img)
+		if _trace != null:
+			_trace.counter("overlayColorUploads")
+			_trace.counter("overlaySourceBytes", colors.size())
 		_overlay_colors = colors.duplicate()
 	if keys_changed:
 		key_img.set_data(world.width, world.height, false, Image.FORMAT_RF, keys.to_byte_array())
 		key_tex.update(key_img)
+		if _trace != null:
+			_trace.counter("overlayKeyUploads")
+			_trace.counter("overlaySourceBytes", keys.size() * 4)
 		_overlay_keys = keys.duplicate()
 	if _trace != null: _trace.end("terrain-overlay-upload", started)
 

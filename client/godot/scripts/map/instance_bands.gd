@@ -5,6 +5,7 @@ extends Node3D
 ## and faded by distance as a unit; each model kind is one MultiMesh per tile.
 ## Used by settlements and decorative vegetation.
 
+var profiler: PerformanceTrace
 var mm: MapMath
 var band_width := 80.0
 var visibility_end := 140.0
@@ -41,6 +42,7 @@ func clear() -> void:
 func clear_band(band: int) -> void:
 	_wrap_valid = false
 	if _bands.has(band):
+		if profiler != null: profiler.counter("bandsRemoved")
 		(_bands[band]["node"] as Node3D).queue_free()
 		_bands.erase(band)
 
@@ -93,6 +95,7 @@ static func pack_instances(instances: Array, origin: Vector2, width: float, math
 ## Rendering-resource publication stays on the main thread. Empty tiles remain
 ## present so the scheduler does not repeatedly regenerate sea/desert tiles.
 func set_band_buffers(band: int, buffers: Dictionary) -> void:
+	if profiler != null: profiler.counter("bandsPublished")
 	clear_band(band)
 	var node := Node3D.new()
 	node.name = "Band%d" % band
@@ -108,6 +111,10 @@ func set_band_buffers(band: int, buffers: Dictionary) -> void:
 		mesh.mesh = ModelLibrary.get_mesh(kind)
 		mesh.instance_count = int(data["count"])
 		mesh.buffer = data["buffer"]
+		if profiler != null:
+			profiler.counter("multiMeshesPublished")
+			profiler.counter("instancesPublished", int(data["count"]))
+			profiler.counter("instanceSourceBytes", data["buffer"].size() * 4)
 		var instance := MultiMeshInstance3D.new()
 		instance.multimesh = mesh
 		instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if cast_shadows else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

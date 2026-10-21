@@ -10,7 +10,6 @@ const BUILD_RADIUS := 150.0
 # Keep one extra tile ring to avoid churn at the construction boundary.
 const RETAIN_RADIUS := BUILD_RADIUS + 80.0
 
-var profiler: PerformanceTrace
 var world: WorldData
 var enabled := true
 var _task := -1
@@ -72,10 +71,14 @@ func _update_tiles(cam: Camera3D) -> void:
 		WorkerThreadPool.wait_for_task_completion(_task)
 		_task = -1
 		_last_publish_frame = Engine.get_process_frames()
+		if profiler != null and _task_result.has("computeUsec"):
+			profiler.worker_span("vegetation-compute", int(_task_result["computeUsec"]))
+			profiler.worker_span("vegetation-pack", int(_task_result["packUsec"]))
 		if enabled and _task_generation == _generation and _near_band(_task_key, focus, RETAIN_RADIUS):
 			var published := profiler.begin() if profiler != null else 0
-			set_band_buffers(_task_key, _task_result)
+			set_band_buffers(_task_key, _task_result.get("bands", {}))
 			if profiler != null: profiler.end("vegetation-publish", published)
+		elif profiler != null: profiler.counter("vegetationTasksDiscarded")
 		_task_result = {}
 		_search_dirty = true
 	super.update_view(cam)
@@ -116,19 +119,26 @@ func _update_tiles(cam: Camera3D) -> void:
 	math.ocean_scale = mm.ocean_scale
 	math.relief_detail = mm.relief_detail
 	math.warp_amp = mm.warp_amp
-	_task = WorkerThreadPool.add_task(func(): _task_result = _prepare_tile(best, clearings, math), false, "vegetation")
+	var profiling := profiler != null and profiler.enabled()
+	_task = WorkerThreadPool.add_task(func(): _task_result = _prepare_tile(best, clearings, math, profiling), false, "vegetation")
 	set_process(true)
 
 
-func _prepare_tile(key: int, clearings: Array, math: MapMath) -> Dictionary:
+func _prepare_tile(key: int, clearings: Array, math: MapMath, profiling := false) -> Dictionary:
+	var started := Time.get_ticks_usec() if profiling else 0
 	var transforms := _compute_tile(key, clearings, math)
+	var computed := Time.get_ticks_usec() if profiling else 0
 	var packed := {}
 	var origin := band_origin(key)
 	for kind: String in transforms:
 		var instances: Array = transforms[kind]
 		if not instances.is_empty():
 			packed[kind] = {"count":instances.size(),"buffer":pack_instances(instances, origin, band_width, math)}
-	return packed
+	var result := {"bands":packed}
+	if profiling:
+		result["computeUsec"] = computed - started
+		result["packUsec"] = Time.get_ticks_usec() - computed
+	return result
 
 
 func _near_band(key: int, focus: Vector2, radius: float) -> bool:
