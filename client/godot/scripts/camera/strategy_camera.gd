@@ -40,11 +40,18 @@ var _ground_y := 0.0
 var _zoom_anchor := Vector3.ZERO
 var _zoom_screen := Vector2.ZERO
 var _zoom_anchored := false
+var _pose_dirty := true
+var _applied_target := Vector3(INF, INF, INF)
+var _applied_orbit := Vector3(INF, INF, INF)
+var _applied_projection := Vector3(INF, INF, INF)
+var _applied_surface := Vector4(INF, INF, INF, INF)
 
 
 func setup(math: MapMath, trace: PerformanceTrace = null) -> void:
 	profiler = trace
 	mm = math
+	# Camera easing precedes the map listener pass, including during playback.
+	process_priority = -1
 	_update_zoom_limits()
 	get_viewport().size_changed.connect(_update_zoom_limits)
 	reset_view(true)
@@ -61,6 +68,12 @@ func _update_zoom_limits() -> void:
 	if mm == null: return
 	max_distance = maxf(min_distance * 8.0, _world_distance() * 1.2)
 	_goal_distance = clampf(_goal_distance, min_distance, max_distance)
+	invalidate_view()
+
+
+func invalidate_view() -> void:
+	_pose_dirty = true
+	moved.emit()
 
 
 func reset_view(instant := false) -> void:
@@ -104,6 +117,7 @@ func pitch() -> float:
 func _process(dt: float) -> void:
 	var started := profiler.begin() if profiler != null else 0
 	var step_time := minf(dt, 0.05)
+	var text_focused := _text_focus()
 	var move := Vector2.ZERO
 	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
 		move.y -= 1
@@ -121,12 +135,12 @@ func _process(dt: float) -> void:
 		if m.x > s.x - 5: move.x += 1
 		if m.y < 4: move.y -= 1
 		if m.y > s.y - 5: move.y += 1
-	if move != Vector2.ZERO and not _text_focus():
+	if move != Vector2.ZERO and not text_focused:
 		_zoom_anchored = false
 		var view_h := 2.0 * distance * tan(deg_to_rad(fov) * 0.5)
 		var v := move.normalized().rotated(-yaw) * view_h * pan_speed * step_time
 		_goal_target += Vector3(v.x, 0, v.y)
-	if not _text_focus():
+	if not text_focused:
 		if Input.is_key_pressed(KEY_Q):
 			_zoom_anchored = false
 			_goal_yaw -= rotate_speed * step_time
@@ -142,12 +156,24 @@ func _process(dt: float) -> void:
 	_goal_yaw = clampf(_goal_yaw, -deg_to_rad(yaw_limit_deg), deg_to_rad(yaw_limit_deg))
 	_clamp_goal()
 	# A slow frame must not consume the whole camera transition in one jump.
-	var k := 1.0 - exp(-smoothing * step_time)
-	var before := global_transform
 	# move along the shortest path around the seam
 	_goal_target.x = mm.wrap_x_near(_goal_target.x, target.x)
+	# End the easing tail once it is far below a screen pixel; apply its exact
+	# endpoint once. Idle frames still poll input but do not sample terrain.
+	var settle_distance := maxf(0.00025, distance * 1e-6)
+	if target.distance_squared_to(_goal_target) < settle_distance * settle_distance: target = _goal_target
+	if absf(log(distance / _goal_distance)) < 1e-6: distance = _goal_distance
+	if absf(yaw - _goal_yaw) < 1e-6: yaw = _goal_yaw
+	if absf(tilt - _goal_tilt) < 1e-6: tilt = _goal_tilt
+	var projection_params := Vector3(fov, min_distance, max_distance)
+	var surface_params := Vector4(mm.land_scale, mm.ocean_scale, mm.relief_detail, mm.warp_amp)
+	if not _pose_dirty and not _zoom_anchored and target == _goal_target and distance == _goal_distance and yaw == _goal_yaw and tilt == _goal_tilt and target == _applied_target and Vector3(distance, yaw, tilt) == _applied_orbit and projection_params == _applied_projection and surface_params == _applied_surface:
+		if profiler != null: profiler.end("camera", started)
+		return
+	var k := 1.0 - exp(-smoothing * step_time)
 	target = target.lerp(_goal_target, k)
-	distance = exp(lerpf(log(distance), log(_goal_distance), k))
+	if distance != _goal_distance:
+		distance = exp(lerpf(log(distance), log(_goal_distance), k))
 	yaw = lerpf(yaw, _goal_yaw, k)
 	tilt = lerpf(tilt, _goal_tilt, k)
 	# keep coordinates near [0, W): shift both states by whole map widths
@@ -164,8 +190,6 @@ func _process(dt: float) -> void:
 		_correct_zoom_anchor()
 		if absf(log(distance / _goal_distance)) < 0.001:
 			_zoom_anchored = false
-	if not before.is_equal_approx(global_transform):
-		moved.emit()
 	if profiler != null: profiler.end("camera", started)
 
 
@@ -178,6 +202,7 @@ func _clamp_goal() -> void:
 
 
 func _apply() -> void:
+	var before := global_transform
 	_ground_y = maxf(mm.height_at(target.x, clampf(target.z, 0.0, mm.map_h)), 0.0)
 	var pr := deg_to_rad(pitch())
 	var dir := Vector3(sin(yaw) * cos(pr), sin(pr), cos(yaw) * cos(pr))
@@ -190,6 +215,12 @@ func _apply() -> void:
 	look_at(focus, Vector3.UP)
 	near = clampf(distance * 0.01, 0.03, 4.0)
 	far = distance * 3.0 + 400.0
+	_pose_dirty = false
+	_applied_target = target
+	_applied_orbit = Vector3(distance, yaw, tilt)
+	_applied_projection = Vector3(fov, min_distance, max_distance)
+	_applied_surface = Vector4(mm.land_scale, mm.ocean_scale, mm.relief_detail, mm.warp_amp)
+	if not before.is_equal_approx(global_transform): moved.emit()
 
 
 func _text_focus() -> bool:

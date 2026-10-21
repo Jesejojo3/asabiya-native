@@ -51,6 +51,8 @@ var _overlay_colors := PackedByteArray()
 var _overlay_keys := PackedFloat32Array()
 var _overlay_style := Vector3(INF, INF, INF)
 var _selection := Vector3(INF, INF, INF)
+var _chunk_lods := PackedInt32Array()
+var _lod_quality := -1.0
 
 
 func setup(w: WorldData, math: MapMath, trace: PerformanceTrace = null) -> void:
@@ -129,6 +131,7 @@ func _build_material() -> void:
 
 ## Pushes the shared geometry parameters (vertical exaggeration…) to the GPU.
 func apply_params() -> void:
+	_view_valid = false
 	var p := mm.shader_params()
 	for k in p:
 		material.set_shader_parameter(k, p[k])
@@ -236,6 +239,8 @@ func _build_chunks() -> void:
 		c.queue_free()
 	chunks.clear()
 	chunk_origin.clear()
+	_chunk_lods.clear()
+	_lod_quality = -1.0
 	var nx := ceili(mm.map_w / chunk_size)
 	var nz := ceili(mm.map_h / chunk_size)
 	var aabb := AABB(Vector3(0, mm.metres_to_units(-9000.0) - 4.0, 0), Vector3(chunk_size, mm.metres_to_units(9000.0) - mm.metres_to_units(-9000.0) + 8.0, chunk_size))
@@ -249,6 +254,7 @@ func _build_chunks() -> void:
 			mi.position = Vector3(i * chunk_size, 0, j * chunk_size)
 			add_child(mi)
 			chunks.append(mi)
+			_chunk_lods.append(-1)
 			chunk_origin.append(Vector2(i * chunk_size, j * chunk_size))
 
 
@@ -272,7 +278,7 @@ func _build_water() -> void:
 
 
 ## Places every chunk at its longitude copy nearest to the camera and picks a
-## LOD from the projected vertex spacing. Called every frame; O(chunks).
+## LOD from the projected vertex spacing. Runs only for an invalidated view.
 func update_view(cam: Camera3D) -> void:
 	if chunks.is_empty() or cam == null:
 		return
@@ -305,6 +311,16 @@ func update_view(cam: Camera3D) -> void:
 			var spacing := float(chunk_size) / lod_subdivisions[l]
 			if spacing / dist * focal <= target_pixels_per_quad:
 				lod = l
+		# Refine immediately. Coarsen only with 8% headroom, retaining at least
+		# the original detail while avoiding swaps around a single boundary.
+		var previous := _chunk_lods[k]
+		if previous >= 0 and lod > previous and target_pixels_per_quad == _lod_quality:
+			var stable := previous
+			for level in range(previous + 1, lod + 1):
+				if float(chunk_size) / lod_subdivisions[level] / dist * focal <= target_pixels_per_quad * 0.92:
+					stable = level
+			lod = stable
+		_chunk_lods[k] = lod
 		var mesh := lod_meshes[lod]
 		if mi.mesh != mesh:
 			mi.mesh = mesh
@@ -312,6 +328,7 @@ func update_view(cam: Camera3D) -> void:
 		tris += n * n * 2 + n * 16
 	for k in water_planes.size():
 		water_planes[k].position.x = mm.wrap_x_near(mm.map_w * 0.5, cp.x) + (k - 1) * mm.map_w
+	_lod_quality = target_pixels_per_quad
 	stats["triangles"] = tris
 	stats["chunks"] = chunks.size()
 	if _trace != null: _trace.end("terrain-lod", started)

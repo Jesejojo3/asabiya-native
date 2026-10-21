@@ -18,6 +18,11 @@ var _task_key := -1
 var _task_result := {}
 var _task_generation := 0
 var _generation := 0
+var _camera: Camera3D
+var _focus_valid := false
+var _last_focus := Vector2.ZERO
+var _search_dirty := true
+var _last_publish_frame := -1
 var _clearings: Array = []   # [Vector2 centre, radius] around engine settlements
 
 
@@ -26,29 +31,59 @@ func setup_veg(w: WorldData, math: MapMath) -> void:
 	setup(math, 80.0, 95.0)
 	cast_shadows = false
 	visibility_margin = 20.0
+	set_process(false)
 
 
 func clear() -> void:
 	# A relief change may invalidate work already running. Discard its result
 	# after completion; never wait for a tile computation on an annual update.
 	_generation += 1
+	_focus_valid = false
+	_search_dirty = true
 	super.clear()
+	if is_instance_valid(_camera): set_process(true)
+
+
+func _process(_dt: float) -> void:
+	if is_instance_valid(_camera): update_view(_camera)
+	else: set_process(false)
 
 
 func update_view(cam: Camera3D) -> void:
+	_camera = cam
+	var started := profiler.begin() if profiler != null else 0
+	_update_tiles(cam)
+	if profiler != null: profiler.end("vegetation", started)
+
+
+func _update_tiles(cam: Camera3D) -> void:
 	var t := cam.global_position
 	var focus := Vector2(t.x, t.z)
 	if cam is StrategyCamera:
 		focus = Vector2((cam as StrategyCamera).target.x, (cam as StrategyCamera).target.z)
-	_prune(focus)
-	if _task >= 0 and WorkerThreadPool.is_task_completed(_task):
+	if not _focus_valid or focus != _last_focus:
+		_focus_valid = true
+		_last_focus = focus
+		_search_dirty = true
+		_prune(focus)
+	# Keep draining the worker independently of camera invalidation. Never
+	# publish two tiles in one process frame, even if both callbacks run.
+	if _task >= 0 and WorkerThreadPool.is_task_completed(_task) and _last_publish_frame != Engine.get_process_frames():
 		WorkerThreadPool.wait_for_task_completion(_task)
 		_task = -1
+		_last_publish_frame = Engine.get_process_frames()
 		if enabled and _task_generation == _generation and _near_band(_task_key, focus, RETAIN_RADIUS):
-			set_band(_task_key, _task_result)
+			var published := profiler.begin() if profiler != null else 0
+			set_band_buffers(_task_key, _task_result)
+			if profiler != null: profiler.end("vegetation-publish", published)
 		_task_result = {}
+		_search_dirty = true
 	super.update_view(cam)
-	if not enabled or _task >= 0 or t.y > BUILD_RADIUS:
+	if _task >= 0:
+		set_process(true)
+		return
+	if not enabled or t.y > BUILD_RADIUS or not _search_dirty:
+		set_process(false)
 		return
 	var nx := maxi(1, ceili(mm.map_w / band_width))
 	var nz := maxi(1, ceili(mm.map_h / band_width))
@@ -61,25 +96,39 @@ func update_view(cam: Camera3D) -> void:
 	for tz in range(tz0, tz1 + 1):
 		for tx in range(tx0, tx1 + 1):
 			var key := tz * 1000 + posmod(tx, nx)
-			if has_band(key):
-				continue
+			if has_band(key): continue
 			var c := band_origin(key) + Vector2.ONE * band_width * 0.5
 			c.x = mm.wrap_x_near(c.x, focus.x)
 			var d := c.distance_squared_to(focus)
 			if d < best_d:
 				best_d = d
 				best = key
-	if best >= 0:
-		_task_key = best
-		_task_generation = _generation
-		var clearings: Array = _clearings.duplicate(true)
-		var math := MapMath.new()
-		math.setup(world)
-		math.land_scale = mm.land_scale
-		math.ocean_scale = mm.ocean_scale
-		math.relief_detail = mm.relief_detail
-		math.warp_amp = mm.warp_amp
-		_task = WorkerThreadPool.add_task(func(): _task_result = _compute_tile(best, clearings, math), false, "vegetation")
+	_search_dirty = false
+	if best < 0:
+		set_process(false)
+		return
+	_task_key = best
+	_task_generation = _generation
+	var clearings: Array = _clearings.duplicate(true)
+	var math := MapMath.new()
+	math.setup(world)
+	math.land_scale = mm.land_scale
+	math.ocean_scale = mm.ocean_scale
+	math.relief_detail = mm.relief_detail
+	math.warp_amp = mm.warp_amp
+	_task = WorkerThreadPool.add_task(func(): _task_result = _prepare_tile(best, clearings, math), false, "vegetation")
+	set_process(true)
+
+
+func _prepare_tile(key: int, clearings: Array, math: MapMath) -> Dictionary:
+	var transforms := _compute_tile(key, clearings, math)
+	var packed := {}
+	var origin := band_origin(key)
+	for kind: String in transforms:
+		var instances: Array = transforms[kind]
+		if not instances.is_empty():
+			packed[kind] = {"count":instances.size(),"buffer":pack_instances(instances, origin, band_width, math)}
+	return packed
 
 
 func _near_band(key: int, focus: Vector2, radius: float) -> bool:
@@ -114,6 +163,8 @@ func set_clearings(list: Array) -> void:
 			changed.append([center, next[center]])
 	_generation += 1
 	_clearings = list.duplicate(true)
+	_search_dirty = true
+	if is_instance_valid(_camera): set_process(true)
 	for key: int in _bands.keys():
 		for c in changed:
 			if _near_band(key, c[0], float(c[1])):
@@ -132,6 +183,8 @@ func _cleared_in(list: Array, px: float, pz: float) -> bool:
 func set_enabled(on: bool) -> void:
 	enabled = on
 	visible = on
+	if on: _search_dirty = true
+	set_process(is_instance_valid(_camera) and (on or _task >= 0))
 
 
 func _exit_tree() -> void:

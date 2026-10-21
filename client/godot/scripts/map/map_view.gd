@@ -21,6 +21,13 @@ var selected_cell := -1
 var selected_key := -2.0
 var _hover_dirty := false
 var _last_mouse := Vector2(-1, -1)
+var _last_gui_id := 0
+var _view_dirty := true
+var _view_transform := Transform3D.IDENTITY
+var _view_projection := Projection()
+var _view_size := Vector2.ZERO
+var _environment_distance := -1.0
+var _minor_rivers := -1.0
 
 ## Extra layers (settlements, labels, markers) register here to get view updates.
 var view_listeners: Array[Callable] = []
@@ -44,7 +51,8 @@ func setup(w: WorldData, trace: PerformanceTrace = null) -> void:
 	add_child(camera)
 	camera.setup(mm, profiler)
 	camera.make_current()
-	camera.moved.connect(func(): _hover_dirty = true)
+	camera.moved.connect(invalidate_view)
+	get_viewport().size_changed.connect(invalidate_view)
 	if DisplayServer.get_name() != "headless":
 		river_baker = RiverBaker.new()
 		river_baker.name = "RiverBaker"
@@ -97,26 +105,49 @@ func _build_environment() -> void:
 	add_child(sun)
 
 
+func invalidate_view() -> void:
+	_view_dirty = true
+	_hover_dirty = true
+
+
 func _process(_dt: float) -> void:
-	if camera == null:
-		return
-	terrain.update_view(camera)
-	# shadows only as far as they matter, sharp up close
-	sun.directional_shadow_max_distance = clampf(camera.distance * 2.6, 40.0, 1800.0)
-	var env_res := env.environment
-	env_res.fog_depth_begin = camera.distance * 2.2 + 60.0
-	env_res.fog_depth_end = camera.distance * 7.0 + 500.0
-	var z := camera.zoom_level()
-	terrain.material.set_shader_parameter("minor_rivers", 1.0 - smoothstep(0.42, 0.6, z))
-	for f in view_listeners:
-		f.call(camera, z)
+	if camera == null: return
+	var started := profiler.begin() if profiler != null else 0
+	var viewport_size := get_viewport().get_visible_rect().size
+	var projection := camera.get_camera_projection()
+	if _view_dirty or camera.global_transform != _view_transform or projection != _view_projection or viewport_size != _view_size:
+		_view_dirty = false
+		_view_transform = camera.global_transform
+		_view_projection = projection
+		_view_size = viewport_size
+		terrain.update_view(camera)
+		if camera.distance != _environment_distance:
+			_environment_distance = camera.distance
+			sun.directional_shadow_max_distance = clampf(camera.distance * 2.6, 40.0, 1800.0)
+			env.environment.fog_depth_begin = camera.distance * 2.2 + 60.0
+			env.environment.fog_depth_end = camera.distance * 7.0 + 500.0
+		var z := camera.zoom_level()
+		var minor := 1.0 - smoothstep(0.42, 0.6, z)
+		if minor != _minor_rivers:
+			_minor_rivers = minor
+			terrain.material.set_shader_parameter("minor_rivers", minor)
+		for listener in view_listeners: listener.call(camera, z)
+		_hover_dirty = true
+		if profiler != null and profiler.enabled():
+			profiler.set_context({"cameraDistance":camera.distance,"zoom":z,"viewport":viewport_size})
 	var mouse := get_viewport().get_mouse_position()
-	if mouse != _last_mouse:
+	var gui := get_viewport().gui_get_hovered_control()
+	var gui_id := gui.get_instance_id() if gui != null else 0
+	if mouse != _last_mouse or gui_id != _last_gui_id:
 		_last_mouse = mouse
+		_last_gui_id = gui_id
 		_hover_dirty = true
 	if _hover_dirty:
 		_hover_dirty = false
+		var hover_started := profiler.begin() if profiler != null else 0
 		_update_hover(mouse)
+		if profiler != null: profiler.end("hover-pick", hover_started)
+	if profiler != null: profiler.end("map-view", started)
 
 
 func _update_hover(mouse: Vector2) -> void:

@@ -223,8 +223,12 @@ func _build_scene() -> void:
 	history.setup(world, map_view.mm)
 	map_view.view_listeners.append(func(cam: Camera3D, z: float):
 		vegetation.update_view(cam)
+		var started := _performance_trace.begin()
 		settlements.update_view(cam)
+		_performance_trace.end("settlements-view", started)
+		started = _performance_trace.begin()
 		history.update_view(cam, z)
+		_performance_trace.end("annotations-view", started)
 		_update_zoom_style(z))
 	map_view.pick_handlers.append(func(screen: Vector2) -> Dictionary:
 		if not settlements.visible:
@@ -347,8 +351,12 @@ func _apply_settings(relief_changed: bool) -> void:
 	map_view.sun.directional_shadow_mode = [DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS, DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS, DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS][q]
 	map_view.env.environment.ssao_enabled = q < 2
 	vegetation.visibility_end = [110.0, 95.0, 60.0][q]
+	vegetation.refresh_visibility()
 	map_view.mm.land_scale = RELIEF_SCALE[r]
 	map_view.terrain.apply_params()
+	map_view.camera.invalidate_view()
+	map_view.invalidate_view()
+	_performance_trace.set_context({"quality":q,"relief":r})
 	hud.set_menu_checks(q, r)
 	if relief_changed:
 		# objects sit on the surface: re-place them for the new exaggeration
@@ -407,6 +415,7 @@ func _load_frame() -> void:
 		label_mode = "religions"
 	var annotations_start := _annual_trace.begin()
 	history.rebuild(current_frame, label_mode)
+	map_view.invalidate_view()
 	_annual_trace.record("annotations", annotations_start)
 	_performance_trace.end("annotations-apply", stage_started)
 	stage_started = _performance_trace.begin()
@@ -443,6 +452,7 @@ func set_layer(id: String) -> void:
 	var label_mode := "peoples" if id in ["peoples", "cultures", "languages"] else ("religions" if id == "religions" else "states")
 	if label_mode != history.label_mode:
 		history.rebuild(current_frame, label_mode)
+	map_view.invalidate_view()
 	_apply_layer()
 	_refresh_ui()
 
@@ -497,6 +507,7 @@ func _on_toggle(key: String, on: bool) -> void:
 		"events":
 			history.show_events = on
 			history.rebuild(current_frame, history.label_mode)
+	map_view.invalidate_view()
 	_apply_layer_style()
 
 
