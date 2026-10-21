@@ -7,6 +7,7 @@ extends RefCounted
 const MAX_SAMPLES := 3600
 const WINDOW_USEC := 2000000
 
+var _trace_session := ""
 var _file: FileAccess
 var _samples := PackedFloat64Array()
 var _scopes := {}
@@ -20,10 +21,13 @@ var _peak_static := 0.0
 func _init() -> void:
 	var path := OS.get_environment("ASABIYA_PROFILE_PATH")
 	if path == "": return
-	_file = FileAccess.open(path, FileAccess.WRITE)
+	# Creating another world must not truncate the previous session.
+	_trace_session = "%d-%d" % [OS.get_process_id(), Time.get_ticks_usec()]
+	_file = FileAccess.open(path, FileAccess.READ_WRITE if FileAccess.file_exists(path) else FileAccess.WRITE)
 	if _file == null:
 		push_warning("No se pudo crear el perfil de rendimiento: " + path)
 		return
+	_file.seek_end()
 	record("environment", {"schema":"asabiya/client-profile-v2",
 		"godot":Engine.get_version_info().get("string", ""),
 		"os":OS.get_name(),"cpu":OS.get_processor_name(),
@@ -61,6 +65,7 @@ func set_context(fields: Dictionary) -> void:
 func record(stage: String, fields: Dictionary) -> void:
 	if _file == null: return
 	var row := fields.duplicate()
+	row["traceSession"] = _trace_session
 	row["stage"] = stage
 	row["ticksUsec"] = Time.get_ticks_usec()
 	_file.store_line(JSON.stringify(row))
@@ -107,7 +112,7 @@ func frame() -> void:
 		var scope: Dictionary = _scopes[stage]
 		var summary := {"calls":scope["calls"],"totalMs":scope["totalMs"],
 			"meanMs":scope["totalMs"] / scope["calls"],"maxMs":scope["maxMs"],
-			"sampledCalls":scope["samples"].size()}
+			"sampledCalls":scope["samples"].size(),"unsampledCalls":scope["calls"] - scope["samples"].size()}
 		summary.merge(_percentiles(scope["samples"]))
 		scopes[stage] = summary
 	fields["cpuScopes"] = scopes
@@ -121,5 +126,6 @@ func frame() -> void:
 
 func close() -> void:
 	if _file == null: return
+	record("trace-end", {"partialWindowFrames":_frames})
 	_file.flush()
 	_file = null

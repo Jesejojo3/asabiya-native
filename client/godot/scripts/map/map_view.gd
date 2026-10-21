@@ -134,7 +134,7 @@ func _process(_dt: float) -> void:
 		for listener in view_listeners: listener.call(camera, z)
 		_hover_dirty = true
 		if profiler != null and profiler.enabled():
-			profiler.set_context({"cameraDistance":camera.distance,"zoom":z,"viewport":viewport_size})
+			profiler.set_context({"cameraDistance":camera.distance,"zoom":z,"viewportWidth":viewport_size.x,"viewportHeight":viewport_size.y})
 	var mouse := get_viewport().get_mouse_position()
 	var gui := get_viewport().gui_get_hovered_control()
 	var gui_id := gui.get_instance_id() if gui != null else 0

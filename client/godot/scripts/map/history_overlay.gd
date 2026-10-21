@@ -21,15 +21,30 @@ var _view_x := INF
 var _view_zoom := INF
 var _marker_materials := {}
 var _route_material: StandardMaterial3D
+var _shape_ids := PackedInt32Array()
+var _shapes := {}
+var _longitude_sin := PackedFloat64Array()
+var _longitude_cos := PackedFloat64Array()
 
 
 func setup(w: WorldData, math: MapMath) -> void:
 	world = w
 	mm = math
+	_shape_ids = PackedInt32Array()
+	_shapes.clear()
+	_longitude_sin.resize(world.width)
+	_longitude_cos.resize(world.width)
+	for x in world.width:
+		var center := world.cell_center(x)
+		var angle := center.x / mm.map_w * TAU
+		_longitude_sin[x] = sin(angle)
+		_longitude_cos[x] = cos(angle)
 
 
 func clear() -> void:
 	_view_valid = false
+	_shape_ids = PackedInt32Array()
+	_shapes.clear()
 	for n in _labels:
 		n.queue_free()
 	for n in _markers:
@@ -99,12 +114,12 @@ func _group_shapes(ids: PackedInt32Array) -> Dictionary:
 		if g < 0:
 			continue
 		var c := world.cell_center(i)
-		var a := c.x / W * TAU
+		var longitude := i % world.width
 		if not acc.has(g):
 			acc[g] = [0.0, 0.0, 0.0, 0, INF, -INF]  # sin, cos, z, n, minz, maxz
 		var v: Array = acc[g]
-		v[0] += sin(a)
-		v[1] += cos(a)
+		v[0] += _longitude_sin[longitude]
+		v[1] += _longitude_cos[longitude]
 		v[2] += c.y
 		v[3] += 1
 		v[4] = minf(v[4], c.y)
@@ -138,7 +153,10 @@ func _build_labels(frame: HistoryFrame) -> void:
 				names[k] = frame.states[k].get("name", "")
 	if ids.is_empty():
 		return
-	var shapes := _group_shapes(ids)
+	if ids != _shape_ids:
+		_shapes = _group_shapes(ids)
+		_shape_ids = ids
+	var shapes := _shapes
 	for g in shapes:
 		var sh: Dictionary = shapes[g]
 		if int(sh["n"]) < 6 or str(names.get(g, "")) == "":
