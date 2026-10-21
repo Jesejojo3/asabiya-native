@@ -44,7 +44,7 @@ var _pick_cache_valid := false
 var _pick_screen := Vector2.ZERO
 var _pick_transform := Transform3D.IDENTITY
 var _pick_projection := Projection()
-var _pick_surface := Vector4.ZERO
+var _pick_surface: Array = []
 var _pick_world_revision := -1
 var _pick_hit: Variant
 var last_pick_cached := false
@@ -242,7 +242,7 @@ func _text_focus() -> bool:
 ## Ground point under a screen position (terrain or sea surface).
 func ground_at_screen(screen: Vector2) -> Variant:
 	var projection_value := get_camera_projection()
-	var surface := Vector4(mm.land_scale, mm.ocean_scale, mm.relief_detail, mm.warp_amp)
+	var surface := [mm.land_scale, mm.ocean_scale, mm.relief_detail, mm.warp_amp]
 	last_pick_cached = _pick_cache_valid and screen == _pick_screen and global_transform == _pick_transform and projection_value == _pick_projection and surface == _pick_surface and mm.geography_revision == _pick_world_revision
 	if last_pick_cached: return _pick_hit
 	_pick_screen = screen

@@ -104,7 +104,7 @@ func rebuild(frame: HistoryFrame, mode: String) -> void:
 	elif profiler != null: profiler.counter("markerLayerCacheHits")
 	var paths := []
 	for route: Dictionary in frame.routes:
-		paths.append([route.get("cells", PackedInt32Array()), route.get("volume", 0.5)])
+		paths.append([route.get("cells", PackedInt32Array()), clampf(float(route.get("volume", 0.5)), 0.0, 1.0)])
 	var routes := {"enabled":show_routes,"routes":paths,"relief":Vector3(mm.land_scale, mm.ocean_scale, mm.relief_detail)}
 	if routes != _route_signature:
 		for node in _routes: node.queue_free()

@@ -51,8 +51,8 @@ func setup(w: WorldData, trace: PerformanceTrace = null) -> void:
 	add_child(camera)
 	camera.setup(mm, profiler)
 	camera.make_current()
-	camera.moved.connect(invalidate_view)
-	get_viewport().size_changed.connect(invalidate_view)
+	camera.moved.connect(invalidate_picking)
+	get_viewport().size_changed.connect(invalidate_picking)
 	if DisplayServer.get_name() != "headless":
 		river_baker = RiverBaker.new()
 		river_baker.name = "RiverBaker"
@@ -103,6 +103,11 @@ func _build_environment() -> void:
 	sun.shadow_bias = 0.04
 	sun.shadow_normal_bias = 1.2
 	add_child(sun)
+
+
+func invalidate_picking() -> void:
+	_hover_dirty = true
+	_view_dirty = true
 
 
 func invalidate_view() -> void:

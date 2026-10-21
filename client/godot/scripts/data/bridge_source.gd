@@ -111,10 +111,10 @@ func can_advance() -> bool:
 	return connected and not busy and not _live_advance_pending and not _closing
 
 func start(_extra_args := PackedStringArray()) -> bool:
-	_profile_worker = profiler != null and profiler.enabled()
 	if _thread != null or (_pid > 0 and OS.is_process_running(_pid)):
 		last_error = "La sesión anterior debe cerrarse antes de reiniciar el motor."
 		return false
+	_profile_worker = profiler != null and profiler.enabled()
 	_closing = false
 	_stop = false
 	_sparse_entities = false
