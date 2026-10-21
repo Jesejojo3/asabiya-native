@@ -6,12 +6,13 @@ dos programas ni configurar puertos.
 
 La simulación comienza con pueblos fundadores: no hay Estados ni ciudades
 preinventados. Usa Continuar para iniciar el avance continuo y Pausar para
-detenerlo. Arranca en Máxima. También puedes elegir
+detenerlo. Arranca en Máxima con Fluido activado. También puedes elegir
 1, 2, 5, 10, 25 o 50 años/s. El ritmo real depende del equipo.
 
-La reproducción muestra cada año y verifica automáticamente el estado cada 25 años y al pausar.
+Fluido muestra cada año y verifica el estado cada 25 años y al pausar.
 Los años intermedios no tienen una comprobación individual del historial;
-se identifican así en la línea del tiempo. No hay un selector de modo.
+se identifican así en la línea del tiempo. Desactiva Fluido para solicitar
+comprobación anual en los próximos avances; pausar verifica el año actual.
 El botón 1 año siempre verifica
 el estado resultante. Pausar termina el año en curso y su comprobación
 antes de permitir otro avance.
@@ -38,7 +39,7 @@ También se puede iniciar con -- --world-source RUTA.json (documentación del re
 
 Esta entrega conserva el protocolo de enteros JSON exactos y los cambios
 de interfaz e intervenciones. La base tiene pruebas previas documentadas.
-La Fase 2 del cliente sólo tiene revisión estática: sus pruebas, compilación
+La Fase 2.2 del cliente sólo tiene revisión estática: sus pruebas, compilación
 y mediciones Windows quedan pendientes del usuario y ChatGPT.
 
 Incluye optimizaciones del motor: datos de vecindad calculados una sola vez,

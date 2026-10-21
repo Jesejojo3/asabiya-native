@@ -1,3 +1,7 @@
+# Fase 2.2 vigente (20 de octubre de 2026, hora del usuario)
+
+Continuar `perf/godot-frame-optimization` desde `238085832ea8fdd8d43e753908699d1810e40337`, actualizar sólo PR #22; no merge ni otras ramas. Priorizar índices derivados de HistoryFrame, escena diferencial, picking y telemetría inclusiva/exclusiva. Sin modificar Go, protocolo TCP, RNG, calendario, SHA, replay, golden o HTML. No ejecutar juego, editor, pruebas, headless, benchmarks, simulaciones ni CI. Sólo revisión estática e instrucciones de compilación Windows; no ZIP. La petición 2.2 autoriza restaurar el control visible Fluido, activado por defecto y explicado. Publicar commits con `[skip ci]` en el HEAD final para no disparar suites al actualizar la PR. La aprobación y mediciones corresponden al usuario/ChatGPT.
+
 # Fase 2 vigente: cliente Godot (21 de octubre de 2026)
 
 Trabajar sólo en `perf/godot-frame-optimization`, desde la consolidación `79035761f1e61041a3ccbf74b648577e53ba7150`. Auditar y optimizar exclusivamente presentación e instrumentación. No ejecutar juego, pruebas, benchmarks, headless, CI ni capturas: validación a cargo del usuario y ChatGPT. No producir ZIP, no merge y no modificar consolidación. Esta instrucción sustituye las autorizaciones de testing y entrega anteriores. Conservar Go, RNG, calendario, SHA, replay, referencia, golden, todos los años y calidad visual. La reproducción fluida es automática, sin selector de modo, como pidió el usuario. No declarar FPS alcanzados sin medidas comparables.

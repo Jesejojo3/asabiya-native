@@ -12,7 +12,7 @@ El cliente conserva el terreno 3D fino, cámara, LOD, vegetación y materiales d
 
 Abre `AsabiyaNative.exe` en la carpeta Windows entregada. No necesitas instalar Go/Godot ni configurar puertos. La historia comienza con pueblos fundadores; usa el selector de años para observar la aparición de Estados y ciudades.
 
-**Reproducción:** inicia en Máxima, muestra todos los años y comprueba automáticamente el estado cada 25 años y al pausar. No requiere seleccionar un modo. La base tiene regresiones previas documentadas; los cambios de Fase 2 sólo tienen revisión estática y requieren nueva validación en Windows. [Cambio y mediciones](docs/integration/FLUID_PLAYBACK.md).
+**Reproducción:** inicia en Máxima con **Fluido** activado. Muestra todos los años, comprueba el estado cada 25 años y al pausar; desactivar Fluido solicita comprobación anual para los siguientes avances. El paso de un año siempre verifica. La Fase 2.2 está pendiente de compilación, pruebas y mediciones Windows. [Reproducción](docs/integration/FLUID_PLAYBACK.md) · [Entrega y aceptación Fase 2.2](docs/performance/PHASE22_IMPLEMENTATION.md).
 
 El núcleo reduce cálculos repetidos de vecindad y recorre sólo tecnologías conocidas, conservando los resultados anteriores. [Optimización de algoritmos y comparación de campañas](docs/integration/CORE_ALGORITHMS.md).
 

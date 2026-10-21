@@ -1,6 +1,6 @@
 # Reproducción Fluida y paquete Windows
 
-La reproducción arranca en **Máxima**. La política de comprobación es automática y no tiene interruptor. Continúa publicando cada año consecutivo, con los mismos datos y mecánicas. La diferencia es la política de comprobación: calcula SHA completo cada 25 años y al pausar; el paso individual también conserva su SHA exacto. El puente conserva el control interno de verificación anual para diagnósticos; no se expone en el juego.
+La reproducción arranca en **Máxima**, con **Fluido** activado. La Fase 2.2 restaura su control visible: desactivarlo solicita comprobación anual para los siguientes avances. Continúa publicando cada año consecutivo, con los mismos datos y mecánicas. La diferencia es la política de comprobación: calcula SHA completo cada 25 años y al pausar; el paso individual también conserva su SHA exacto. Pausar y avanzar un año mantienen su comprobación exacta con cualquiera de las dos posiciones del control.
 
 La opción es explícita y visible. Un año intermedio lleva `digestMode=deferred-v1` y una huella vacía, nunca un SHA inventado. La línea temporal avisa cuando el año observado no tiene comprobación individual. Pausar verifica el año actual; no crea retrospectivamente huellas exactas para todos los años anteriores. El historial visual sigue siendo una caché limitada, no un archivo íntegro de huellas.
 
