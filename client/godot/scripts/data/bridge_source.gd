@@ -16,6 +16,8 @@ const EXE_WIN := "asabiya-server.exe"
 const MAX_FRAMES := 24
 const MAX_RESPONSE_BYTES := 256 * 1024 * 1024
 
+var profiler: PerformanceTrace
+var _profile_worker := false
 var world: WorldData
 var exe := ""
 var available := false
@@ -109,6 +111,7 @@ func can_advance() -> bool:
 	return connected and not busy and not _live_advance_pending and not _closing
 
 func start(_extra_args := PackedStringArray()) -> bool:
+	_profile_worker = profiler != null and profiler.enabled()
 	if _thread != null or (_pid > 0 and OS.is_process_running(_pid)):
 		last_error = "La sesión anterior debe cerrarse antes de reiniciar el motor."
 		return false
@@ -397,6 +400,7 @@ func poll() -> void:
 		fast_remaining = int(progress["remaining"])
 		progress_changed.emit(calculated_year, _years[-1] if not _years.is_empty() else calculated_year, fast_remaining)
 	for response: Dictionary in replies:
+		if profiler != null and response.has("_client_profile"): profiler.worker_report(response["_client_profile"])
 		if response.has("_error"):
 			connected = false
 			_fail(str(response["_error"]))
@@ -513,6 +517,7 @@ static func _response_integrity_error(response: Dictionary, inflight: Dictionary
 func _worker() -> void:
 	var trace := AnnualTrace.new("worker")
 	var request_started := 0
+	var receive_usec := 0
 	var deadline := Time.get_ticks_msec() + 15000
 	while not FileAccess.file_exists(_endpoint) and not _stopped():
 		if not OS.is_process_running(_pid) or Time.get_ticks_msec() > deadline:
@@ -540,6 +545,7 @@ func _worker() -> void:
 	var inflight: Dictionary = {}
 	var ready := false
 	var decoder := NativeFrameDecoder.new(world)
+	decoder.profile_enabled = _profile_worker
 	var fast: Dictionary = {}
 	while not _stopped():
 		peer.poll()
@@ -575,6 +581,7 @@ func _worker() -> void:
 					inflight = {"schema":PROTOCOL,"id":"ff-%s-%d" % [fast["job"],fast["sequence"]],"op":"get_state" if snapshot else "advance","payload":{"view":_map_view} if snapshot else {"publication":"status"},"_local_fast":true}
 			if not inflight.is_empty():
 				inflight["session"] = session
+				receive_usec = 0
 				request_started = trace.begin()
 				var wire := inflight.duplicate()
 				wire.erase("_local_fast")
@@ -594,12 +601,14 @@ func _worker() -> void:
 			break
 		var count := mini(peer.get_available_bytes(), 1048576)
 		if count > 0:
+			var receive_started := Time.get_ticks_usec() if _profile_worker else 0
 			var chunk: Array = peer.get_partial_data(count)
 			if int(chunk[0]) != OK:
 				_push({"_error":"No se pudo recibir la respuesta del motor."})
 				break
 			var raw: PackedByteArray = chunk[1]
 			incoming.append(raw)
+			if _profile_worker: receive_usec += Time.get_ticks_usec() - receive_started
 			if incoming.error != "":
 				_push({"_error":incoming.error})
 				break
@@ -607,12 +616,15 @@ func _worker() -> void:
 			if incoming.complete:
 				var parse_started := trace.begin()
 				var response_bytes := incoming.bytes.size()
+				var json_started := Time.get_ticks_usec() if _profile_worker else 0
 				var value: Variant = JSON.parse_string(incoming.take_text())
+				var json_usec := Time.get_ticks_usec() - json_started if _profile_worker else 0
 				trace.record("json-parse", parse_started, {"bytes":response_bytes})
 				if not value is Dictionary:
 					_push({"_error":"El motor envió JSON inválido."})
 					break
 				var response: Dictionary = value
+				var client_profile: Dictionary = {"receiveUsec":receive_usec,"jsonUsec":json_usec,"bytes":response_bytes} if _profile_worker else {}
 				var integrity_error := _response_integrity_error(response, inflight, session)
 				if integrity_error != "":
 					_push({"_error":integrity_error})
@@ -626,8 +638,17 @@ func _worker() -> void:
 						response["_world"] = loaded
 						decoder.world = loaded
 					elif op == "get_state" or op == "start_history" or (op == "advance" and data.get("schema", "") != "asabiya/advance-status-v1"):
+						var decode_started := Time.get_ticks_usec() if _profile_worker else 0
 						response["_frame"] = decoder.consume(data, op == "advance")
 						response.erase("data") # Do not retain large raw provincial dictionaries.
+						if _profile_worker:
+							client_profile["decodeUsec"] = Time.get_ticks_usec() - decode_started
+							var published: HistoryFrame = response.get("_frame")
+							if published != null:
+								client_profile["indexUsec"] = published.visual_index.get("buildUsec", 0)
+								for metric: String in ["shapesRebuilt", "shapesReused", "totalsCellsScanned"]:
+									client_profile[metric] = published.visual_index.get(metric, 0)
+				if _profile_worker: response["_client_profile"] = client_profile
 				var terminal: bool = not response["ok"] and not _is_recoverable_request_error(op, str(response.get("error", {}).get("code", "")))
 				trace.record("request-decode", request_started, {"op":op,"bytes":response_bytes})
 				if inflight.get("_local_fast", false) and not terminal:
@@ -654,7 +675,9 @@ func _worker() -> void:
 						_mutex.lock()
 						var done: bool = _fast_cancel or int(fast["remaining"]) <= 0
 						_mutex.unlock()
-						_push({"_fast_frame":frame,"done":done})
+						var packet := {"_fast_frame":frame,"done":done}
+						if _profile_worker: packet["_client_profile"] = client_profile
+						_push(packet)
 						fast["since"] = 0
 						if done: fast.clear()
 				else:
