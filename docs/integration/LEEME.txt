@@ -6,13 +6,13 @@ dos programas ni configurar puertos.
 
 La simulación comienza con pueblos fundadores: no hay Estados ni ciudades
 preinventados. Usa Continuar para iniciar el avance continuo y Pausar para
-detenerlo. Arranca en Máxima con Fluido activado. También puedes elegir
+detenerlo. Arranca en Máxima. También puedes elegir
 1, 2, 5, 10, 25 o 50 años/s. El ritmo real depende del equipo.
 
-Fluido muestra cada año y verifica el estado cada 25 años y al pausar.
+La reproducción muestra cada año y verifica automáticamente el estado cada 25 años y al pausar.
 Los años intermedios no tienen una comprobación individual del historial;
-se identifican así en la línea del tiempo. Desactiva Fluido si necesitas
-verificar cada año, con menor velocidad. El botón 1 año siempre verifica
+se identifican así en la línea del tiempo. No hay un selector de modo.
+El botón 1 año siempre verifica
 el estado resultante. Pausar termina el año en curso y su comprobación
 antes de permitir otro avance.
 El botón 1 año hace un único paso en pausa. No hay ráfagas para recuperar
@@ -45,7 +45,7 @@ Incluye optimizaciones del motor: datos de vecindad calculados una sola vez,
 recorridos de tecnologías conocidas y operaciones numéricas más eficientes.
 Se conservan las reglas y los resultados. Ver CAMBIOS-ALGORITMOS.md.
 
-Descomprime todo el ZIP Fluido en una carpeta nueva y abre AsabiyaNative.exe.
+Descomprime todo el ZIP en una carpeta nueva y abre AsabiyaNative.exe.
 No necesitas instalar Go, Godot ni herramientas de desarrollo.
 Evita mezclar sus archivos con los de entregas anteriores.
 No se ha integrado nada en main.

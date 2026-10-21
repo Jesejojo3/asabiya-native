@@ -1,6 +1,6 @@
 # Reproducción Fluida y paquete Windows
 
-La reproducción arranca en **Máxima**, con **Fluido** activado junto al selector de velocidad. Continúa publicando cada año consecutivo, con los mismos datos y mecánicas. La diferencia es la política de comprobación: calcula SHA completo cada 25 años y al pausar; el paso individual también conserva su SHA exacto. Desactivar Fluido devuelve la comprobación anual.
+La reproducción arranca en **Máxima**. La política de comprobación es automática y no tiene interruptor. Continúa publicando cada año consecutivo, con los mismos datos y mecánicas. La diferencia es la política de comprobación: calcula SHA completo cada 25 años y al pausar; el paso individual también conserva su SHA exacto. El puente conserva el control interno de verificación anual para diagnósticos; no se expone en el juego.
 
 La opción es explícita y visible. Un año intermedio lleva `digestMode=deferred-v1` y una huella vacía, nunca un SHA inventado. La línea temporal avisa cuando el año observado no tiene comprobación individual. Pausar verifica el año actual; no crea retrospectivamente huellas exactas para todos los años anteriores. El historial visual sigue siendo una caché limitada, no un archivo íntegro de huellas.
 
@@ -38,6 +38,6 @@ Los resultados crudos están en `benchmarks/fluid-playback-2026-10-20/`. El benc
 
 ## Probar en Windows
 
-Descomprimir el ZIP completo en una carpeta nueva y abrir `AsabiyaNative.exe`. Generar el mundo, pulsar **Continuar** y comprobar que están seleccionados **Máxima** y **Fluido**. El servidor Go arranca automáticamente. No instalar Go ni Godot, ni reemplazar archivos de una entrega previa por separado.
+Descomprimir el ZIP completo en una carpeta nueva y abrir `AsabiyaNative.exe`. Generar el mundo, pulsar **Continuar** y comprobar que la velocidad inicial es **Máxima**. El servidor Go arranca automáticamente. No instalar Go ni Godot, ni reemplazar archivos de una entrega previa por separado.
 
 El paquete se construye con Go 1.27.2 (windows/amd64, GOAMD64=v1, CGO desactivado), Godot oficial 4.7.2 y sus plantillas fijadas por SHA-256. Incluye cliente, servidor, recursos y manifiesto de hashes. La construcción y las pruebas headless no acreditan ejecución Windows ni validación gráfica en el equipo del usuario.

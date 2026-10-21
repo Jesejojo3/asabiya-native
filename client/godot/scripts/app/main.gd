@@ -251,6 +251,7 @@ func _build_scene() -> void:
 	hud = Hud.new()
 	hud.name = "Hud"
 	layer.add_child(hud)
+	hud.profiler = _performance_trace
 	hud.build(self)
 	hud.layer_selected.connect(set_layer)
 	hud.opacity_changed.connect(func(v: float):
@@ -280,8 +281,6 @@ func _build_scene() -> void:
 			_annual_trace.record("annual-progress", 0, {"calculatedYear":calculated,"visualizedYear":visualized,"remaining":remaining}))
 	hud.playback_rate_changed.connect(func(rate: int):
 		if source is BridgeSource: (source as BridgeSource).set_live_rate(rate))
-	hud.fluid_playback_changed.connect(func(enabled: bool):
-		if source is BridgeSource: (source as BridgeSource).fluid_playback = enabled)
 	hud.fly_to.connect(func(c: int): select_entity("cell", c, true))
 	hud.focus_cell.connect(func(c: int):
 		if c >= 0 and c < world.cell_count():

@@ -12,7 +12,6 @@ signal advance_requested(years: int)
 signal play_toggled(on: bool)
 signal fast_forward_requested(years_count: int, publish_every: int)
 signal playback_rate_changed(years_per_second: int)
-signal fluid_playback_changed(enabled: bool)
 signal fly_to(cell: int)
 signal focus_cell(cell: int)
 signal entity_requested(kind: String, id: int)
@@ -31,7 +30,6 @@ var top_stats: Dictionary = {}
 var session_badge_box: HBoxContainer
 var sim_buttons: Dictionary = {}
 var speed_option: OptionButton
-var fluid_option: CheckButton
 var layer_buttons: Dictionary = {}
 var layer_group := ButtonGroup.new()
 var legend_box: VBoxContainer
@@ -111,6 +109,12 @@ var _transport_live := false
 var _transport_connected := false
 var _search_timer: Timer
 var command_panel: CommandPanel
+var profiler: PerformanceTrace
+var _timeline_signature: Array = []
+var _figures_signature: Array = []
+var _disasters_signature: Array = []
+var _stats_signature: Array = []
+var _scale_index := -1
 
 
 func build(application: Node) -> void:
@@ -409,7 +413,7 @@ func _build_layer_panel() -> void:
 
 
 func refresh_layers(source: HistorySource, frame: HistoryFrame, current: String) -> void:
-	var signature := [source, frame, current]
+	var signature := [source, source.systems() if source != null else PackedStringArray(), frame != null, current]
 	if signature == _layer_signature: return
 	_layer_signature = signature
 	for id in layer_buttons:
@@ -667,13 +671,6 @@ func _build_timeline() -> void:
 	speed_option.focus_mode = Control.FOCUS_NONE
 	speed_option.item_selected.connect(func(_index: int): playback_rate_changed.emit(speed()))
 	transport.add_child(speed_option)
-	fluid_option = CheckButton.new()
-	fluid_option.text = "Fluido"
-	fluid_option.button_pressed = true
-	fluid_option.focus_mode = Control.FOCUS_NONE
-	fluid_option.tooltip_text = "Muestra todos los años. Verifica el historial al pausar y cada 25 años. Desactiva Fluido para verificar cada año, con menor velocidad."
-	fluid_option.toggled.connect(func(enabled: bool): fluid_playback_changed.emit(enabled))
-	transport.add_child(fluid_option)
 	var step := Button.new()
 	step.text = "1 año"
 	step.icon = AtlasIcons.get_icon("step")
@@ -752,6 +749,14 @@ func _build_timeline() -> void:
 
 func refresh_timeline(source: HistorySource, year: int) -> void:
 	var ys := source.years()
+	var bridge := source as BridgeSource
+	var viewed: HistoryFrame = source.frame(year)
+	var signature := [source, ys, year, _playing, source.can_advance(),
+		bridge.busy if bridge != null else false, bridge.connected if bridge != null else false,
+		bridge._pause_verifying if bridge != null else false, bridge.is_fast_forward() if bridge != null else false,
+		viewed.digest_mode if viewed != null else ""]
+	if signature == _timeline_signature: return
+	_timeline_signature = signature
 	timeline_slider.editable = ys.size() > 1
 	if ys.is_empty():
 		timeline_label.text = ""
@@ -768,9 +773,8 @@ func refresh_timeline(source: HistorySource, year: int) -> void:
 		if source is BridgeSource and (source as BridgeSource).is_fast_forward(): timeline_label.text = "RÁPIDO" if _playing else "FINALIZANDO AÑO"
 		timeline_slider.tooltip_text = "Años recibidos: %s — %s. Caché limitada; no es un archivo completo." % [fmt_year(ys[0]), fmt_year(ys[ys.size() - 1])]
 		timeline_hint.visible = false
-		var viewed: HistoryFrame = source.frame(year)
 		if viewed != null and viewed.digest_mode == "deferred-v1":
-			timeline_hint.text = "Fluido · año sin comprobación individual. Pausar verifica el año actual."
+			timeline_hint.text = "Año sin comprobación individual. Pausar verifica el año actual."
 			timeline_hint.visible = true
 	sim_buttons["advance"].disabled = not source.can_advance() or _playing
 	# Pausing must remain possible during the first year in flight.
@@ -921,8 +925,12 @@ static func _figure_score(f: Dictionary, religions: Dictionary) -> float:
 
 
 func _fill_figures() -> void:
-	figure_list.clear()
 	var f: HistoryFrame = app.current_frame
+	var signature := [f.entity_records.get("figure", {}) if f != null else null,
+		f.entity_records.get("religion", {}) if f != null else null, figure_query.text, figure_filter.selected]
+	if signature == _figures_signature: return
+	_figures_signature = signature
+	figure_list.clear()
 	if f == null:
 		figure_list.add_item("Inicia una historia para consultar figuras.", null, false)
 		return
@@ -1032,9 +1040,15 @@ func _build_disasters() -> void:
 
 
 func _fill_disasters() -> void:
+	var frame: HistoryFrame = app.current_frame
+	var signature := [frame.year if frame != null else null,
+		frame.entity_records.get("cataclysm", {}) if frame != null else null,
+		frame.entity_records.get("outbreak", {}) if frame != null else null,
+		disaster_query.text, disaster_sort.selected]
+	if signature == _disasters_signature: return
+	_disasters_signature = signature
 	cataclysm_list.clear()
 	outbreak_list.clear()
-	var frame: HistoryFrame = app.current_frame
 	if frame == null:
 		cataclysm_list.add_item("Todavía no hay historia disponible.", null, false)
 		outbreak_list.add_item("Todavía no hay historia disponible.", null, false)
@@ -1290,6 +1304,7 @@ func set_hover(text: String) -> void:
 
 
 func _process(_dt: float) -> void:
+	var started := profiler.begin() if profiler != null else 0
 	if app.source is BridgeSource:
 		var bridge := app.source as BridgeSource
 		if bridge.busy != _transport_busy or bridge.is_live() != _transport_live or bridge.connected != _transport_connected:
@@ -1303,7 +1318,9 @@ func _process(_dt: float) -> void:
 		var m := get_local_mouse_position()
 		var s := hover_tip.size
 		var vp := size
-		hover_tip.position = Vector2(minf(m.x + 18, vp.x - s.x - 6), minf(m.y + 18, vp.y - s.y - 6))
+		var next_position := Vector2(minf(m.x + 18, vp.x - s.x - 6), minf(m.y + 18, vp.y - s.y - 6))
+		if hover_tip.position != next_position: hover_tip.position = next_position
+	if profiler != null: profiler.end("hud-process", started)
 
 
 func _build_help() -> void:
@@ -1506,6 +1523,11 @@ func set_session(source: HistorySource, world: WorldData) -> void:
 	top_stats["land"].text = _fmt_int(world.land_cells.size())
 
 func set_frame_stats(frame: HistoryFrame, start_year: int) -> void:
+	if disasters_panel.visible: _fill_disasters()
+	if figures_panel.visible: _fill_figures()
+	var signature := [start_year] if frame == null else [frame.year, frame.world_population, frame.state_count(), frame.peoples.size()]
+	if signature == _stats_signature: return
+	_stats_signature = signature
 	if frame == null:
 		top_year.text = fmt_year(start_year)
 		for k in ["population", "states", "peoples"]:
@@ -1516,8 +1538,6 @@ func set_frame_stats(frame: HistoryFrame, start_year: int) -> void:
 	top_stats["population"].text = _fmt_int(frame.world_population) if frame.world_population > 0.0 else "—"
 	top_stats["states"].text = str(frame.state_count())
 	top_stats["peoples"].text = str(frame.peoples.size())
-	if disasters_panel.visible:
-		_fill_disasters()
 
 func _icon_button(icon: String, hint: String, action: Callable) -> Button:
 	var button := Button.new()
@@ -1582,9 +1602,11 @@ func _build_atlas_navigation() -> void:
 
 func set_view_scale(zoom: float, yaw: float) -> void:
 	var scale_index := 0 if zoom >= 0.78 else (1 if zoom >= 0.45 else 2)
-	for i in _scale_buttons.size():
-		_scale_buttons[i].set_pressed_no_signal(i == scale_index)
-	_scale_label.text = "N %+.0f°" % rad_to_deg(yaw)
+	if scale_index != _scale_index:
+		_scale_index = scale_index
+		for i in _scale_buttons.size(): _scale_buttons[i].set_pressed_no_signal(i == scale_index)
+	var text := "N %+.0f°" % rad_to_deg(yaw)
+	if _scale_label.text != text: _scale_label.text = text
 
 
 func remember_selection(kind: String, id: int) -> void:
