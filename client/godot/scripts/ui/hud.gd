@@ -12,6 +12,7 @@ signal advance_requested(years: int)
 signal play_toggled(on: bool)
 signal fast_forward_requested(years_count: int, publish_every: int)
 signal playback_rate_changed(years_per_second: int)
+signal fluid_playback_changed(enabled: bool)
 signal fly_to(cell: int)
 signal focus_cell(cell: int)
 signal entity_requested(kind: String, id: int)
@@ -30,6 +31,7 @@ var top_stats: Dictionary = {}
 var session_badge_box: HBoxContainer
 var sim_buttons: Dictionary = {}
 var speed_option: OptionButton
+var fluid_option: CheckButton
 var layer_buttons: Dictionary = {}
 var layer_group := ButtonGroup.new()
 var legend_box: VBoxContainer
@@ -86,7 +88,8 @@ var _playing := false
 var _nav: Array[Dictionary] = []
 var _nav_index := -1
 var _navigating := false
-var _info_signature: Array = []
+var _info_sections := {}
+var _info_section_names: Array = []
 var _info_entity: Dictionary = {}
 var _section_tabs: TabBar
 var _section_nodes: Array[Control] = []
@@ -558,75 +561,72 @@ func hide_info() -> void:
 	if _welcome != null: _welcome.visible = size.x >= 1250.0
 
 func show_info(title: String, subtitle: String, sections: Array) -> void:
-	# A detail reply or status refresh need not rebuild an unchanged inspector.
+	var started := profiler.begin() if profiler != null else 0
 	var entity: Dictionary = app.selection.duplicate()
-	var signature := [entity, title, subtitle]
-	for sec: Array in sections:
-		var values := [sec[0]]
-		for row: Variant in sec[1]:
-			if row is Label: values.append(row.text)
-			elif row is Array and row.size() > 1 and row[1] != null:
-				values.append([row[0], str(row[2]) if row[1] is Callable and row.size() > 2 else str(row[1])])
-		signature.append(values)
-	if signature == _info_signature:
-		for sec: Array in sections:
-			for row: Variant in sec[1]:
-				if row is Control and not row.is_inside_tree(): row.free()
-		info_panel.visible = true
-		if _welcome != null: _welcome.hide()
-		return
 	var changed_entity := entity != _info_entity or info_title.text != title
 	_info_entity = entity
 	var previous_section := _section_key
-	_info_signature = signature
-	info_title.text = title
-	info_subtitle.text = subtitle
-	for c in info_body.get_children():
-		info_body.remove_child(c)
-		c.queue_free()
+	if info_title.text != title: info_title.text = title
+	if info_subtitle.text != subtitle: info_subtitle.text = subtitle
+	var live := {}
+	var names := []
 	_section_nodes.clear()
-	_section_tabs.clear_tabs()
-	for sec: Array in sections:
+	for spec: Array in sections:
 		var present := []
-		for row: Variant in sec[1]:
-			if row is Control or (row is Array and row.size() > 1 and row[1] != null): present.append(row)
+		for row: Variant in spec[1]:
+			if row is Control or (row is Dictionary and row.has("text")) or (row is Array and row.size() > 1 and row[1] != null): present.append(row)
 		if present.is_empty(): continue
-		var section := VBoxContainer.new()
-		section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		info_body.add_child(section)
-		_section_nodes.append(section)
-		_section_tabs.add_tab(str(sec[0]))
-		section.add_child(UiTheme.heading(str(sec[0]), 17))
-		for row: Variant in present:
-			if row is Control:
-				section.add_child(row)
-				continue
-			var fact := VBoxContainer.new()
-			fact.add_theme_constant_override("separation", 2)
-			section.add_child(fact)
-			fact.add_child(UiTheme.muted(str(row[0]).to_upper(), 10))
-			var val: Variant = row[1]
-			if val is Callable:
-				var b := Button.new()
-				b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-				b.text = str(row[2]) if row.size() > 2 else "Ver"
-				b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-				b.tooltip_text = b.text + " · abrir ficha sin mover el mapa"
-				b.icon = AtlasIcons.get_icon("forward")
-				b.pressed.connect(val)
-				fact.add_child(b)
-			else:
-				var l := Label.new()
-				l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-				l.text = str(val)
-				fact.add_child(l)
-			section.add_child(HSeparator.new())
-	var selected := 0
-	if not changed_entity:
-		for i in _section_tabs.tab_count:
-			if _section_tabs.get_tab_title(i) == previous_section: selected = i
-	_section_tabs.current_tab = selected
-	_show_section(selected)
+		var title_value := str(spec[0])
+		var key := "%d:%s" % [_section_nodes.size(), title_value]
+		names.append(title_value)
+		live[key] = true
+		if not _info_sections.has(key):
+			var container := VBoxContainer.new()
+			container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			container.add_child(UiTheme.heading(title_value, 17))
+			info_body.add_child(container)
+			_info_sections[key] = {"node":container,"rows":[]}
+		var section: Dictionary = _info_sections[key]
+		var node: VBoxContainer = section["node"]
+		var bindings: Array = section["rows"]
+		for index in present.size():
+			var old: Dictionary = bindings[index] if index < bindings.size() else {}
+			var binding := _sync_info_row(old, present[index])
+			if index < bindings.size(): bindings[index] = binding
+			else: bindings.append(binding)
+		while bindings.size() > present.size(): _free_info_row(bindings.pop_back())
+		var position_index := 1
+		for binding: Dictionary in bindings:
+			var root: Control = binding["root"]
+			if root.get_parent() != node: node.add_child(root)
+			if root.get_index() != position_index: node.move_child(root, position_index)
+			position_index += 1
+			if binding.has("separator"):
+				var separator: Control = binding["separator"]
+				if separator.get_parent() != node: node.add_child(separator)
+				if separator.get_index() != position_index: node.move_child(separator, position_index)
+				position_index += 1
+		if node.get_index() != _section_nodes.size(): info_body.move_child(node, _section_nodes.size())
+		_section_nodes.append(node)
+	for key: String in _info_sections.keys():
+		if not live.has(key):
+			var node: Control = _info_sections[key]["node"]
+			info_body.remove_child(node)
+			node.queue_free()
+			_info_sections.erase(key)
+	var structure_changed := names != _info_section_names
+	if structure_changed:
+		_info_section_names = names
+		_section_tabs.clear_tabs()
+		for key: String in names: _section_tabs.add_tab(key)
+	if changed_entity or structure_changed:
+		var selected := -1 if names.is_empty() else 0
+		if not changed_entity:
+			for index in names.size():
+				if names[index] == previous_section: selected = index
+		_section_tabs.current_tab = selected
+		_show_section(selected)
+	# Otherwise retain the selected tab and scroll while updating its values.
 	info_panel.show()
 	if _welcome != null: _welcome.hide()
 	if changed_entity and not _reduced_motion:
@@ -634,6 +634,77 @@ func show_info(title: String, subtitle: String, sections: Array) -> void:
 		info_panel.modulate.a = 0.35
 		_fade = create_tween()
 		_fade.tween_property(info_panel, "modulate:a", 1.0, 0.16)
+	if profiler != null: profiler.end("inspector", started)
+
+
+func _free_info_row(binding: Dictionary) -> void:
+	for key: String in ["root", "separator"]:
+		var node: Control = binding.get(key)
+		if node == null: continue
+		if node.get_parent() != null: node.get_parent().remove_child(node)
+		node.queue_free()
+
+
+func _sync_info_row(binding: Dictionary, row: Variant) -> Dictionary:
+	var kind := "control" if row is Control else ("note" if row is Dictionary else ("action" if row[1] is Callable else "fact"))
+	if not binding.is_empty() and (binding["kind"] != kind or (kind == "control" and binding["root"] != row)):
+		_free_info_row(binding)
+		binding = {}
+	if binding.is_empty():
+		binding = {"kind":kind}
+		if kind == "control": binding["root"] = row
+		elif kind == "note": binding["root"] = UiTheme.muted("", int(row.get("size", 12)))
+		else:
+			var fact := VBoxContainer.new()
+			fact.add_theme_constant_override("separation", 2)
+			binding["root"] = fact
+			var heading := UiTheme.muted(str(row[0]).to_upper(), 10)
+			fact.add_child(heading)
+			binding["heading"] = heading
+			binding["separator"] = HSeparator.new()
+			if kind == "action":
+				var button := Button.new()
+				button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+				button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+				button.icon = AtlasIcons.get_icon("forward")
+				fact.add_child(button)
+				binding["value"] = button
+			else:
+				var label := Label.new()
+				label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+				fact.add_child(label)
+				binding["value"] = label
+		if profiler != null: profiler.counter("inspectorRowsCreated")
+	elif profiler != null: profiler.counter("inspectorRowsReused")
+	if kind == "note":
+		var label: Label = binding["root"]
+		var text := str(row["text"])
+		if label.text != text: label.text = text
+		var size_value := int(row.get("size", 12))
+		if binding.get("size") != size_value:
+			label.add_theme_font_size_override("font_size", size_value)
+			binding["size"] = size_value
+	elif kind != "control":
+		var heading: Label = binding["heading"]
+		var caption := str(row[0]).to_upper()
+		if heading.text != caption: heading.text = caption
+		if kind == "action":
+			var button: Button = binding["value"]
+			var text := str(row[2]) if row.size() > 2 else "Ver"
+			if button.text != text:
+				button.text = text
+				button.tooltip_text = text + " · abrir ficha sin mover el mapa"
+			var old_action: Callable = binding.get("action", Callable())
+			var action: Callable = row[1]
+			if old_action != action:
+				if old_action.is_valid() and button.pressed.is_connected(old_action): button.pressed.disconnect(old_action)
+				button.pressed.connect(action)
+				binding["action"] = action
+		else:
+			var label: Label = binding["value"]
+			var text := str(row[1])
+			if label.text != text: label.text = text
+	return binding
 
 func _build_timeline() -> void:
 	timeline_panel = PanelContainer.new()
@@ -671,6 +742,13 @@ func _build_timeline() -> void:
 	speed_option.focus_mode = Control.FOCUS_NONE
 	speed_option.item_selected.connect(func(_index: int): playback_rate_changed.emit(speed()))
 	transport.add_child(speed_option)
+	fluid_option = CheckButton.new()
+	fluid_option.text = "Fluido"
+	fluid_option.button_pressed = true
+	fluid_option.focus_mode = Control.FOCUS_NONE
+	fluid_option.tooltip_text = "Activado: muestra todos los años y comprueba el estado cada 25 años. Desactivado: comprueba cada año. Pausar y 1 año siempre comprueban el estado exacto. El cambio afecta a los próximos avances."
+	fluid_option.toggled.connect(func(enabled: bool): fluid_playback_changed.emit(enabled))
+	transport.add_child(fluid_option)
 	var step := Button.new()
 	step.text = "1 año"
 	step.icon = AtlasIcons.get_icon("step")
@@ -1506,6 +1584,9 @@ func set_status(text: String) -> void:
 
 
 func set_session(source: HistorySource, world: WorldData) -> void:
+	fluid_option.disabled = not source is BridgeSource
+	if source is BridgeSource and fluid_option.button_pressed != (source as BridgeSource).fluid_playback:
+		fluid_option.set_pressed_no_signal((source as BridgeSource).fluid_playback)
 	var notice := ""
 	if source is BridgeSource and not (source as BridgeSource).connected:
 		notice = "Sin conexión"
