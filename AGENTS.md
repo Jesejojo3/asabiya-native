@@ -1,3 +1,7 @@
+# Fase 2 vigente: cliente Godot (21 de octubre de 2026)
+
+Trabajar sólo en `perf/godot-frame-optimization`, desde la consolidación `79035761f1e61041a3ccbf74b648577e53ba7150`. Auditar y optimizar exclusivamente presentación e instrumentación. No ejecutar juego, pruebas, benchmarks, headless, CI ni capturas: validación a cargo del usuario y ChatGPT. No producir ZIP, no merge y no modificar consolidación. Esta instrucción sustituye las autorizaciones de testing y entrega anteriores. Conservar Go, RNG, calendario, SHA, replay, referencia, golden, todos los años y calidad visual. La reproducción fluida es automática, sin selector de modo, como pidió el usuario. No declarar FPS alcanzados sin medidas comparables.
+
 # Continuación: reproducción fluida y entrega tangible
 
 Tras la PR #19, el usuario indica «eso no es tangible para mi, continúa». Esta continuación añade un modo visible Fluido que mantiene cada año publicado, negocia checkpoints explícitos cada 25 años y verifica el snapshot al pausar. La opción de verificación anual se conserva. Los frames diferidos no tienen una huella histórica exacta y deben seguir marcados como tales. No activar diferimiento oculto ni inventar huellas para años pasados. Preparar un paquete Windows para probar; no integrar automáticamente. Esta decisión de presentación sustituye la obligatoriedad de SHA anual en el modo Fluido descrita abajo; conserva las mecánicas, referencia, fixtures, calendario y RNG.
