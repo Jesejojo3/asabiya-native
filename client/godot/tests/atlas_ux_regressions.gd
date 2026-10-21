@@ -25,6 +25,9 @@ func check(ok: bool, label: String) -> void:
 
 func _initialize() -> void: call_deferred("_run")
 
+func _relation_sections(observer: ObserverStub, state_id: int) -> Array:
+	return [["Sociedad", [["Estado", func(): observer.select_entity("state", state_id, false), "Estado de prueba"], ["Población", "12 000"]]], ["Geografía", [["Bioma", "Pradera"]]]]
+
 func _run() -> void:
 	var observer := ObserverStub.new()
 	root.add_child(observer)
@@ -102,14 +105,36 @@ func _run() -> void:
 	for icon in ["atlas","search","chronicle","home","focus","back","forward","close","play","pause","step","menu","people","state","city"]:
 		check(AtlasIcons.get_icon(icon) != null, "original icon " + icon)
 	check(AtlasIcons.get_icon("search") == AtlasIcons.get_icon("search"), "icon texture cached")
-	var sections := [["Sociedad", [["Estado", func(): observer.select_entity("state", 7, false), "Estado de prueba"], ["Población", "12 000"]]], ["Geografía", [["Bioma", "Pradera"]]]]
+	observer.selection = {"kind":"cell","id":1}
+	observer.picked.clear()
+	var sections := _relation_sections(observer, 7)
 	hud.show_info("Provincia 1,0", "Año observado", sections)
 	var original := hud.info_body.get_child(0).get_instance_id()
 	hud.show_info("Provincia 1,0", "Año observado", sections)
 	check(hud.info_body.get_child(0).get_instance_id() == original, "unchanged inspector is not rebuilt")
+	var relation: Button = hud.info_body.find_children("*", "Button", true, false)[0]
+	relation.pressed.emit()
+	check(observer.selection == {"kind":"state","id":7}
+		and observer.picked == [{"kind":"state","id":7}],
+		"relation opens its original entity once after an unchanged refresh")
 	observer.selection = {"kind":"cell","id":2}
+	sections = _relation_sections(observer, 8)
 	hud.show_info("Provincia 1,0", "Año observado", sections)
-	check(hud.info_body.get_child(0).get_instance_id() != original, "different entity IDs rebind relation callbacks even with identical text")
+	relation = hud.info_body.find_children("*", "Button", true, false)[0]
+	check(relation.text == "Estado de prueba", "different relation destinations keep identical visible text")
+	relation.pressed.emit()
+	check(observer.selection == {"kind":"state","id":8}
+		and observer.picked == [{"kind":"state","id":7}, {"kind":"state","id":8}],
+		"identically named relation opens the new entity without invoking the old callback")
+	observer.selection = {"kind":"cell","id":2}
+	# Recreate the closure as a normal inspector refresh does, with the same target.
+	hud.show_info("Provincia 1,0", "Año observado", _relation_sections(observer, 8))
+	relation = hud.info_body.find_children("*", "Button", true, false)[0]
+	relation.pressed.emit()
+	check(observer.selection == {"kind":"state","id":8}
+		and observer.picked == [{"kind":"state","id":7}, {"kind":"state","id":8}, {"kind":"state","id":8}],
+		"refreshing the relation does not accumulate callbacks")
+	observer.selection = {"kind":"cell","id":2}
 	check(hud._section_tabs.tab_count == 2, "context sections become tabs")
 	hud._section_tabs.current_tab = 1
 	check(not hud._section_nodes[0].visible and hud._section_nodes[1].visible, "section tab changes visible facts")

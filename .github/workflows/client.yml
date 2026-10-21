@@ -42,6 +42,9 @@ jobs:
       - name: Atlas historical explorer regression contracts (headless)
         timeout-minutes: 2
         run: timeout --signal=TERM 40s ./godot --headless --path client/godot --script res://tests/atlas_ux_regressions.gd
+      - name: Phase 2.2 picking, historical indexes and visual reuse contracts
+        timeout-minutes: 2
+        run: timeout --signal=TERM 90s ./godot --headless --path client/godot --script res://tests/phase22_contracts.gd
       - name: Fluid playback, annual frames and exact pause
         timeout-minutes: 3
         run: |
