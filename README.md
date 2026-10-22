@@ -1,49 +1,50 @@
 # Asabiya Native
 
-Port incremental de Asabiya History Engine v0.6 a Go + Ebitengine, para uso personal en **Windows x64**.
+**Un mundo. Infinitas historias.**
 
-Estado: Bloque 1 integrado en `7fb42f9eab9304b7bcd6811a379780ea6ca4723b`. Tag `legacy-v0.6` conservado en `fe58bdb2ccf4db83857b02d16fa1852b54836824`. **Fase 1, Bloque 2 para revisión; no integrar automáticamente.** [Issue #3](https://github.com/Jesejojo3/asabiya-native/issues/3).
+Asabiya es un **simulador histórico emergente de observación**: sociedades que nacen, se organizan, se transforman y desaparecen sobre una Tierra reconocible, dejando consecuencias persistentes para las generaciones posteriores. El observador puede investigar la historia e intervenir ocasionalmente, sin necesidad de gobernar una dinastía ni ganar una partida.
 
-Ya genera terreno y clima procedural, drenaje/ríos, geometría esférica, biomas, aptitud agrícola/pastoral, costes de viaje, enlaces marítimos y ecología inicial. Exporta JSON/PNG, consulta celdas y ofrece un viewport fino en Ebitengine. La sesión sigue **sin población**: no avanza años ni crea pueblos, estados o guerras. [Alcance y decisiones del Bloque 2](docs/phase-1/BLOCK2.md); [historial del Bloque 1](docs/phase-1/README.md).
+> **Dirección de producto aprobada (21-10-2026):** desarrollar primero **Asabiya Atlas 2D**, con el mayor detalle cartográfico, histórico y sistémico que podamos sostener. Mantener la simulación en **Go como única autoridad causal**. El **3D queda aplazado** hasta disponer de financiación, mejores recursos de cómputo/IA y capacidad de formar un equipo especializado. No es una cancelación de la visión 3D ni un compromiso de fecha.
 
-## Compilar y ejecutar
+## Qué significa «2D de máximo detalle»
 
-Requisitos: Go **1.27.2** para Windows amd64; Ebitengine **2.10.5** fijado en `go.mod`/`go.sum`. No requiere compilador C. El script de compilación exige la versión exacta y fija `GOAMD64=v1`, `CGO_ENABLED=0`.
+No se persigue un mapa plano sin profundidad: la representación tendrá varias escalas de zoom, relieve sombreado, costas y ríos, capas dinámicas, nombres, provincias, ciudades, rutas, construcciones, ruinas y una interfaz de investigación con cronologías y causalidad explicable. **La complejidad de la historia no depende del número de polígonos.**
 
-```powershell
-./tools/build-native.ps1
-./bin/asabiya-headless.exe --seed Asabiya --history-seed 1 --cell 200,100 --out world.json --png world.png
-./bin/asabiya-headless.exe --seed Asabiya --png world-fine.png --high-res
-./bin/asabiya.exe --seed Asabiya
-```
+El detalle será **progresivo según escala, región y consulta**, no miles de objetos permanentes que colapsen la GPU. Los eventos, identidades, edificios e historias se modelan en Go y conservan su continuidad aunque estén fuera de pantalla. No se debe inventar información histórica desde el cliente.
 
-La ventana conserva las capas finas 1600×800 y muestra una textura de clima/elevación; Esc la cierra. No hay todavía overlays fluviales, paneles, cámara ni controles temporales. El JSON v2 incluye drenaje/ecología y enlaces marítimos de la celda consultada; **no es un guardado reanudable**.
+## Situación del código frente a la visión
 
-```powershell
-go test ./...
-go vet ./...
-./tools/check-native-repro.ps1
-```
+**No confundir una decisión de diseño con una función entregada.** El `main` de este repositorio conserva documentación e implementación de fases tempranas de Go/Ebitengine. El motor Go y el cliente Godot 3D más avanzados, las optimizaciones y la documentación conceptual se han desarrollado en **ramas y pull requests separados**; su contenido no debe describirse como fusionado ni validado en `main`.
 
-El generador usa `math` de Go: no se exige paridad bit a bit con V8. El golden v1 se conserva como proyección congelada; el nuevo golden v2 cubre todas las capas de geografía/ecología. Cambios de CPU o toolchain requieren investigar cualquier discrepancia, no regenerar referencias automáticamente. [Validación del Bloque 2](docs/phase-1/BLOCK2_VALIDATION.md).
+- [PR #21 — consolidación Go + Godot 3D](https://github.com/Jesejojo3/asabiya-native/pull/21): rama técnica para validación Windows, sin merge.
+- [PR #22 — Fase 2.2 de rendimiento](https://github.com/Jesejojo3/asabiya-native/pull/22): optimizaciones pendientes de validación integral.
+- [PR #23 — visión anterior, en revisión](https://github.com/Jesejojo3/asabiya-native/pull/23): documentación conceptual de la etapa de atlas 3D, base de esta revisión.
+- [PR #24 — perfilado Windows](https://github.com/Jesejojo3/asabiya-native/pull/24) y [PR #25 — diagnóstico/optimización 3D](https://github.com/Jesejojo3/asabiya-native/pull/25): investigación técnica preservada; no es la prioridad futura de producto.
+- **Nueva etapa:** prototipo Atlas 2D comparativo antes de escoger definitivamente Godot 2D, Ebitengine o una interfaz cartográfica web.
 
-## Referencia conservada
+Los README técnicos de cada rama, sus artefactos y suites prevalecen al documentar qué compila, cómo se ejecuta y qué está probado **en esa rama**. No usar comandos del `main` como instrucciones de las PR modernas.
 
-- [Entrega y alcance de Fase 0](docs/phase-0/README.md)
-- [Arquitectura propuesta](docs/phase-0/ARCHITECTURE.md)
-- [Inspección del motor JavaScript](docs/phase-0/SOURCE_AUDIT.md)
-- [Paquete de auditoría para Claude](docs/phase-0/CLAUDE_REVIEW.md)
-- [Pruebas realizadas y pendientes](docs/phase-0/VALIDATION.md)
+## Documentos rectores
 
-Comprobaciones locales con Node, sin instalar paquetes:
+1. [Visión del producto](docs/design/VISION.md): Tierra real, historia alternativa, observador y memoria material.
+2. [Principios de diseño](docs/design/DESIGN_PRINCIPLES.md): causalidad, independencia gráfica y aceptación de mecánicas.
+3. [Roadmap por hitos](docs/design/ROADMAP.md): del prototipo 2D al desarrollo sistémico y futuro 3D.
+4. [Arquitectura de transición 2D](docs/design/ARCHITECTURE_2D.md): contratos Go–representación y opciones de cliente.
+5. [Detalle cartográfico y UX](docs/design/ATLAS_2D_SPEC.md): zoom, capas, ciudades, ruinas, inspección y presupuesto de rendimiento.
+6. [Estrategia futura 3D/equipo](docs/design/FUTURE_3D.md): condiciones de financiación, contratación y migración.
+7. [Registro de decisiones](docs/design/DECISIONS.md): decisiones tomadas, experimentos descartados y asuntos abiertos.
+8. [Estado documental](docs/design/README.md): qué es vigente, histórico o todavía una hipótesis.
 
-```sh
-node tools/verify-reference.mjs
-node tools/reference-smoke.mjs
-```
+## Límites de la transición
 
-El HTML y todos los fixtures de Fase 0 permanecen intactos. Sus documentos describen la auditoría histórica; las decisiones actuales de implementación están en `docs/phase-1/`.
+- **El motor histórico Go se conserva.** No reescribirlo por motivos gráficos.
+- El **HTML v0.6 es referencia inmutable**: `reference/v0.6/` y sus golden no se alteran.
+- **No borrar** los trabajos Godot 3D ni sus evidencias: quedan como activo técnico y posible cliente futuro.
+- **No reemplazar código de producción aún.** Probar una vertical slice 2D con datos de Go, capturas, métricas y contratos antes de seleccionar cliente.
+- No tocar `main`, fusionar PR, cambiar contratos de simulación ni afirmar mejoras no medidas sin autorización y validación.
 
-Correcciones de primera auditoría: [matriz de hallazgos](docs/phase-0/AUDIT_FINDINGS.md) y [validación correctiva](docs/phase-0/CORRECTION_VALIDATION.md).
+**Plataforma actual:** uso personal en Windows x64. Una comercialización futura, si se considerara, exigiría una decisión distinta sobre alcance y licencias.
 
-Alcance aprobado: uso personal **Windows x64**, Go + Ebitengine. `native` usará inicialmente `math` de Go, sin paridad bit a bit obligatoria con V8; `v06-compat` y los fixtures originales permanecen como referencia diagnóstica. Linux es diagnóstico opcional, no CI bloqueante.
+## Legado técnico
+
+La documentación de [Fase 0](docs/phase-0/README.md), [arquitectura inicial Go + Ebitengine](docs/phase-0/ARCHITECTURE.md) y [Fase 1](docs/phase-1/README.md) conserva el contexto de sus respectivas fechas. **No se reescriben retroactivamente** para fingir que describen la arquitectura activa actual. Las referencias históricas se mantienen intactas y están claramente distinguidas de la nueva dirección de producto.
