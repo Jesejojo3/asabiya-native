@@ -22,6 +22,7 @@ type game struct {
 	duration           time.Duration
 	zoom               float64
 	frames             int
+	logged             bool
 }
 
 func (g *game) Update() error {
@@ -31,6 +32,17 @@ func (g *game) Update() error {
 	return nil
 }
 func (g *game) Draw(screen *ebiten.Image) {
+	if !g.logged {
+		bounds := screen.Bounds()
+		if bounds.Dx() != 1920 || bounds.Dy() != 1080 {
+			panic("microprobe framebuffer mismatch")
+		}
+		var debug ebiten.DebugInfo
+		ebiten.ReadDebugInfo(&debug)
+		row, _ := json.Marshal(map[string]any{"kind": "ready", "framebuffer_size": []int{bounds.Dx(), bounds.Dy()}, "graphics_library": debug.GraphicsLibrary.String(), "software_env": os.Getenv("LIBGL_ALWAYS_SOFTWARE")})
+		fmt.Fprintln(g.log, string(row))
+		g.logged = true
+	}
 	now := time.Now()
 	elapsed := now.Sub(g.start).Seconds()
 	if !g.last.IsZero() && elapsed >= 3 {

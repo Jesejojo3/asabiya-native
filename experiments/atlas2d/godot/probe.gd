@@ -8,6 +8,7 @@ var output: FileAccess
 var seconds := 10.0
 var zoom := 4.0
 var opts := {}
+var checked := false
 
 func _initialize() -> void:
 	for arg: String in OS.get_cmdline_user_args():
@@ -17,15 +18,18 @@ func _initialize() -> void:
 	seconds=float(opts.get("seconds","10"))
 	zoom=float(opts.get("zoom","4"))
 	output=FileAccess.open(opts["out"],FileAccess.WRITE)
-	output.store_line(JSON.stringify({"kind":"environment","engine":Engine.get_version_info(),"fixture":JSON.parse_string(FileAccess.get_file_as_string(fixture.path_join("probe.json"))),"size":"1920x1080","framebuffer_validated":true,"target_hardware_verified":false,"zoom":zoom,"gpu":RenderingServer.get_video_adapter_name()}))
+	output.store_line(JSON.stringify({"kind":"environment","engine":Engine.get_version_info(),"fixture":JSON.parse_string(FileAccess.get_file_as_string(fixture.path_join("probe.json"))),"size":"1920x1080","target_hardware_verified":false,"zoom":zoom,"gpu":RenderingServer.get_video_adapter_name()}))
 	base=ImageTexture.create_from_image(Image.load_from_file(fixture.path_join("terrain.png")))
 	overlay=ImageTexture.create_from_image(Image.load_from_file(fixture.path_join("political.png")))
-	root.size=Vector2i(1920,1080)
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	canvas=Node2D.new()
 	root.add_child(canvas)
 	canvas.draw.connect(_draw_map)
 	RenderingServer.frame_post_draw.connect(_frame)
+	_configure.call_deferred()
+
+func _configure() -> void:
+	root.size=Vector2i(1920,1080)
 	started=Time.get_ticks_usec()
 
 func _process(_dt: float) -> bool:
@@ -33,6 +37,7 @@ func _process(_dt: float) -> bool:
 	return false
 
 func _draw_map() -> void:
+	if started==0: return
 	var elapsed := (Time.get_ticks_usec()-started)/1000000.0
 	var center := Vector2(400*(0.5+sin(elapsed*0.2)*0.15),200*(0.5+sin(elapsed*0.12)*0.08))
 	var scale := minf(1920.0/400,1080.0/200)*zoom
@@ -45,12 +50,17 @@ func _draw_map() -> void:
 		canvas.draw_texture_rect(overlay,rect,false)
 
 func _frame() -> void:
+	if started==0: return
 	var now := Time.get_ticks_usec()
 	var elapsed := (now-started)/1000000.0
-	if elapsed>=3 and Vector2i(root.get_texture().get_size())!=Vector2i(1920,1080):
-		push_error("Microprobe framebuffer mismatch")
-		quit(1)
-		return
+	if elapsed>=3 and not checked:
+		checked=true
+		var actual := Vector2i(root.get_texture().get_size())
+		if actual!=Vector2i(1920,1080):
+			push_error("Microprobe framebuffer mismatch: "+str(actual))
+			quit(1)
+			return
+		output.store_line(JSON.stringify({"kind":"ready","framebuffer_size":[actual.x,actual.y]}))
 	if elapsed>=3 and last>0:
 		output.store_line(JSON.stringify({"kind":"frame","frame_ms":(now-last)/1000.0}))
 	last=now
