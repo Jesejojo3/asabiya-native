@@ -16,6 +16,7 @@ var play_button: Button
 var init_button: Button
 var pause_button: Button
 var review: OptionButton
+var legend: Label
 var layer_ids := ["terrain","states","population","peoples","cultures","religions","biomes","technology"]
 var layer_names := ["Terreno","Política · estados","Densidad de población","Pueblos","Cultura · componentes 1–3","Religiones","Biomas","Tecnología"]
 var desired_layer := "states"
@@ -123,6 +124,9 @@ func _build_ui() -> void:
 	inspector.size_flags_vertical=Control.SIZE_EXPAND_FILL
 	inspector.text="Arrastra para desplazar. Rueda para acercar.\nSelecciona una provincia.\n\nGo calcula la historia; este cliente la observa."
 	panel.add_child(inspector)
+	legend=Label.new()
+	legend.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
+	panel.add_child(legend)
 	chronicle=RichTextLabel.new()
 	chronicle.custom_minimum_size.y=150
 	panel.add_child(chronicle)
@@ -202,6 +206,7 @@ func _process(_delta: float) -> void:
 			var upload_ms := map.publish(packet)
 			current=publication
 			shown_layer=packet.layer
+			_update_legend(packet.legend)
 			metrics.publication_us=int(received_us.get(current.get_instance_id(),Time.get_ticks_usec()))
 			received_us.erase(current.get_instance_id())
 			metrics.updates+=1
@@ -249,7 +254,7 @@ func _pause() -> void:
 
 func _review(index: int) -> void:
 	if source==null or playing or source.busy: return
-	var year := review.get_item_id(index)
+	var year := int(review.get_item_metadata(index))
 	var value := source.frame(year)
 	if value!=null:
 		review_year=year
@@ -258,7 +263,8 @@ func _review(index: int) -> void:
 func _refresh_review() -> void:
 	review.clear()
 	for year in source.years():
-		review.add_item("Año %d" % year,year)
+		review.add_item("Año %d" % year)
+		review.set_item_metadata(review.item_count-1,year)
 		if year==current.year: review.select(review.item_count-1)
 
 func _selected(id: int, started_us := 0) -> void:
@@ -297,9 +303,27 @@ func _update_panel() -> void:
 			inspector.text+="\nConsulta Go: cohesión %s · integración %s\nFortificación: %s (índice; no edificios)\nCiudad ID: %s\n" % [str(data.get("cohesion","—")),str(data.get("integration","—")),str(data.get("fortification","—")),str(data.get("cityId","—"))])
 		source.query_history(id,func(response: Dictionary):
 			if current==null or key!=query_key or playing or int(response.get("year",-1))!=current.year: return
-			inspector.text+="\nHistorial provincial Go (observaciones cada 10 años):\n"+JSON.stringify(response.get("data",{})))
+			var records: Array=response.get("data",{}).get("records",[]) if response.get("data",{}).get("records") is Array else []
+			inspector.text+="\nPropiedad observada cada 10 años. Últimas %d de %d observaciones:\n" % [mini(12,records.size()),records.size()]
+			for entry: Dictionary in records.slice(maxi(0,records.size()-12)):
+				inspector.text+="%s · propietario ID %s\n" % [entry.get("year","—"),entry.get("ownerPolityId","—")])
 	elif playing:
 		inspector.text+="\nPausa para consultar detalle provincial e historial sin mezclar años."
+
+func _update_legend(value: Dictionary) -> void:
+	legend.text="Leyenda · "+layer_names[layer_ids.find(shown_layer)]+"\n"
+	if value.get("kind")=="ramp":
+		legend.text+="Violeta → azul → verde → amarillo → rojo\n%s → %s" % [str(value.get("min","")),str(value.get("max",""))]
+	elif shown_layer=="cultures":
+		legend.text+="RGB: componentes culturales 1, 2 y 3; los seis se consultan en el panel."
+	elif shown_layer in ["states","peoples","religions"]:
+		legend.text+="Colores de entidades Go. Selecciona para ver nombre e ID. Tierra sin entidad conserva el color físico."
+	elif value.get("kind")=="swatches":
+		var names := PackedStringArray()
+		for item: Array in value.get("items",[]): names.append(str(item[1]))
+		legend.text+=", ".join(names)
+	else:
+		legend.text+="Color físico por elevación, temperatura y precipitación. Sombreado de pendientes."
 
 func _post_draw() -> void:
 	if current==null or not bench_ready: return

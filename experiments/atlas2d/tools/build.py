@@ -40,6 +40,7 @@ def build(godot, go, template, destination):
     run([godot, "--headless", "--path", project, "--export-release", "Windows x64", destination / "AsabiyaAtlas2D.exe"])
     for name in ("README.md", "docs/SYSTEMS.md", "docs/BENCHMARK.md"):
         shutil.copyfile(ROOT / "experiments/atlas2d" / name, destination / Path(name).name)
+    shutil.copytree(ROOT / "experiments/atlas2d/docs", destination / "docs", dirs_exist_ok=True)
     for name in ("benchmark.ps1", "summarize.py"):
         shutil.copyfile(ROOT / "experiments/atlas2d/tools" / name, destination / name)
     (destination / "Medir rendimiento.cmd").write_text('@echo off\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0benchmark.ps1"\r\npause\r\n')
@@ -56,9 +57,9 @@ def build(godot, go, template, destination):
     (destination / "Godot-licenses.json").write_text(notices[notices.index('{'):])
     manifest = json.loads((project / "build-manifest.json").read_text())
     manifest.update(godot=gdversion, go=version.strip(), target="windows/amd64/v1", mode="official release template", files={})
-    for file in sorted(destination.iterdir()):
+    for file in sorted(destination.rglob("*")):
         if file.is_file() and file.name != "build-manifest.json":
-            manifest["files"][file.name] = hashlib.sha256(file.read_bytes()).hexdigest()
+            manifest["files"][file.relative_to(destination).as_posix()] = hashlib.sha256(file.read_bytes()).hexdigest()
     (destination / "build-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(destination)
 

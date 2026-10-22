@@ -29,7 +29,7 @@ flowchart LR
   G[cmd/asabiya-server] --> P[internal/interop · TCP NDJSON]
   P --> S[internal/sim · 63 fuentes / 11417 líneas]
   S --> R[internal/rng · orden causal]
-  S --> M[internal/mapsource · entradas geográficas]
+  M[internal/mapsource · I/O de entradas] --> S
   P --> B[Geografía ASABGEO + snapshots + consultas + replay]
   B --> A[BridgeSource + NativeFrameDecoder]
   A --> D[Cliente Godot 3D existente]
