@@ -1,100 +1,84 @@
-# ASABIYA — Principios y constitución de diseño
+# ASABIYA — Constitución de diseño (2D primero)
 
-**Estado:** criterios de producto para evaluar propuestas. No reemplazan los contratos técnicos existentes ni conceden autorización automática para modificar código.
+**Estado:** criterios rectores vigentes desde 21-10-2026; no son prueba de implementación ni autorizan por sí solos cambios de código.
 
-## Reglas fundacionales
+## Principios innegociables
 
-### P1. La historia ocurre sin el jugador
+### P1. Emergencia autónoma y observación
+La historia avanza sin órdenes del jugador. Existe una modalidad de observación pura; intervenir es opcional y trazable.
+**Prueba:** campaña sin comandos produce cambios consultables y reproducibles.
 
-El motor debe poder generar cambios y conflictos durante una sesión de observación pura. Toda intervención debe ser opcional y quedar registrada.
+### P2. Causalidad antes que cronologías prefijadas
+Los acontecimientos proceden de condiciones y relaciones entre sistemas. La historia real inspira parámetros, no una lista obligatoria de sucesos.
+**Prueba:** misma configuración reproduce resultados; condiciones distintas producen alternativas explicables.
 
-**Comprobación:** iniciar una campaña sin comandos de intervención, avanzar y poder investigar transformaciones reales.
+### P3. Una única autoridad histórica
+**Go decide; las interfaces representan.** El atlas 2D, el Godot 3D archivado y futuros visores no inventan cambios, fechas, guerras ni ruinas. Los comandos entran por contratos versionados.
+**Prueba:** para la misma instantánea, todos los clientes describen identidades, años y hechos equivalentes.
 
-### P2. Emerger antes que guionizar
+### P4. Persistencia y memoria intergeneracional
+Ciudades, construcciones, infraestructuras, conocimientos, instituciones y marcas ambientales no desaparecen arbitrariamente por cambio de era o gobernante.
+**Prueba:** sitio/legado verificable después de perder a su constructor.
 
-La formación y caída de Estados, difusión cultural, desarrollo técnico y cataclismos se resuelven mediante condiciones e interacciones, no por fechas históricas obligatorias.
+### P5. Tierra fija como referencia, historia variable
+La dirección geográfica es una Tierra real versionada, sin imponer países modernos ni la cronología histórica. Sus cambios físicos futuros requieren reglas causales y fuentes comprobables.
+**Prueba:** IDs/vecindades/posiciones coherentes con el atlas, mapa real verificable y partidas reproducibles.
 
-**Comprobación:** variar condiciones o semilla y observar resultados diferentes explicables; repetirlas debe reproducir el mismo resultado en el entorno objetivo.
+### P6. Tecnología regional y multidimensional
+Energía, conocimiento, especialistas, manufactura, redes, infraestructura e instituciones evolucionan de forma parcialmente independiente. No hay una era única obligatoria para todo el planeta.
+**Prueba:** pérdida o preservación de capacidades según variables y no por cambio instantáneo de etiqueta.
 
-### P3. Persistencia y causalidad histórica
+### P7. Máximo detalle histórico, visualización progresiva
+El objetivo no es el número máximo de objetos simultáneos, sino la mayor cantidad **útil, correcta y legible** de información al explorar. Mundo, región, provincia y localidad revelan progresivamente relieve, biomas, ciudades, rutas, construcciones y ruinas.
+**Prueba:** zoom y capas aportan detalle sin saturación ni disparar complejidad por cada celda fuera de pantalla.
 
-Las construcciones, instituciones, poblaciones, conocimientos y alteraciones ambientales no se eliminan simplemente porque cambie una era o desaparezca su creador.
+### P8. La misma verdad en mapa, inspector e historial
+Los paneles, cronologías y la cartografía se apoyan en estado y eventos reales. Separar datos confirmados, inferencias explicativas y elementos no disponibles.
+**Prueba:** una ocupación o construcción muestra fecha, ID y relación causal consistentes donde se consulte.
 
-**Comprobación:** observar al menos una consecuencia persistente tras un cambio de gobernante, Estado o asentamiento.
+### P9. Diseño independiente del medio
+La simulación no contiene imports ni dependencias de sprites, shaders, escenas 3D, UI ni reloj gráfico. Coordenadas, IDs, eventos y persistencia deben sobrevivir a un cambio de cliente.
+**Prueba:** la misma simulación puede ejecutarse headless y alimentar al menos un visor sin mutar el estado.
 
-### P4. Tecnología regional y multidimensional
+### P10. Rendimiento medido, no prometido
+Presupuesto explícito de CPU, GPU, RAM, coste de avance y latencia de inspección. Preferir diffs, cachés, índices y streaming por región.
+**Prueba:** escenarios comparables en Windows x64 muestran FPS y P50/P95/P99, memoria y años/s; resultados ajenos/headless no se presentan como Iris Xe.
 
-La capacidad tecnológica no es un único nivel global. Distinguir, cuando corresponda, conocimiento conservado, capacidad productiva, energía, infraestructura y organización social.
+### P11. Un ciclo completo supera cien mecánicas aisladas
+Una feature debe reforzar una cadena causa → transformación → legado → explicación accesible.
+**Prueba:** vertical slice reproducible de comunidad, crisis, cambio y huella histórica.
 
-**Comprobación:** una sociedad puede conservar un vestigio avanzado sin disponer automáticamente de medios para construirlo o repararlo.
+### P12. 3D futuro sin deuda arquitectónica irreversible
+El 2D es producto útil, no trabajo descartable; el 3D se retoma con financiación, hardware, herramientas y equipo suficientes. Conservar el prototipo 3D y evitar atar datos al 2D.
+**Prueba:** entidades históricas persistentes no dependen de coordenadas de pantalla, nombres de nodos ni assets.
 
-### P5. Un atlas terrestre, muchas historias
+## Puerta de aceptación de cualquier nueva función
 
-El producto principal usa un atlas 3D plano de la Tierra. Topología y fuentes geográficas deben ser identificables; las fronteras políticas y la trayectoria de las sociedades son emergentes.
+Cada propuesta debe responder:
 
-**Comprobación:** reproducir una configuración sobre una versión de atlas, y distinguir claramente coordenadas físicas de divisiones políticas simuladas. El generador anterior se conserva como referencia técnica mientras se migra.
+1. **Experiencia:** ¿qué podrá observar o investigar el usuario?
+2. **Causa:** ¿qué variables y reglas producen el resultado?
+3. **Persistencia:** ¿qué huellas deja y quién puede heredarlas?
+4. **Escalas:** ¿cómo aparece en mapa mundial, región, provincia, sitio e historial?
+5. **Autoridad:** ¿qué calcula Go y qué se limita a dibujar o consultar el cliente?
+6. **Coste:** ¿qué presupuestos de CPU/GPU/memoria/tiempo anual consume?
+7. **Compatibilidad:** ¿qué contratos, RNG, hashes, replay, saves y referencias protege?
+8. **Prueba:** ¿cómo medimos aceptación y qué resultado descartaría la idea?
 
-### P6. La misma verdad en todas las escalas
+Si no hay respuestas, recortar alcance o postergar.
 
-Mapa mundial, provincia, localidad, cronología e inspector consultan el mismo estado causal o el mismo historial. La presentación no fabrica acontecimientos para decorar.
+## Disciplina de ingeniería
 
-**Comprobación:** una transición política o destrucción material coincide entre vista global, detalles de provincia y registro histórico.
+- Una PR y una responsabilidad verificable; separar cambios causales, interfaz, render, rendimiento y documentación.
+- Verificar HEAD reales antes de editar, no asumir que main contiene ramas abiertas.
+- No fusionar, borrar trabajo ajeno ni alterar oráculos y golden sin autorización.
+- Mantener trazabilidad de IDs, semillas, archivos de datos, builds y evidencias.
+- Informar de manera explícita: visión / especificación / implementación / CI / validación en PC / aceptación.
+- No introducir 3D, Unity o CK3 en el camino crítico del prototipo 2D.
+- No usar la presión de financiación o la disponibilidad de IA como justificación para generar código inmantenible.
 
-### P7. Coherencia visual a través del tiempo
+## Ejemplo de criterio de producto
 
-La cartografía, selección, navegación y jerarquía visual conservan una lógica común entre eras. Arquitectura, materiales y ruinas reflejan cultura, tecnología y deterioro.
+**Situación hipotética:** una sociedad con fusión sufre una guerra, pierde su red energética y especialistas, conserva parcialmente archivos e instalaciones; siglos después un pueblo agrícola reutiliza las ruinas.
 
-**Comprobación:** el usuario puede leer quién controla un lugar, qué hay allí y qué cambió sin aprender una interfaz nueva por cada era.
-
-### P8. Determinismo, trazabilidad y pruebas
-
-Go es la **única autoridad causal**. Godot visualiza e interroga datos; las intervenciones entran por contratos explícitos. Conservar reglas de RNG, calendario, huellas/replay, referencia HTML v0.6 y suites de regresión.
-
-**Comprobación:** las entradas equivalentes reproducen el estado esperado bajo el contrato de determinismo vigente; discrepancias no se encubren actualizando golden sin justificación.
-
-### P9. Rendimiento y complejidad presupuestados
-
-El motor y el atlas deben poder representar historias largas sin cargar en 3D todo el detalle del planeta a la vez. El detalle local es dependiente del zoom; el contenido causal persiste aun cuando no está renderizado.
-
-**Comprobación:** registrar FPS, tiempos de frame, memoria y coste de avance con escenarios comparables, en especial en Windows x64 y hardware integrado objetivo. No afirmar mejoras sin pruebas.
-
-### P10. Una función debe aportar una experiencia investigable
-
-Una mecánica que no genera consecuencias, no cambia decisiones de las sociedades o no puede observarse requiere una justificación especial.
-
-**Comprobación:** documentar al menos una cadena entrada → efecto → persistencia/resultado → evidencia visible.
-
-## Puerta de aceptación de nuevas funciones
-
-Toda propuesta relevante debe responder antes de implementarse:
-
-1. **Propósito:** ¿qué experiencia central mejora y qué problema observable resuelve?
-2. **Causa:** ¿qué datos la producen y qué sistemas afecta?
-3. **Legado:** ¿qué ocurre con sus consecuencias al desaparecer la sociedad responsable?
-4. **Observación:** ¿en qué mapa, panel o cronología pueden investigarse?
-5. **Compatibilidad:** ¿cómo mantiene contratos, determinismo, replay y pruebas?
-6. **Coste:** ¿qué impacto tiene sobre CPU, GPU, memoria, longitud de campañas y mantenimiento?
-7. **Evidencia:** ¿qué prueba o criterio demostraría que funciona y cuándo rechazaríamos la PR?
-
-Si no hay respuestas verificables, reducir el alcance o aplazarla.
-
-## Disciplina de desarrollo
-
-- **Una PR, un propósito comprobable.** Separar refactor, performance, nuevas reglas causales, UI y documentación salvo dependencias justificadas.
-- Antes de borrar o mover archivos, comprobar consumidores, referencias y riesgos de compatibilidad.
-- Identificar siempre **visión**, **implementación**, **prueba automática** y **validación empírica** como estados distintos.
-- No fusionar ramas ni actualizar referencias históricas sin revisión y autorización.
-- El responsable no técnico debe recibir un informe comprensible: cambio, motivo, archivos afectados, pruebas, riesgos y criterio de aceptación.
-- Los cambios de diseño aprobados se registran explícitamente en estos documentos; no se deducen del comportamiento accidental de una rama.
-
-## Ejemplo de verificación
-
-**Hipótesis:** tras una guerra devastadora, una ciudad puede perder la capacidad de operar su infraestructura avanzada, mientras sus edificios siguen existiendo.
-
-**Datos:** daños, población, mantenimiento, especialistas, redes de energía y estado de edificios.
-
-**Resultado esperado:** deterioro gradual y recuperaciones potenciales diferentes por territorio; no una regresión global instantánea.
-
-**Evidencia:** datos de Go, evolución determinista en varias configuraciones y representación coherente de la ruina en Godot cuando el contenido sea visible.
-
-Este ejemplo es una **propuesta futura**, no una mecánica actualmente certificada.
+**Evidencia exigible:** estados y eventos Go trazables; reglas de deterioro y conservación; sitio con ID estable; icono arqueológico e historial coherentes en atlas 2D; una futura vista 3D sería otra representación del mismo objeto. Este caso es **diseño futuro**, no código ya comprobado.
