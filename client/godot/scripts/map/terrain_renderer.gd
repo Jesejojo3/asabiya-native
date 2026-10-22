@@ -21,6 +21,8 @@ const BIOME_COLORS := [
 @export var lod_subdivisions: PackedInt32Array = [160, 80, 40, 20, 10]
 @export var target_pixels_per_quad := 12.0  # quality: 9 high, 12 medium, 20 low
 
+const SEA_TILE := 16  # fine samples per sea tile side
+
 var world: WorldData
 var mm: MapMath
 var material: ShaderMaterial
@@ -29,6 +31,7 @@ var chunks: Array[MeshInstance3D] = []
 var chunk_origin: Array[Vector2] = []
 var lod_meshes: Array[ArrayMesh] = []
 var water_planes: Array[MeshInstance3D] = []
+var water_tiles := 0
 
 var elev_tex: ImageTexture
 var temp_tex: ImageTexture
@@ -262,19 +265,74 @@ func _build_water() -> void:
 	for w in water_planes:
 		w.queue_free()
 	water_planes.clear()
-	var pm := PlaneMesh.new()
-	pm.size = Vector2(mm.map_w, mm.map_h)
-	pm.subdivide_width = 8
-	pm.subdivide_depth = 4
-	pm.material = water_material
+	var started := Time.get_ticks_usec()
+	var sea := _sea_mesh()
+	if _trace != null: _trace.record("terrain-sea-tiles", {"elapsedUsec":Time.get_ticks_usec() - started, "tiles":water_tiles})
 	for k in [-1, 0, 1]:
 		var w := MeshInstance3D.new()
 		w.name = "Sea_%d" % k
-		w.mesh = pm
+		w.mesh = sea
 		w.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		w.position = Vector3(mm.map_w * 0.5 + k * mm.map_w, 0.0, mm.map_h * 0.5)
 		add_child(w)
 		water_planes.append(w)
+
+
+## The sea surface only where it can be drawn. The water shader discards every
+## fragment whose bilinear fine elevation is > 0; a tile whose texels (plus a
+## two-texel margin) are all > 0 would be discarded entirely, so it is omitted.
+## Same plane, height and vertex positions as the former 1600×800 PlaneMesh;
+## land-only views no longer shade a full-screen discarded sea.
+func _sea_mesh() -> ArrayMesh:
+	var fw := world.fine_width
+	var fh := world.fine_height
+	var elev := world.elevation_fine
+	var tx_count := ceili(float(fw) / SEA_TILE)
+	var tz_count := ceili(float(fh) / SEA_TILE)
+	# Minimum per tile, then a 3×3 tile dilation covers the bilinear footprint.
+	var tile_min := PackedFloat32Array()
+	tile_min.resize(tx_count * tz_count)
+	tile_min.fill(INF)
+	for z in fh:
+		var row := z * fw
+		var trow := (z / SEA_TILE) * tx_count
+		for x in fw:
+			var v := elev[row + x]
+			var t := trow + x / SEA_TILE
+			if v < tile_min[t]: tile_min[t] = v
+	var verts := PackedVector3Array()
+	var idx := PackedInt32Array()
+	water_tiles = 0
+	for tz in tz_count:
+		for tx in tx_count:
+			var wet := false
+			for dz in [-1, 0, 1]:
+				var nz: int = tz + dz
+				if nz < 0 or nz >= tz_count: continue
+				for dx in [-1, 0, 1]:
+					if tile_min[nz * tx_count + posmod(tx + dx, tx_count)] <= 0.0: wet = true
+			if not wet: continue
+			water_tiles += 1
+			var x0 := tx * SEA_TILE - mm.map_w * 0.5
+			var z0 := tz * SEA_TILE - mm.map_h * 0.5
+			var x1 := minf(float((tx + 1) * SEA_TILE), mm.map_w) - mm.map_w * 0.5
+			var z1 := minf(float((tz + 1) * SEA_TILE), mm.map_h) - mm.map_h * 0.5
+			var base := verts.size()
+			verts.append_array([Vector3(x0, 0.0, z0), Vector3(x1, 0.0, z0), Vector3(x0, 0.0, z1), Vector3(x1, 0.0, z1)])
+			idx.append_array([base, base + 1, base + 2, base + 2, base + 1, base + 3])
+	var mesh := ArrayMesh.new()
+	if water_tiles == 0: return mesh
+	var normals := PackedVector3Array()
+	normals.resize(verts.size())
+	normals.fill(Vector3.UP)
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arrays[Mesh.ARRAY_INDEX] = idx
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	mesh.surface_set_material(0, water_material)
+	return mesh
 
 
 ## Places every chunk at its longitude copy nearest to the camera and picks a

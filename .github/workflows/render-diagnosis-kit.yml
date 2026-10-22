@@ -1,0 +1,181 @@
+name: Render diagnosis kit (Phase 2.3; no target GPU benchmark)
+on:
+  pull_request:
+    paths:
+      - 'client/godot/**'
+      - 'tools/diagnose-render.ps1'
+      - 'tools/package-render-kit.py'
+      - 'tools/analyze-render-diagnosis.mjs'
+      - 'tools/test-render-diagnosis.mjs'
+      - '.github/workflows/render-diagnosis-kit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  GOTOOLCHAIN: local
+jobs:
+  linux:
+    # Functional checks only. Software Vulkan (lavapipe) is other hardware:
+    # its frame times are never presented as Iris Xe results.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version-file: '.go-version'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.node-version'
+      - name: Analyzer unit tests (controlled samples)
+        run: node --test tools/test-render-diagnosis.mjs tools/test-close-zoom.mjs
+      - name: Go, protocol, reference and golden unchanged since PR #22
+        run: git diff --exit-code 2193a9d92400e7398c73c79105e311aae6397d3b -- internal cmd go.mod go.sum reference tests/native client/exporter
+      - name: Pinned Godot and software Vulkan
+        run: |
+          f=Godot_v4.7.2-stable_linux.x86_64.zip
+          curl -fsSL --retry 2 -o "$f" "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/$f"
+          grep "$f" client/tools/godot-pins.txt | awk '{print $2"  "$1}' | sha256sum -c -
+          unzip -q "$f" && mv Godot_v4.7.2-stable_linux.x86_64 godot && chmod +x godot
+          sudo apt-get install -y -q mesa-vulkan-drivers xvfb >/dev/null
+      - name: Build server
+        run: go build -trimpath -buildvcs=false -o build/bin/asabiya-server ./cmd/asabiya-server
+      - name: Existing client contracts (headless)
+        run: |
+          ./godot --headless --path client/godot --import >/dev/null 2>&1 || true
+          timeout --signal=TERM 120s ./godot --headless --path client/godot --script res://tests/phase22_contracts.gd
+          timeout --signal=TERM 60s ./godot --headless --path client/godot --script res://tests/atlas_ux_regressions.gd
+          timeout --signal=TERM 120s ./godot --headless --path client/godot --script res://tests/render_optimization_contracts.gd
+      - name: Harness smoke on lavapipe (Forward+ and Mobile; functional only)
+        run: |
+          export DISPLAY=:99
+          Xvfb :99 -screen 0 2560x1440x24 & sleep 2
+          for renderer in forward_plus mobile; do
+            timeout --signal=TERM 900s ./godot --path client/godot --script res://tests/render_diagnosis_runner.gd --rendering-method $renderer --windowed --audio-driver Dummy -- \
+              --server "$PWD/build/bin/asabiya-server" --output "$PWD/build/smoke-$renderer" --width 1280 --height 720 --plan smoke \
+              --seconds 5 --settle-seconds 2 --warmup-seconds 2 --history-years 300 --label ci-lavapipe-$renderer
+            grep -q '"valid": true' "build/smoke-$renderer/run.json"
+          done
+          # Same harness against the UNMODIFIED PR #22 tree (as the kit does).
+          git worktree add -f build/base 2193a9d92400e7398c73c79105e311aae6397d3b
+          ./godot --headless --path build/base/client/godot --import >/dev/null 2>&1 || true
+          timeout --signal=TERM 900s ./godot --path build/base/client/godot --script "$PWD/client/godot/tests/render_diagnosis_runner.gd" --rendering-method forward_plus --windowed --audio-driver Dummy -- \
+            --harness "$PWD/client/godot/diagnostics/render_diagnosis.gd" --server "$PWD/build/bin/asabiya-server" --output "$PWD/build/smoke-base" \
+            --width 1280 --height 720 --plan smoke --seconds 5 --settle-seconds 2 --warmup-seconds 2 --history-years 300 --label ci-lavapipe-base
+          grep -q '"valid": true' build/smoke-base/run.json
+          node tools/analyze-render-diagnosis.mjs build > build/smoke-analysis.md
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: render-diagnosis-ci-smoke-lavapipe
+          path: |
+            build/smoke-*/**
+            build/smoke-analysis.md
+          if-no-files-found: warn
+          retention-days: 14
+
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 60
+    needs: linux
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      GOOS: windows
+      GOARCH: amd64
+      GOAMD64: v1
+      CGO_ENABLED: '0'
+    steps:
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version-file: '.go-version'
+      - name: Build Windows server and headless replay tool
+        run: |
+          go build -trimpath -buildvcs=false -o build/bin/asabiya-server.exe ./cmd/asabiya-server
+          go build -trimpath -buildvcs=false -o build/bin/asabiya-headless.exe ./cmd/asabiya-headless
+      - name: Windows Go reproduces the expected 10000-year SHA
+        run: |
+          & build/bin/asabiya-headless.exe --years 10000 --replay build/replay-10000.json --out build/report-10000.json | Out-Null
+          $replay = Get-Content -Raw build/replay-10000.json | ConvertFrom-Json
+          if ($replay.finalSHA256 -ne 'e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9') { throw "Unexpected SHA $($replay.finalSHA256)" }
+      - name: Pinned editor and export templates
+        run: |
+          $pins=@{}
+          foreach ($line in Get-Content client/tools/godot-pins.txt) { if ($line -match '^\s*#' -or !$line.Trim()) { continue }; $p=$line -split '\s+'; $pins[$p[0]]=$p[1] }
+          New-Item -ItemType Directory -Force build/godot | Out-Null
+          foreach ($name in @('Godot_v4.7.2-stable_win64.exe.zip','Godot_v4.7.2-stable_export_templates.tpz')) {
+            Invoke-WebRequest -Uri "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/$name" -OutFile "build/godot/$name"
+            if ((Get-FileHash "build/godot/$name" -Algorithm SHA256).Hash.ToLowerInvariant() -ne $pins[$name]) { throw "Hash mismatch $name" }
+          }
+          Expand-Archive build/godot/Godot_v4.7.2-stable_win64.exe.zip -DestinationPath build/godot/editor
+          $templates = Join-Path $env:APPDATA 'Godot/export_templates/4.7.2.stable'
+          New-Item -ItemType Directory -Force $templates | Out-Null
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $zip=[IO.Compression.ZipFile]::OpenRead((Resolve-Path build/godot/Godot_v4.7.2-stable_export_templates.tpz))
+          try { foreach ($n in @('windows_release_x86_64.exe','windows_release_x86_64_console.exe','version.txt')) { [IO.Compression.ZipFileExtensions]::ExtractToFile($zip.GetEntry("templates/$n"),(Join-Path $templates $n),$true) } } finally { $zip.Dispose() }
+      - name: Export the candidate product executable (unchanged preset)
+        run: |
+          $editor = Resolve-Path build/godot/editor/Godot_v4.7.2-stable_win64_console.exe
+          & $editor --headless --editor --path client/godot --import *> build/import.log
+          & $editor --headless --path client/godot --export-release 'Windows x64' (Join-Path $PWD 'build/export/AsabiyaNative.exe') *> build/export.log
+          if (!(Test-Path build/export/AsabiyaNative.exe) -or (Select-String -LiteralPath build/export.log -Pattern 'SCRIPT ERROR|Parse Error|Export failed' -Quiet)) { Get-Content build/export.log; throw 'Export failed' }
+      - name: Exported build contains and starts the opt-in harness
+        run: |
+          $log = Join-Path $PWD 'build/self-check.log'
+          $p = Start-Process -FilePath build/export/AsabiyaNative.exe -ArgumentList @('--headless','--log-file',('"'+$log+'"'),'--','--render-diagnosis','--self-check') -PassThru -Wait
+          Get-Content $log
+          if ($p.ExitCode -ne 0 -or !(Select-String -LiteralPath $log -Pattern 'RENDER_DIAGNOSIS_SELF_CHECK' -Quiet)) { throw 'Exported harness self-check failed' }
+          if (!(Select-String -LiteralPath $log -Pattern '"exported":true' -Quiet)) { throw 'Self-check did not run inside the exported build' }
+      - name: Package kit
+        run: python tools/package-render-kit.py --editor-zip build/godot/Godot_v4.7.2-stable_win64.exe.zip --server build/bin/asabiya-server.exe --exported build/export/AsabiyaNative.exe --out build/render-kit
+      - name: Kit runner smoke on the CI virtual adapter (functional only, D3D12/WARP)
+        # Exercises process roles, phases, fast-forward preparation, logs and
+        # summaries end to end. WARP frame times are not hardware results.
+        continue-on-error: true
+        env:
+          ASABIYA_CI_SMOKE: '1'
+        run: |
+          Copy-Item -Recurse build/render-kit build/kit-smoke
+          ./build/kit-smoke/tools/diagnose-render.ps1 -KitDirectory build/kit-smoke -Campaign quick -Plan smoke -Width 960 -Height 540 -RenderingDriver d3d12 -HistoryYears 300 -Seconds 5 -ActiveSeconds 10 -OutputDirectory build/kit-smoke-results
+          $campaign = Get-Content -Raw build/kit-smoke-results/campaign.json | ConvertFrom-Json
+          $campaign | Format-Table id,status,error -AutoSize | Out-String -Width 300
+          foreach ($session in $campaign) {
+            $roles = (Import-Csv (Join-Path build/kit-smoke-results "$($session.id)/processes.csv")).role | Sort-Object -Unique
+            "$($session.id): roles $($roles -join ', ')"
+            if ($session.status -eq 'valid' -and (!($roles -contains 'godot-graphical') -or !($roles -contains 'go-server'))) { throw "Process roles not resolved in $($session.id)" }
+          }
+          if (@($campaign | Where-Object status -ne 'valid').Count) { throw 'Some smoke sessions failed' }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: render-diagnosis-windows-kit-smoke-ci-warp
+          path: build/kit-smoke-results/**
+          if-no-files-found: warn
+          retention-days: 14
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: asabiya-render-diagnosis-kit-windows-x64
+          path: build/render-kit/**
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: render-diagnosis-windows-logs
+          path: |
+            build/import.log
+            build/export.log
+            build/self-check.log
+          if-no-files-found: warn
+          retention-days: 14

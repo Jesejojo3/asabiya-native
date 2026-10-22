@@ -70,10 +70,11 @@ float cell_key(ivec2 c) {
 }
 
 int land_cell(ivec2 c, bool fine_land) {
-	float r = texelFetch(cell_remap_tex, c, 0).r;
+	vec2 remap = texelFetch(cell_remap_tex, c, 0).rg;
+	float r = remap.r;
 	int raw = c.y * int(grid_size.x) + c.x;
 	// remap: >= 0 for land cells (itself) and coastal sea cells (a land neighbour)
-	float own = texelFetch(cell_remap_tex, c, 0).g;
+	float own = remap.g;
 	if (own > 0.5) return raw;
 	if (fine_land && r >= 0.0) return int(r + 0.5);
 	return -1 - raw;
@@ -93,11 +94,25 @@ void fragment() {
 	float e = elev_bilinear(p);
 	vec2 rp = relief_params(p, e);
 	float eps = 0.25;
-	float hc = height_with(p, e, rp);
-	float hl = height_with(p - vec2(eps, 0.0), elev_bilinear(p - vec2(eps, 0.0)), rp);
-	float hr = height_with(p + vec2(eps, 0.0), elev_bilinear(p + vec2(eps, 0.0)), rp);
-	float hu = height_with(p - vec2(0.0, eps), elev_bilinear(p - vec2(0.0, eps)), rp);
-	float hd = height_with(p + vec2(0.0, eps), elev_bilinear(p + vec2(0.0, eps)), rp);
+	// Same five heights as height_with() at p, p -/+ (eps,0), p -/+ (0,eps); the
+	// noise of the five points shares lattice hashes (vnoise_cross).
+	vec4 en = vec4(elev_bilinear(p - vec2(eps, 0.0)), elev_bilinear(p + vec2(eps, 0.0)),
+		elev_bilinear(p - vec2(0.0, eps)), elev_bilinear(p + vec2(0.0, eps)));
+	float relief_c = 0.0;
+	float ridge_c = 0.0;
+	vec4 relief_n = vec4(0.0);
+	vec4 ridge_n = vec4(0.0);
+	if (max(e, max(max(en.x, en.y), max(en.z, en.w))) > 0.0) {
+		relief_n = relief_noise_cross(p, eps, relief_c);
+		if (rp.y > 0.0) {
+			ridge_n = ridge_noise_cross(p, eps, ridge_c);
+		}
+	}
+	float hc = height_from_noise(e, rp, relief_c, ridge_c);
+	float hl = height_from_noise(en.x, rp, relief_n.x, ridge_n.x);
+	float hr = height_from_noise(en.y, rp, relief_n.y, ridge_n.y);
+	float hu = height_from_noise(en.z, rp, relief_n.z, ridge_n.z);
+	float hd = height_from_noise(en.w, rp, relief_n.w, ridge_n.w);
 	vec3 n = normalize(vec3(hl - hr, 2.0 * eps, hu - hd));
 	// cavity term: valleys darker, crests lighter (cheap ambient occlusion)
 	float cavity = clamp(((hl + hr + hu + hd) * 0.25 - hc) * 6.0, -1.0, 1.0);
@@ -120,7 +135,12 @@ void fragment() {
 	}
 	float slope = 1.0 - n.y;
 	col = mix(col, vec3(0.45, 0.42, 0.38), smoothstep(0.35, 0.65, slope) * (0.4 + 0.5 * rp.y));
-	float snow = smoothstep(4350.0, 4600.0, e + relief_noise(p * 2.0) * 140.0 - cavity * 900.0) * step(t, 2.0);
+	// |relief_noise| <= 1 and |cavity| <= 1: below 3300 m or above 2 C the
+	// smoothstep argument stays under 4350 and snow is exactly 0.
+	float snow = 0.0;
+	if (e >= 3300.0 && t <= 2.0) {
+		snow = smoothstep(4350.0, 4600.0, e + relief_noise(p * 2.0) * 140.0 - cavity * 900.0) * step(t, 2.0);
+	}
 	snow = max(snow, step(float(b), 1.5) * step(0.5, float(b)));
 	col = mix(col, vec3(0.86, 0.88, 0.92), snow * (1.0 - smoothstep(0.45, 0.8, slope) * 0.7));
 	// beaches

@@ -56,9 +56,16 @@ var settings := {"quality": 1, "relief": 1}
 const SETTINGS_PATH := "user://settings.cfg"
 const QUALITY_PX := [9.0, 12.0, 20.0]
 const RELIEF_SCALE := [1.0 / 650.0, 1.0 / 420.0, 1.0 / 300.0]
+const RENDER_DIAGNOSIS := "res://diagnostics/render_diagnosis.gd"
 
 
 func _ready() -> void:
+	if pending_world.is_empty() and OS.get_cmdline_user_args().has("--render-diagnosis"):
+		# Opt-in measurement of this exported build; the harness owns its own
+		# session and never reads or writes the user's settings.
+		get_tree().root.add_child.call_deferred(load(RENDER_DIAGNOSIS).new())
+		queue_free()
+		return
 	if _performance_trace.enabled():
 		var probe := ProfileFrameProbe.new()
 		probe.profiler = _performance_trace

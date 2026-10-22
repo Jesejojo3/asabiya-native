@@ -1,4 +1,14 @@
-# Misión actual: perfilado de zoom cercano, 30 FPS (21 de octubre de 2026)
+# Misión actual: Fase 2.3, diagnóstico y optimización del render (22 de octubre de 2026)
+
+Rama/PR independiente sobre `perf/close-zoom-30fps` (#24, `431a7dd…6b`), que a su vez
+depende de #22 (`2193a9d`). Sin merge ni cambios en main, #22 o #24. Prioridad: rendimiento
+del cliente; sin mecánicas ni contenido nuevo. Sin cambios en Go, protocolo TCP, RNG,
+calendario, replay, SHA, golden ni HTML v0.6. Forward+ sigue siendo el renderizador por
+defecto; Mobile sólo como configuración diagnóstica. Diagnóstico con una variable por
+experimento; optimizaciones sólo con evidencia antes/después, y nunca presentar FPS de
+lavapipe/CI/WARP como Iris Xe. Ver `docs/performance/PHASE_2_3_RENDER.md`.
+
+# Historial: perfilado de zoom cercano, 30 FPS (21 de octubre de 2026)
 
 La nueva petición autoriza perfiles/pruebas y rama/PR independientes desde
 `2193a9d92400e7398c73c79105e311aae6397d3b`, sin actualizar PR #22 ni main ni merges.
