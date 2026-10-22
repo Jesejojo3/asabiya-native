@@ -58,6 +58,10 @@ func publish(packet: Dictionary) -> float:
 
 func zoom_to(multiplier: float) -> void:
 	if world == null: return
+	if multiplier==1:
+		target_center=Vector2(world.width,world.height)*0.5
+	elif selected>=0:
+		target_center=Vector2(selected%world.width,floori(float(selected)/world.width))+Vector2(0.5,0.5)
 	target_zoom=maxf(0.1,minf(size.x/world.width,size.y/world.height))*multiplier
 
 func screen_to_world(point: Vector2) -> Vector2:
@@ -66,7 +70,10 @@ func screen_to_world(point: Vector2) -> Vector2:
 func _process(delta: float) -> void:
 	if world == null: return
 	var weight := 1.0-exp(-delta*16.0)
-	center=center.lerp(target_center,weight)
+	var shift := target_center-center
+	shift.x=wrapf(shift.x,-world.width*0.5,world.width*0.5)
+	center+=shift*weight
+	center.x=fposmod(center.x,world.width)
 	zoom=lerpf(zoom,target_zoom,weight)
 	shader.set_shader_parameter("cell_pixels",zoom)
 	queue_redraw()
