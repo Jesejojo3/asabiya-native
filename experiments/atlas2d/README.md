@@ -63,4 +63,5 @@ No edites `build/`: se genera. El proyecto toma ocho adaptadores existentes
 byte por byte y anota sus hashes. Los fuentes del cliente 3D quedan intactos.
 
 Documentación: `docs/AUDIT.md`, `docs/ARCHITECTURE.md`, `docs/TECHNOLOGY.md`,
-`docs/SYSTEMS.md`, `docs/BENCHMARK.md`, `docs/VALIDATION.md`, `docs/OWNER_GUIDE.md`.
+`docs/SYSTEMS.md`, `docs/BENCHMARK.md`, `docs/PERFORMANCE.md`,
+`docs/VALIDATION.md`, `docs/OWNER_GUIDE.md`.

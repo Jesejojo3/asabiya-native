@@ -1,0 +1,56 @@
+{
+  "runtimeCommit": "197f46a242e2dea316ef500b359e07dc4898843a",
+  "captureMode": "official Godot Linux editor binary running project, not exported Windows",
+  "framebufferValidated": true,
+  "repeatCount": 1,
+  "warmupSeconds": 3,
+  "sampleSeconds": 10,
+  "zoom": 4,
+  "targetHardwareVerified": false,
+  "readyStateSHA256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+  "files": {
+    "1280x720-zoom4-activeFalse.jsonl": "1dabb9f8eeb603b958026f2884152c5c46ff728021ba23de853a3110dfef5090",
+    "1280x720-zoom4-activeFalse.log": "e3676d50b1a4f12e8e089770743325ad3203b2e0bce68ad6116edc9f569fca6a",
+    "1280x720-zoom4-activeFalse.memory.jsonl": "1314290184e787f9f07678c5aba483ab8bd805e2bc1a410530ba636ffb32b639",
+    "1280x720-zoom4-activeTrue.jsonl": "440ce5b9b6358ac9aedfc2c730fb96b696830e1f2f1976567338493394de3634",
+    "1280x720-zoom4-activeTrue.log": "659da4951c81699c3f3e447dfc205a4c411f8809cd95b272a1bacb43dc64fcfd",
+    "1280x720-zoom4-activeTrue.memory.jsonl": "2c207f578807d7c4c9af2fe90e77320574ed088da3af32400205a51546760d74",
+    "1920x1080-zoom4-activeFalse.jsonl": "5327a8744db23bb117b51809f3db0410bfa85ba5bbe6495ad6221919e38924b4",
+    "1920x1080-zoom4-activeFalse.log": "78762c9569e4200f6bf3dc117d8be4d90b3ab90bd322e03c0f21e204872a8051",
+    "1920x1080-zoom4-activeFalse.memory.jsonl": "4db4adfcf6bda612333a63391e15010ca41e942a5e2040cabf104a83136f6af6",
+    "1920x1080-zoom4-activeTrue.jsonl": "9f4bab1a1ea97260548c7775d4012ccf64e5cb290d2aed0273bb40e1ef06c862",
+    "1920x1080-zoom4-activeTrue.log": "56ef16e5c7eaa020c3f926dfbccf3480dba9a2fad2ef499bc3297360f216cc96",
+    "1920x1080-zoom4-activeTrue.memory.jsonl": "e0a1707e43e8a231c4d9a074cbab56b878394e2790343481f87679804f3cb481",
+    "summary.json": "67b5ee8e802f216ece13b720154117b26728b8950ea8c4dbf6d14a0c940e2129"
+  },
+  "screenshots": {
+    "1920x1080-zoom4-activeTrue.png": {
+      "sha256": "4d7f311ce61f793316fcc180fdf5c09f50ce38c89dc985fef5a5c2a0fe3b9a2c",
+      "framebuffer": [
+        1920,
+        1080
+      ]
+    },
+    "1280x720-zoom4-activeTrue.png": {
+      "sha256": "984cce561cf5999d49ee08806f55b01aadd1fb7369d16d2e206745c0165ad8ff",
+      "framebuffer": [
+        1280,
+        720
+      ]
+    },
+    "1920x1080-zoom4-activeFalse.png": {
+      "sha256": "9c332f41f6b1120fabbc85d961469577fba49f76db7ba4c4bc4987f31ce864eb",
+      "framebuffer": [
+        1920,
+        1080
+      ]
+    },
+    "1280x720-zoom4-activeFalse.png": {
+      "sha256": "9ff148892298f00ced58b102078befa6e57f5558dbdfc7ba0ee5bfffab826e47",
+      "framebuffer": [
+        1280,
+        720
+      ]
+    }
+  }
+}

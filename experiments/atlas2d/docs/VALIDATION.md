@@ -30,9 +30,10 @@ seguía en 1280×720 al usar DisplayServer.window_set_size. Datos y explicación
 framebuffer y comprobación IHDR del PNG en CI/runner. No se sustituyen esas
 cifras por una afirmación de mejora: era un fallo del método de captura.
 
-Comparativa corregida en curso: 400×200 detalle 4, 10000 años preparados,
+Comparativa corregida completa: 400×200 detalle 4, 10000 años preparados,
 1080p/720p reales, zoom regional 4, pausa/activo, warmup 3 s +muestra 10 s.
-Se actualizará con los datos completos. La matriz objetivo completa de tres
-zooms, tres repeticiones y 30 s se entrega reproducible; no se ha ejecutado
-en Iris Xe. Tampoco se ha comparado de forma emparejada con el antiguo 3D.
-
+Datos crudos y hashes en evidence/full-world; cifras y análisis en PERFORMANCE.md.
+Runtime de esa captura: 197f46a; cambios posteriores de controles/cámara no se
+presentan como una mejora medida. La matriz objetivo completa de tres zooms,
+tres repeticiones y 30 s se entrega reproducible; sigue sin ejecutarse en Iris Xe.
+Tampoco se comparó de forma emparejada con el antiguo renderer 3D.
