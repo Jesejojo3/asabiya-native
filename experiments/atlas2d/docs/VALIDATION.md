@@ -14,5 +14,25 @@ Godot Linux 4.7.2 oficial, llvmpipe/Mesa 25.0.7, CPU Xeon Platinum 8573C:
 smoke gráfico y captura inspeccionada manualmente, terreno/panel visibles.
 Es integración en software, **no** medición de Iris Xe.
 
-La ejecución nativa Windows, checks CI finales y comparativas completas se
-registrarán aquí tras completarse. No dar por confirmado lo pendiente.
+En el SHA `197f46a`, CI Atlas (Linux + Windows), Native Windows x64 y Legacy
+reference están en verde. La ejecución Windows incluye prueba del observador y
+arranque/avance/pausa del ejecutable release exportado. Es prueba funcional
+headless: no valida GPU ni apariencia de una ventana Windows.
+
+También se comprobó preparación explícita de 3 años +3 pasos normales en el
+mundo pequeño: SHA `9503b72061975381d65cb1676a857ad15fde36544f19585497a8027ef16b714c`,
+igual a seis años en Go directo. La aplicación bloquea pasos/reinicio durante
+preparación; permite pausar. El adaptador compartido queda intacto.
+
+Las primeras capturas se descartaron para comparar resoluciones: el framebuffer
+seguía en 1280×720 al usar DisplayServer.window_set_size. Datos y explicación en
+`evidence/invalid-resolution`. Se corrigió con Window.size, validación del
+framebuffer y comprobación IHDR del PNG en CI/runner. No se sustituyen esas
+cifras por una afirmación de mejora: era un fallo del método de captura.
+
+Comparativa corregida en curso: 400×200 detalle 4, 10000 años preparados,
+1080p/720p reales, zoom regional 4, pausa/activo, warmup 3 s +muestra 10 s.
+Se actualizará con los datos completos. La matriz objetivo completa de tres
+zooms, tres repeticiones y 30 s se entrega reproducible; no se ha ejecutado
+en Iris Xe. Tampoco se ha comparado de forma emparejada con el antiguo 3D.
+

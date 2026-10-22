@@ -1,0 +1,152 @@
+[
+  {
+    "file": "ebiten-static-verified.jsonl",
+    "environment": {
+      "engine": "Ebitengine 2.10.5",
+      "fixture": {
+        "height": 200,
+        "note": "Static renderer probe; history controls are assessed separately",
+        "source": "real Go procedural",
+        "stateSHA256": "cc49302e8308f792526a11c17dd330279c0cc2ceff4c9ea645abe62b16294fa2",
+        "symbols": 0,
+        "width": 400,
+        "worldSHA256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+        "year": -8000
+      },
+      "go": "go1.27.2",
+      "kind": "environment",
+      "measurement": "Draw callback intervals, not photons",
+      "os": "linux",
+      "size": "1920x1080",
+      "target_hardware_verified": false,
+      "zoom": 4
+    },
+    "frames": 84,
+    "fps_p50": 11.36640899244809,
+    "fps_mean": 8.33753391277899,
+    "frame_ms_p50": 87.978534,
+    "frame_ms_p95": 346.27017349999994,
+    "frame_ms_p99": 540.2447644200008,
+    "frames_above_33_333ms_percent": 100.0,
+    "godot_static_peak_bytes": 0,
+    "target_hardware_verified": false,
+    "ready": {
+      "framebuffer_size": [
+        1920,
+        1080
+      ],
+      "graphics_library": "OpenGL",
+      "kind": "ready",
+      "software_env": "1"
+    },
+    "selection_local_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "selection_present_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "selection_query_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "map_present_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "projection_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "upload_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "years_per_second": null
+  },
+  {
+    "file": "godot-static-verified.jsonl",
+    "environment": {
+      "engine": {
+        "build": "official",
+        "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+        "hex": 263938,
+        "major": 4,
+        "minor": 7,
+        "patch": 2,
+        "status": "stable",
+        "string": "4.7.2-stable (official)",
+        "timestamp": 0
+      },
+      "fixture": {
+        "height": 200.0,
+        "note": "Static renderer probe; history controls are assessed separately",
+        "source": "real Go procedural",
+        "stateSHA256": "cc49302e8308f792526a11c17dd330279c0cc2ceff4c9ea645abe62b16294fa2",
+        "symbols": 0.0,
+        "width": 400.0,
+        "worldSHA256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+        "year": -8000.0
+      },
+      "gpu": "llvmpipe (LLVM 19.1.7, 256 bits)",
+      "kind": "environment",
+      "size": "1920x1080",
+      "target_hardware_verified": false,
+      "zoom": 4.0
+    },
+    "frames": 190,
+    "fps_p50": 16.49892756970797,
+    "fps_mean": 18.904118311921934,
+    "frame_ms_p50": 60.61,
+    "frame_ms_p95": 74.48874999999998,
+    "frame_ms_p99": 83.24808999999999,
+    "frames_above_33_333ms_percent": 95.26315789473684,
+    "godot_static_peak_bytes": 0,
+    "target_hardware_verified": false,
+    "ready": {
+      "framebuffer_size": [
+        1920,
+        1080
+      ],
+      "kind": "ready"
+    },
+    "selection_local_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "selection_present_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "selection_query_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "map_present_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "projection_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "upload_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "years_per_second": null
+  }
+]

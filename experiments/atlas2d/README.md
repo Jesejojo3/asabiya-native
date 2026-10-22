@@ -8,12 +8,17 @@ Base: PR #21 `79035761f1e61041a3ccbf74b648577e53ba7150`. Dirección: PR #26
 
 1. Descarga el artefacto `asabiya-atlas2d-windows-x64` de Actions de esta PR.
 2. Extrae **toda** la carpeta ZIP. Abre `AsabiyaAtlas2D.exe`.
-3. Espera a que Go cree el mundo y aparezca el año. No necesita Godot, Go ni Python instalados.
-4. Arrastra el mapa; usa rueda o Mundo / Región / Provincia para acercarte.
-5. Selecciona una provincia. Cambia Política por Población, Pueblos, Cultura o Biomas.
-6. Usa +1 año o Reproducir. Máximo solicita años sin espera artificial; presenta cada año recibido.
-7. Pausar detiene solicitudes y verifica el SHA del último año completo. Una solicitud en curso acaba atómicamente.
-8. El selector de años revisa hasta 24 publicaciones retenidas; **no rebobina Go**.
+3. Opcional: abre `Abrir historia avanzada.cmd` para que Go calcule 10.000 años
+   antes de explorar (+1000 en el calendario del motor). Puede tardar varios
+   minutos; muestra progreso y se puede pausar. No inventa sociedades ni salta
+   cálculos causales. En esa preparación se muestran publicaciones cada 100
+   años; la reproducción normal conserva cada año.
+4. Espera a que Go cree el mundo y aparezca el año. No necesita Godot, Go ni Python instalados.
+5. Arrastra el mapa; usa rueda o Mundo / Región / Provincia para acercarte.
+6. Selecciona una provincia. Cambia Política por Población, Pueblos, Cultura o Biomas.
+7. Usa +1 año o Reproducir. Máximo solicita años sin espera artificial; presenta cada año recibido.
+8. Pausar detiene solicitudes y verifica el SHA del último año completo. Una solicitud en curso acaba atómicamente.
+9. El selector de años revisa hasta 24 publicaciones retenidas; **no rebobina Go**.
 
 Nueva sesión vuelve a generar el mundo con la semilla escrita. La sesión actual no
 se guarda automáticamente. Cerrar finaliza el proceso Go propiedad de esta ventana.
@@ -58,4 +63,4 @@ No edites `build/`: se genera. El proyecto toma ocho adaptadores existentes
 byte por byte y anota sus hashes. Los fuentes del cliente 3D quedan intactos.
 
 Documentación: `docs/AUDIT.md`, `docs/ARCHITECTURE.md`, `docs/TECHNOLOGY.md`,
-`docs/SYSTEMS.md`, `docs/BENCHMARK.md`, `docs/VALIDATION.md`.
+`docs/SYSTEMS.md`, `docs/BENCHMARK.md`, `docs/VALIDATION.md`, `docs/OWNER_GUIDE.md`.

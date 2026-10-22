@@ -24,6 +24,8 @@ def summary(path):
     end = next((r for r in rows if r["kind"] == "end"), None)
     is_atlas = environment.get("schema") == "asabiya/atlas2d-measure-v1"
     ready = next((r for r in rows if r["kind"] == "ready"), None)
+    if not is_atlas and (not ready or ready.get("framebuffer_size") != [1920,1080]):
+        raise ValueError("Microprobe framebuffer resolution not validated")
     if is_atlas and (not ready or not ready.get("framebuffer_size") or ready["framebuffer_size"] != ready.get("window_size")):
         raise ValueError("Framebuffer resolution not validated")
     if is_atlas and (not sample or not end or not any(r["kind"] == "verified_pause" and r.get("exact") for r in rows)):

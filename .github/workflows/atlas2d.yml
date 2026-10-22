@@ -43,6 +43,9 @@ jobs:
           timeout 60 ./godot --headless --path build/atlas2d/project --script res://test_atlas.gd -- --server="$PWD/build/bin/asabiya-server" --small --expected="$PWD/build/atlas2d/test-fixture/state.json" | tee build/atlas2d/tests.log
           if grep -E 'SCRIPT ERROR|ERROR:' build/atlas2d/tests.log; then exit 1; fi
           grep -F 'ATLAS TESTS: 0 failures' build/atlas2d/tests.log
+          go run ./experiments/atlas2d/probes/fixture --small --years 6 --out build/atlas2d/test-fixture6
+          timeout 30 ./godot --headless --path build/atlas2d/project -- --server="$PWD/build/bin/asabiya-server" --small --prepare-years=3 --smoke-out="$PWD/build/atlas2d/prepare-check.json" --expected="$PWD/build/atlas2d/test-fixture6/state.json" > build/atlas2d/prepare.log 2>&1
+          python3 -c "import json; assert json.load(open('build/atlas2d/prepare-check.json'))['ok']"
       - name: Graphical software integration smoke (not target GPU)
         run: |
           LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe xvfb-run -a -s '-screen 0 1920x1080x24' timeout 60 ./godot --path build/atlas2d/project --audio-driver Dummy -- --server="$PWD/build/bin/asabiya-server" --small --width=1920 --height=1080 --bench-out="$PWD/build/atlas2d/smoke.jsonl" --seconds=3 --screenshot="$PWD/build/atlas2d/smoke.png" > build/atlas2d/graphical.log 2>&1
@@ -125,5 +128,4 @@ jobs:
           path: |
             build/atlas2d/*.log
             build/atlas2d/export-*.json*
-            build/atlas2d/ebiten-probe.exe
           retention-days: 14

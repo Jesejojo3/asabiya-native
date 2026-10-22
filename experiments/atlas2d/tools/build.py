@@ -45,6 +45,7 @@ def build(godot, go, template, destination):
         shutil.copyfile(ROOT / "experiments/atlas2d/tools" / name, destination / name)
     (destination / "Medir rendimiento.cmd").write_text('@echo off\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0benchmark.ps1"\r\npause\r\n')
     (destination / "Medir completo.cmd").write_text('@echo off\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0benchmark.ps1" -Full\r\npause\r\n')
+    (destination / "Abrir historia avanzada.cmd").write_text('@echo off\r\nstart "" "%~dp0AsabiyaAtlas2D.exe" -- --prepare-years=10000\r\n')
     if (ROOT / "LICENSE").exists():
         shutil.copyfile(ROOT / "LICENSE", destination / "LICENSE-Asabiya.txt")
     else:

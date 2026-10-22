@@ -39,3 +39,27 @@ umbral pese a mejoras locales medidas, o si una alternativa demuestra la misma
 integridad/UI/calidad con menor mantenimiento total. No cambiar por una cifra
 estática aislada ni declarar ganadora una tecnología sin medir el cliente real.
 Los resultados ejecutados se registran en VALIDATION y evidence, con límites.
+
+## Ejecución de los dos microprototipos
+
+Linux/Xvfb, llvmpipe Mesa 25.0.7, sin GPU objetivo. Framebuffers verificados
+1920×1080, 3 s warmup +10 s, una ejecución secuencial por motor, zoom 4.
+Fixture Go real a −8000 (1000 años), SHA `cc49302e…`; los archivos PNG y SHA
+completo se identifican en `evidence/static-fixture.json`. No es el escenario
+histórico de +1000 del benchmark completo. Se comprobó que el PNG político
+tiene alfa 0 en todas sus celdas: aún no hay propietarios en ese escenario.
+Por tanto este microcaso mide terreno y un paso transparente; no prueba la
+cartografía política tardía. El caso estático no reproduce la
+carga de sociedades tardías ni integra consultas/controles.
+
+| Microprobe | FPS P50 | Frame P50 / P95 / P99, ms |
+|---|---:|---:|
+| Godot 2D | 16,50 | 60,61 / 74,49 / 83,25 |
+| Ebitengine 2.10.5 | 11,37 | 87,98 / 346,27 / 540,24 |
+
+Datos crudos y resumen en evidence. Son muestras cortas en software; la cola de
+Ebitengine es muy variable. No usar la diferencia como predicción de Iris Xe ni
+como prueba de superioridad de Godot. Ebitengine mide intervalos de Draw;
+Godot, post_draw. Ninguno mide presentación física. La decisión sigue apoyada
+en la integración comprobada y el coste de mantenimiento, no en estas cifras.
+Los intentos previos de Godot sin framebuffer validado se descartaron.

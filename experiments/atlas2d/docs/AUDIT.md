@@ -2,7 +2,7 @@
 
 ## Integración y dependencias
 
-| Referencia abierta | HEAD verificado | Contenido efectivo |
+| Referencia inspeccionada | HEAD verificado | Contenido efectivo |
 |---|---|---|
 | main | `714d06c3a9d3ce9d69dbb184161a99b2c78e82f1` | Geografía; no contiene toda la consolidación histórica/cliente |
 | PR #21 | `79035761f1e61041a3ccbf74b648577e53ba7150` | Consolidación Go + Godot + contrato + pruebas; base experimental |
@@ -15,7 +15,9 @@ resultó vacío. El motor integrado más reciente entre estas PR es idéntico a 
 las mejoras posteriores inspeccionadas son cliente/herramientas/documentación.
 No se considera que #21 esté integrada en main. Esta rama parte exactamente de
 su SHA, sin fusionar #22/#25/#26. La dirección de #26 se aplica como especificación,
-no como merge. Otras PR permanecen abiertas, sin modificación.
+no como merge. No se modificó el estado de otras PR. En la comprobación posterior de esta
+misión, #22 figuraba cerrada y no fusionada, con el mismo HEAD; #21/#25/#26
+seguían abiertas. No se atribuye aquí esa transición a una persona o herramienta.
 
 ## Mapa del repositorio en la base #21
 

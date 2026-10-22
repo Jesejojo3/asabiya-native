@@ -1,0 +1,19 @@
+{
+  "height": 200,
+  "note": "Static renderer probe; history controls are assessed separately",
+  "source": "real Go procedural",
+  "stateSHA256": "cc49302e8308f792526a11c17dd330279c0cc2ceff4c9ea645abe62b16294fa2",
+  "symbols": 0,
+  "width": 400,
+  "worldSHA256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+  "year": -8000,
+  "filesSHA256": {
+    "terrain.png": "8d886147ec77270f532da91667c1b5e711a10a85792488f527a6e991189c4a71",
+    "political.png": "85a1524171e382bd08adb5d319bf2a4fa9b65722e06c5ce75193ae6ef00c19fd"
+  },
+  "politicalOverlayAlphaExtrema": [
+    0,
+    0
+  ],
+  "limitation": "No polity owners at -8000; static terrain + transparent overlay only"
+}

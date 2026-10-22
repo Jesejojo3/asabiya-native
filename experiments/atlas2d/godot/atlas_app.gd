@@ -171,6 +171,9 @@ func _initialize() -> void:
 		map.set_world(value)
 		map.zoom_to(float(options.get("zoom","1"))))
 	source.frames_changed.connect(_receive_frame)
+	source.progress_changed.connect(func(calculated: int, visualized: int, remaining: int):
+		if preparing:
+			status.text="Preparación histórica explícita · Go calcula todos los años · muestra cada 100\nCalculado: %d · mostrado: %d · quedan: %d. Pausar detiene al terminar el año en curso." % [calculated,visualized,remaining])
 	source.status_changed.connect(func(message: String):
 		if message!="": status.text=message)
 	source.request_failed.connect(func(op: String,code: String,message: String): _fail(op+" · "+code+" · "+message))
@@ -181,9 +184,9 @@ func _receive_frame() -> void:
 	var years := source.years()
 	if years.is_empty(): return
 	var value := source.frame(years[-1])
-	if benchmark and not initial_prepared:
+	if not initial_prepared and (benchmark or options.has("prepare-years")):
 		initial_prepared=true
-		var count := int(options.get("year","0"))
+		var count := int(options.get("prepare-years",options.get("year","0")))
 		if count>0:
 			preparing=true
 			source.start_fast_forward(count,100)
@@ -222,7 +225,7 @@ func _process(_delta: float) -> void:
 		var next: HistoryFrame=queue.pop_front()
 		worker=Thread.new()
 		worker.start(AtlasProjection.layer.bind(world,next,desired_layer))
-	if options.has("smoke-out") and current!=null and source.can_advance() and worker==null and queue.is_empty():
+	if options.has("smoke-out") and not preparing and current!=null and source.can_advance() and worker==null and queue.is_empty():
 		_export_smoke()
 		if _closing: return
 	if benchmark and not bench_ready and current!=null and not preparing and not source.busy and queue.is_empty() and worker==null:
@@ -249,11 +252,11 @@ func _process(_delta: float) -> void:
 		if elapsed>_next_selection:
 			_next_selection=elapsed+1.0
 			map.select_at(map.size*0.5)
-	init_button.disabled=source.busy or playing
-	step_button.disabled=not source.can_advance() or playing or worker!=null or not queue.is_empty()
+	init_button.disabled=source.busy or playing or preparing
+	step_button.disabled=preparing or not source.can_advance() or playing or worker!=null or not queue.is_empty()
 	play_button.disabled=not source.connected or preparing
 	pause_button.disabled=not source.connected
-	review.disabled=playing or source.busy or worker!=null
+	review.disabled=preparing or playing or source.busy or worker!=null
 
 func _step() -> void:
 	playing=false
@@ -293,7 +296,7 @@ func _selected(id: int, started_us := 0) -> void:
 func _update_panel() -> void:
 	if current==null or world==null: return
 	var fingerprint := "SHA diferido explícito; pausa para verificar" if current.state_digest=="" else current.state_digest
-	status.text="Año %d · %s · %.0f habitantes · %.1f FPS · %s\n%s" % [current.year,layer_names[layer_ids.find(shown_layer)],current.world_population,Engine.get_frames_per_second(),"Reproduciendo" if playing else "Pausa / revisión",fingerprint]
+	status.text="Año %d · %s · %.0f habitantes · %.1f FPS · %s\n%s" % [current.year,layer_names[layer_ids.find(shown_layer)],current.world_population,Engine.get_frames_per_second(),"Preparación Go · muestra cada 100 años" if preparing else ("Reproduciendo" if playing else "Pausa / revisión"),fingerprint]
 	chronicle.text="Crónica Go · últimos 5 de hasta 1000 eventos publicados\n"
 	for i in range(maxi(0,current.events.size()-5),current.events.size()):
 		var event: Dictionary=current.events[i]
