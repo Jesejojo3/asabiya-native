@@ -364,7 +364,7 @@ func _export_smoke() -> void:
 		source.pause()
 	else:
 		var expected: Dictionary=JSON.parse_string(FileAccess.get_file_as_string(str(options.expected)))
-		var success := current.year==int(expected.get("year")) and current.state_digest==expected.get("stateSHA256") and current.state_digest!=""
+		var success: bool = current.year==int(expected.get("year")) and current.state_digest==expected.get("stateSHA256") and current.state_digest!=""
 		var file := FileAccess.open(str(options["smoke-out"]),FileAccess.WRITE)
 		file.store_line(JSON.stringify({"ok":success,"year":current.year,"state_sha256":current.state_digest,"pid":OS.get_process_id(),"go_pid":source._pid,"mode":"functional; no GPU/FPS measurement"}))
 		file.close()
