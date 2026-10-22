@@ -337,9 +337,15 @@ datos actuales es improbable que estas dos optimizaciones exactas basten por sí
   y SHA verificado al inicio y al final; A/B en proceso; equivalencia de píxeles; Mobile; captura
   activa (publicaciones anuales consecutivas 1001–1014, pausa y prueba final).
 * PowerShell 7 (Linux): análisis sintáctico del runner.
-* Configurado en CI Windows (resultado en la PR): export del candidato, autocomprobación del arnés
-  dentro del `.exe`, SHA de 10 000 años con Go Windows y ejecución del runner completo sobre el
-  adaptador virtual (D3D12/WARP, sólo funcional).
+* CI Windows (windows-2022, run 39711425731): export del candidato correcto; el arnés arranca
+  dentro del `.exe` exportado (`RENDER_DIAGNOSIS_SELF_CHECK … "exported":true`); Go Windows
+  reproduce el SHA de 10 000 años; el runner completo se ejecutó de principio a fin y **resolvió
+  los roles de proceso reales** (`launcher` 178 muestras, `godot-graphical`
+  `Godot_v4.7.2-stable_win64` 177, `go-server` 155): problema A corregido en Windows real. La
+  preparación con avance rápido funcionó. Las capturas gráficas no pueden completarse allí: el
+  adaptador virtual Microsoft Basic Render Driver (D3D12/WARP) se queda sin memoria
+  (`0x8007000e`) al hornear los ríos y al leer texturas, y los contadores GPU WDDM no existen en
+  esa máquina. Es un límite del runner, no una medida ni un fallo del juego en hardware real.
 * No ejecutado: ninguna medida en la Iris Xe tras estos cambios; PresentMon; sesiones largas.
 
 ## 9. Siguientes experimentos propuestos
