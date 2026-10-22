@@ -49,7 +49,7 @@ func _ready() -> void:
 			options[parts[0]]=parts[1] if parts.size()==2 else "true"
 	benchmark=options.has("bench-out")
 	if options.has("width"):
-		DisplayServer.window_set_size(Vector2i(int(options.width),int(options.get("height","1080"))))
+		get_window().size=Vector2i(int(options.width),int(options.get("height","1080")))
 	if benchmark: DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	_build_ui()
 	if benchmark and DisplayServer.get_name()=="headless":
@@ -61,7 +61,7 @@ func _ready() -> void:
 			"schema":"asabiya/atlas2d-measure-v1","godot":Engine.get_version_info(),
 			"os":OS.get_name(),"cpu":OS.get_processor_name(),"gpu":RenderingServer.get_video_adapter_name(),
 			"renderer":RenderingServer.get_current_rendering_method(),"pid":OS.get_process_id(),
-			"size":str(DisplayServer.window_get_size()),"vsync":"disabled","scene":"procedural",
+			"size":str(DisplayServer.window_get_size()),"vsync_requested":"disabled","scene":"procedural",
 			"target_hardware_verified":false,"headless":DisplayServer.get_name()=="headless",
 			"build":JSON.parse_string(FileAccess.get_file_as_string("res://build-manifest.json"))})
 	call_deferred("_initialize")
@@ -226,9 +226,14 @@ func _process(_delta: float) -> void:
 		_export_smoke()
 		if _closing: return
 	if benchmark and not bench_ready and current!=null and not preparing and not source.busy and queue.is_empty() and worker==null:
+		var actual := Vector2i(get_viewport().get_texture().get_size())
+		var requested := Vector2i(int(options.get("width",str(actual.x))),int(options.get("height",str(actual.y))))
+		if actual!=requested or get_window().size!=requested:
+			_fail("Resolución inválida: framebuffer %s, ventana %s, solicitada %s" % [actual,get_window().size,requested])
+			return
 		bench_ready=true
 		playing=options.has("active")
-		metrics.record("ready",{"year":current.year,"go_pid":source._pid,"world_sha256":current.world_digest,"state_sha256":current.state_digest,"digest_mode":current.digest_mode,"layer":shown_layer})
+		metrics.record("ready",{"year":current.year,"go_pid":source._pid,"world_sha256":current.world_digest,"state_sha256":current.state_digest,"digest_mode":current.digest_mode,"layer":shown_layer,"window_size":[DisplayServer.window_get_size().x,DisplayServer.window_get_size().y],"framebuffer_size":[get_viewport().get_texture().get_size().x,get_viewport().get_texture().get_size().y],"map_pixels":[map.size.x,map.size.y],"zoom_multiplier":float(options.get("zoom","1")),"world_config":source.world_config,"history_seed":source.history_seed})
 		metrics.begin(current.year,playing)
 	if playing and not preparing and worker==null and queue.is_empty() and source.can_advance() and Time.get_ticks_usec()>=next_year_us:
 		review_year=-2147483648

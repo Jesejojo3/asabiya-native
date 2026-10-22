@@ -11,6 +11,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"runtime"
 	"time"
 )
 
@@ -82,7 +83,7 @@ func main() {
 	if e != nil {
 		panic(e)
 	}
-	b, _ := json.Marshal(map[string]any{"kind": "environment", "engine": "Ebitengine 2.10.5", "fixture": json.RawMessage(meta), "size": "1920x1080", "target_hardware_verified": false, "zoom": *zoom})
+	b, _ := json.Marshal(map[string]any{"kind": "environment", "engine": "Ebitengine 2.10.5", "os": runtime.GOOS, "go": runtime.Version(), "measurement": "Draw callback intervals, not photons", "fixture": json.RawMessage(meta), "size": "1920x1080", "target_hardware_verified": false, "zoom": *zoom})
 	fmt.Fprintln(f, string(b))
 	ebiten.SetWindowSize(1920, 1080)
 	ebiten.SetWindowTitle("Atlas2D static microprobe — Ebitengine")

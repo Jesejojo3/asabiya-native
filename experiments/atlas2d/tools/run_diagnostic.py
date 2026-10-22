@@ -3,6 +3,7 @@ import argparse
 import json
 import os
 import subprocess
+import struct
 import time
 from pathlib import Path
 from summarize import summary
@@ -54,6 +55,8 @@ if __name__ == "__main__":
                 if proc.returncode:raise RuntimeError(f"Exit {proc.returncode}: {name}")
             if any(error in (dest/(name+".log")).read_text() for error in ("SCRIPT ERROR","SHADER ERROR")):
                 raise RuntimeError("Godot runtime errors in "+name)
+            size = struct.unpack(">II", (dest/(name+".png")).read_bytes()[16:24])
+            if size != (width,height): raise RuntimeError("Screenshot framebuffer mismatch")
             results.append(summary(raw))
             (dest/"summary.json").write_text(json.dumps(results,indent=2)+"\n")
             print({key:results[-1][key] for key in ("file","fps_p50","frame_ms_p95","frame_ms_p99","years_per_second")},flush=True)

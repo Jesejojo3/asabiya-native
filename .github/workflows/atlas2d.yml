@@ -45,8 +45,9 @@ jobs:
           grep -F 'ATLAS TESTS: 0 failures' build/atlas2d/tests.log
       - name: Graphical software integration smoke (not target GPU)
         run: |
-          LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe xvfb-run -a -s '-screen 0 1920x1080x24' timeout 60 ./godot --path build/atlas2d/project --audio-driver Dummy -- --server="$PWD/build/bin/asabiya-server" --small --bench-out="$PWD/build/atlas2d/smoke.jsonl" --seconds=3 --screenshot="$PWD/build/atlas2d/smoke.png" > build/atlas2d/graphical.log 2>&1
+          LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe xvfb-run -a -s '-screen 0 1920x1080x24' timeout 60 ./godot --path build/atlas2d/project --audio-driver Dummy -- --server="$PWD/build/bin/asabiya-server" --small --width=1920 --height=1080 --bench-out="$PWD/build/atlas2d/smoke.jsonl" --seconds=3 --screenshot="$PWD/build/atlas2d/smoke.png" > build/atlas2d/graphical.log 2>&1
           if grep -E 'SCRIPT ERROR|SHADER ERROR' build/atlas2d/graphical.log; then exit 1; fi
+          python3 -c "import struct; assert struct.unpack('>II',open('build/atlas2d/smoke.png','rb').read(24)[16:24]) == (1920,1080)"
           python3 experiments/atlas2d/tools/summarize.py build/atlas2d/smoke.jsonl --out build/atlas2d/summary.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()

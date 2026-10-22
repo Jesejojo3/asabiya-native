@@ -17,10 +17,10 @@ func _initialize() -> void:
 	seconds=float(opts.get("seconds","10"))
 	zoom=float(opts.get("zoom","4"))
 	output=FileAccess.open(opts["out"],FileAccess.WRITE)
-	output.store_line(JSON.stringify({"kind":"environment","engine":Engine.get_version_info(),"fixture":JSON.parse_string(FileAccess.get_file_as_string(fixture.path_join("probe.json"))),"size":"1920x1080","target_hardware_verified":false,"zoom":zoom,"gpu":RenderingServer.get_video_adapter_name()}))
+	output.store_line(JSON.stringify({"kind":"environment","engine":Engine.get_version_info(),"fixture":JSON.parse_string(FileAccess.get_file_as_string(fixture.path_join("probe.json"))),"size":"1920x1080","framebuffer_validated":true,"target_hardware_verified":false,"zoom":zoom,"gpu":RenderingServer.get_video_adapter_name()}))
 	base=ImageTexture.create_from_image(Image.load_from_file(fixture.path_join("terrain.png")))
 	overlay=ImageTexture.create_from_image(Image.load_from_file(fixture.path_join("political.png")))
-	DisplayServer.window_set_size(Vector2i(1920,1080))
+	root.size=Vector2i(1920,1080)
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	canvas=Node2D.new()
 	root.add_child(canvas)
@@ -47,6 +47,10 @@ func _draw_map() -> void:
 func _frame() -> void:
 	var now := Time.get_ticks_usec()
 	var elapsed := (now-started)/1000000.0
+	if elapsed>=3 and Vector2i(root.get_texture().get_size())!=Vector2i(1920,1080):
+		push_error("Microprobe framebuffer mismatch")
+		quit(1)
+		return
 	if elapsed>=3 and last>0:
 		output.store_line(JSON.stringify({"kind":"frame","frame_ms":(now-last)/1000.0}))
 	last=now

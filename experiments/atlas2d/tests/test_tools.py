@@ -27,9 +27,9 @@ class ToolsTests(unittest.TestCase):
             path = Path(directory) / "raw.jsonl"
             rows = [{"kind":"environment", "schema":"asabiya/atlas2d-measure-v1"}, {"kind":"frame", "frame_ms":20}]
             path.write_text("\n".join(json.dumps(r) for r in rows))
-            with self.assertRaisesRegex(ValueError,"Incomplete"):
+            with self.assertRaises(ValueError):
                 summary(path)
-            rows += [{"kind":"sample_begin","ticks_us":10,"year":0}, {"kind":"end","ticks_us":1000010,"year":2}, {"kind":"verified_pause","exact":True}]
+            rows += [{"kind":"ready","framebuffer_size":[1920,1080],"window_size":[1920,1080]}, {"kind":"sample_begin","ticks_us":10,"year":0}, {"kind":"end","ticks_us":1000010,"year":2}, {"kind":"verified_pause","exact":True}]
             path.write_text("\n".join(json.dumps(r) for r in rows))
             result = summary(path)
             self.assertEqual(result["fps_p50"],50)

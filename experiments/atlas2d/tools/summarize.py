@@ -23,6 +23,9 @@ def summary(path):
     sample = next((r for r in rows if r["kind"] == "sample_begin"), None)
     end = next((r for r in rows if r["kind"] == "end"), None)
     is_atlas = environment.get("schema") == "asabiya/atlas2d-measure-v1"
+    ready = next((r for r in rows if r["kind"] == "ready"), None)
+    if is_atlas and (not ready or not ready.get("framebuffer_size") or ready["framebuffer_size"] != ready.get("window_size")):
+        raise ValueError("Framebuffer resolution not validated")
     if is_atlas and (not sample or not end or not any(r["kind"] == "verified_pause" and r.get("exact") for r in rows)):
         raise ValueError("Incomplete capture / pause not verified")
     measured = [r for r in rows if not sample or sample["ticks_us"] <= r.get("ticks_us", 0) <= end["ticks_us"]]
@@ -32,7 +35,8 @@ def summary(path):
               "frame_ms_p50": percentile(frames, .5), "frame_ms_p95": percentile(frames, .95), "frame_ms_p99": percentile(frames, .99),
               "frames_above_33_333ms_percent": 100 * sum(t > 1000 / 30 for t in frames) / len(frames),
               "godot_static_peak_bytes": max((r.get("godot_static_bytes", 0) for r in rows), default=0),
-              "target_hardware_verified": False}
+              "target_hardware_verified": False,
+              "ready": next((r for r in rows if r["kind"] == "ready"), None)}
     for kind in ("selection_local", "selection_present", "selection_query", "map_present"):
         values = [r["ms"] for r in measured if r["kind"] == kind]
         result[kind + "_ms"] = {"samples": len(values), "p50": percentile(values, .5), "p95": percentile(values, .95)}

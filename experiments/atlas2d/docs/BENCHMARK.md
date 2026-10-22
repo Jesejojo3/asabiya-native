@@ -27,7 +27,8 @@ consulta: ida y vuelta TCP en pausa. Actualización: recepción en hilo principa
 hasta post-draw; separar CPU de proyección y subida de textura. La consulta
 provincial se descarta si cambia selección/año. Años/s: diferencia del año
 presentado entre sample_begin y end / tiempo monótono, excluye preparación y warmup.
-Memoria estática Godot **no es RSS**. El runner registra WorkingSet64 de Godot,
+El modo headless rechaza captura de FPS; `--smoke-out` ejecuta tres años y
+compara SHA, sin producir métricas gráficas. Memoria estática Godot **no es RSS**. El runner registra WorkingSet64 de Godot,
 Go y suma cada 500 ms (incluye arranque; puede perder picos entre muestras).
 Identifica PID real con `OS.get_process_id`, hijo Go con ready; no mide launcher.
 

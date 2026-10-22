@@ -74,4 +74,4 @@ foreach ($repeat in 1..$Repeats) {
 Write-Host "Capturas terminadas: $out"
 Write-Host 'Comparte esta carpeta completa. Incluye datos crudos y memoria de ambos procesos.'
 $python = Get-Command python -ErrorAction SilentlyContinue
-if ($python) { & $python.Source (Join-Path $Directory 'summarize.py') @files --out (Join-Path $out 'resumen.json') }
+if ($python -and $python.Source -notlike "*WindowsApps*") { & $python.Source (Join-Path $Directory 'summarize.py') @files --out (Join-Path $out 'resumen.json') }

@@ -32,7 +32,8 @@ def stage(destination):
     for source in sorted((ROOT / "experiments/atlas2d").rglob("*")):
         if source.is_file() and "__pycache__" not in source.parts and source.suffix not in (".pyc", ".uid"):
             tree_hash.update(str(source.relative_to(ROOT)).encode()+b"\0"+source.read_bytes())
-    manifest = {"experimentTreeSHA256": tree_hash.hexdigest(), "schema": "asabiya/atlas2d-build-v1", "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
+    atlas_hashes = {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted((ROOT / "experiments/atlas2d/godot").glob("*")) if p.is_file() and p.suffix != ".uid"}
+    manifest = {"atlasSourcesSHA256": atlas_hashes, "experimentTreeSHA256": tree_hash.hexdigest(), "schema": "asabiya/atlas2d-build-v1", "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
                 "commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
                 "sharedAdaptersSHA256": hashes}
     (destination / "build-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
