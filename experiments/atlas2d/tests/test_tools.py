@@ -34,6 +34,13 @@ class ToolsTests(unittest.TestCase):
             result = summary(path)
             self.assertEqual(result["fps_p50"],50)
             self.assertEqual(result["years_per_second"],2)
+            self.assertEqual(result["main_ms"]["samples"],0)
+            rows[1]["main_ms"]=1.5
+            rows.append({"kind":"slow_tick","ticks_us":20,"total_ms":25})
+            path.write_text("\n".join(json.dumps(r) for r in rows))
+            result = summary(path)
+            self.assertEqual(result["main_ms"]["p50"],1.5)
+            self.assertEqual(result["main_thread_ticks_over_20ms"],1)
     def test_stage_rejects_source_destination(self):
         with self.assertRaises(ValueError): stage(ROOT / "experiments/atlas2d")
 

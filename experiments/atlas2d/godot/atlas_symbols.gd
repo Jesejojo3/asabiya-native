@@ -4,10 +4,33 @@ extends Control
 var map: AtlasMap
 func _ready() -> void:
 	mouse_filter=Control.MOUSE_FILTER_IGNORE
-func _process(_delta: float) -> void:
-	queue_redraw()
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	map.redrawn.connect(queue_redraw)
+func _point(cell: int) -> Vector2:
+	var coordinate := Vector2(cell%map.world.width,floori(float(cell)/map.world.width))+Vector2(0.5,0.5)
+	var offset := coordinate-map.center
+	offset.x=wrapf(offset.x,-map.world.width*0.5,map.world.width*0.5)
+	return map.size*0.5+offset*map.zoom
+
 func _draw() -> void:
-	if map==null or map.world==null or map.frame==null or map.zoom<10: return
+	if map==null or map.world==null or map.frame==null: return
+	if map.routes_visible:
+		# Active Go trade routes along their published cell paths.
+		for route: Dictionary in map.frame.routes:
+			var cells: PackedInt32Array=route.get("cells",PackedInt32Array())
+			if cells.size()<2: continue
+			var points := PackedVector2Array()
+			var previous := _point(cells[0])
+			points.append(previous)
+			for k in range(1,cells.size()):
+				var point := _point(cells[k])
+				# Keep the polyline continuous across the longitude seam.
+				var span := map.world.width*map.zoom
+				point.x=previous.x+wrapf(point.x-previous.x,-span*0.5,span*0.5)
+				points.append(point)
+				previous=point
+			draw_polyline(points,Color(0.95,0.78,0.35,0.9),maxf(1.0,minf(3.0,map.zoom*0.25)),true)
+	if map.zoom<10: return
 	var font := ThemeDB.fallback_font
 	for city: Dictionary in map.frame.settlements:
 		var id := int(city.cell)

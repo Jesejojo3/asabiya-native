@@ -1,0 +1,2690 @@
+[
+  {
+    "file": "bench-ab--pr27-active-2.jsonl",
+    "environment": {
+      "build": {
+        "atlasSourcesSHA256": {
+          "experiments/atlas2d/godot/atlas.tscn": "0f71494638735511b31240f4114bd43a489471f89affc07323a284736edacbe7",
+          "experiments/atlas2d/godot/atlas_app.gd": "ffef0658b83a5def0b9c190a4ee389fa04450b03f6d9dda8fac00f4007541fab",
+          "experiments/atlas2d/godot/atlas_map.gd": "c9d2fa1d92655f0f322a1ab2c981236f8bc73c6b9615d50066cb01fa0c8b6cf6",
+          "experiments/atlas2d/godot/atlas_metrics.gd": "6dbdbf78f2db76d6c783d8fdacc6dacb8647c97bc9f74c661be6f4ad3636756c",
+          "experiments/atlas2d/godot/atlas_projection.gd": "b0ced0181b798133a327a6c6a68f13514fd43a593a2ab73a235fc2b4f4c0ae4d",
+          "experiments/atlas2d/godot/atlas_symbols.gd": "ce06da7a953b858a32c3fbb7dfb657f3369688d01a479562b7bffc3d0704b2fa",
+          "experiments/atlas2d/godot/probe.gd": "febd0b029c3dc3b4f752578ca2b27119cb908914ef2e13678436a9a87df6db15",
+          "experiments/atlas2d/godot/project.godot": "ac427e680e414a9f7b224b2b91f912fbd6a987af9ac522528fd256a89e86ed37",
+          "experiments/atlas2d/godot/terrain.gdshader": "a8e6c14ff7f320bc6145fd488baf08517d289d7e2da93e953fefa83ddbbf846e",
+          "experiments/atlas2d/godot/test_atlas.gd": "90167302a9843a458a16636c71f051fe21f14039f0cf3e2ce30a8bea8300d0ac"
+        },
+        "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
+        "commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+        "experimentTreeSHA256": "4bd7be39e8fbecc97153a0e2c76cdfcf85260407ba96d28d99b01e913f21a627",
+        "schema": "asabiya/atlas2d-build-v1",
+        "sharedAdaptersSHA256": {
+          "client/godot/scripts/data/annual_trace.gd": "fd396487a31699101ad1177ec5a8832d6b41ab8a3f3bd7ad50361ab06a0733a2",
+          "client/godot/scripts/data/bridge_source.gd": "13ce361acefc45523bd26e004b299ac7f25620c79386a17a3e1f2d17d7bff134",
+          "client/godot/scripts/data/history_frame.gd": "ad5c0a860b257de90e7204c3efd0a75fd46d01fc7641aa829a9e124b8ed39607",
+          "client/godot/scripts/data/history_source.gd": "1d7d4232b2f8897b8cad37dcc397e2c09203c4c382c366d34312c45a7260c103",
+          "client/godot/scripts/data/local_response_buffer.gd": "0e7e9305cb7f148471e9f8f9b5099c84a96c7cb3a98a57fe3caa29c795588be0",
+          "client/godot/scripts/data/native_frame_decoder.gd": "6ac3068a7dc14084cff69febba2915cb1d790e4be0ff55db93a24a0ca86848a0",
+          "client/godot/scripts/data/world_data.gd": "752ef238b536adea2b1b7b68b715b38f3db881ddb50e3a07492a2db7e2274763",
+          "client/godot/scripts/map/map_layers.gd": "c07ea7d149dae63e9b5f16bd9eeba828e4c8bb103599eba93caa359c3b237122"
+        }
+      },
+      "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+      "godot": {
+        "build": "official",
+        "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+        "hex": 263938,
+        "major": 4,
+        "minor": 7,
+        "patch": 2,
+        "status": "stable",
+        "string": "4.7.2-stable (official)",
+        "timestamp": 0
+      },
+      "gpu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "headless": false,
+      "kind": "environment",
+      "os": "Linux",
+      "pid": 10236,
+      "renderer": "gl_compatibility",
+      "scene": "procedural",
+      "schema": "asabiya/atlas2d-measure-v1",
+      "size": "(1920, 1080)",
+      "target_hardware_verified": false,
+      "ticks_us": 648845,
+      "vsync_requested": "disabled"
+    },
+    "frames": 261,
+    "fps_p50": 36.54570039834813,
+    "fps_mean": 25.860905583518143,
+    "frame_ms_p50": 27.363,
+    "frame_ms_p95": 128.293,
+    "frame_ms_p99": 260.39699999999954,
+    "frames_above_33_333ms_percent": 15.32567049808429,
+    "godot_static_peak_bytes": 2007597343.0,
+    "target_hardware_verified": false,
+    "ready": {
+      "digest_mode": "",
+      "framebuffer_size": [
+        1920.0,
+        1080.0
+      ],
+      "go_pid": 10284,
+      "history_seed": "1",
+      "kind": "ready",
+      "layer": "states",
+      "map_pixels": [
+        1574.0,
+        936.0
+      ],
+      "state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "ticks_us": 139252032,
+      "window_size": [
+        1920,
+        1080
+      ],
+      "world_config": {
+        "detail": 4,
+        "height": 200,
+        "landFraction": 0.33,
+        "seed": "Asabiya",
+        "width": 400
+      },
+      "world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "year": 1000,
+      "zoom_multiplier": 4.0
+    },
+    "selection_local_ms": {
+      "samples": 10,
+      "p50": 0.4845,
+      "p95": 2.0185999999999975
+    },
+    "selection_present_ms": {
+      "samples": 10,
+      "p50": 27.42,
+      "p95": 41.178099999999986
+    },
+    "selection_query_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "map_present_ms": {
+      "samples": 18,
+      "p50": 50.9495,
+      "p95": 58.7672
+    },
+    "projection_ms": {
+      "samples": 18,
+      "p50": 8.016,
+      "p95": 12.878400000000001
+    },
+    "upload_ms": {
+      "samples": 18,
+      "p50": 0.307,
+      "p95": 0.39244999999999997
+    },
+    "main_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null,
+      "p99": null
+    },
+    "render_cpu_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null,
+      "p99": null
+    },
+    "render_gpu_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null,
+      "p99": null
+    },
+    "main_thread_ticks_over_20ms": 0,
+    "years_per_second": 1.7990010147365167
+  },
+  {
+    "file": "bench-ab--pr27-active.jsonl",
+    "environment": {
+      "build": {
+        "atlasSourcesSHA256": {
+          "experiments/atlas2d/godot/atlas.tscn": "0f71494638735511b31240f4114bd43a489471f89affc07323a284736edacbe7",
+          "experiments/atlas2d/godot/atlas_app.gd": "ffef0658b83a5def0b9c190a4ee389fa04450b03f6d9dda8fac00f4007541fab",
+          "experiments/atlas2d/godot/atlas_map.gd": "c9d2fa1d92655f0f322a1ab2c981236f8bc73c6b9615d50066cb01fa0c8b6cf6",
+          "experiments/atlas2d/godot/atlas_metrics.gd": "6dbdbf78f2db76d6c783d8fdacc6dacb8647c97bc9f74c661be6f4ad3636756c",
+          "experiments/atlas2d/godot/atlas_projection.gd": "b0ced0181b798133a327a6c6a68f13514fd43a593a2ab73a235fc2b4f4c0ae4d",
+          "experiments/atlas2d/godot/atlas_symbols.gd": "ce06da7a953b858a32c3fbb7dfb657f3369688d01a479562b7bffc3d0704b2fa",
+          "experiments/atlas2d/godot/probe.gd": "febd0b029c3dc3b4f752578ca2b27119cb908914ef2e13678436a9a87df6db15",
+          "experiments/atlas2d/godot/project.godot": "ac427e680e414a9f7b224b2b91f912fbd6a987af9ac522528fd256a89e86ed37",
+          "experiments/atlas2d/godot/terrain.gdshader": "a8e6c14ff7f320bc6145fd488baf08517d289d7e2da93e953fefa83ddbbf846e",
+          "experiments/atlas2d/godot/test_atlas.gd": "90167302a9843a458a16636c71f051fe21f14039f0cf3e2ce30a8bea8300d0ac"
+        },
+        "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
+        "commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+        "experimentTreeSHA256": "4bd7be39e8fbecc97153a0e2c76cdfcf85260407ba96d28d99b01e913f21a627",
+        "schema": "asabiya/atlas2d-build-v1",
+        "sharedAdaptersSHA256": {
+          "client/godot/scripts/data/annual_trace.gd": "fd396487a31699101ad1177ec5a8832d6b41ab8a3f3bd7ad50361ab06a0733a2",
+          "client/godot/scripts/data/bridge_source.gd": "13ce361acefc45523bd26e004b299ac7f25620c79386a17a3e1f2d17d7bff134",
+          "client/godot/scripts/data/history_frame.gd": "ad5c0a860b257de90e7204c3efd0a75fd46d01fc7641aa829a9e124b8ed39607",
+          "client/godot/scripts/data/history_source.gd": "1d7d4232b2f8897b8cad37dcc397e2c09203c4c382c366d34312c45a7260c103",
+          "client/godot/scripts/data/local_response_buffer.gd": "0e7e9305cb7f148471e9f8f9b5099c84a96c7cb3a98a57fe3caa29c795588be0",
+          "client/godot/scripts/data/native_frame_decoder.gd": "6ac3068a7dc14084cff69febba2915cb1d790e4be0ff55db93a24a0ca86848a0",
+          "client/godot/scripts/data/world_data.gd": "752ef238b536adea2b1b7b68b715b38f3db881ddb50e3a07492a2db7e2274763",
+          "client/godot/scripts/map/map_layers.gd": "c07ea7d149dae63e9b5f16bd9eeba828e4c8bb103599eba93caa359c3b237122"
+        }
+      },
+      "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+      "godot": {
+        "build": "official",
+        "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+        "hex": 263938,
+        "major": 4,
+        "minor": 7,
+        "patch": 2,
+        "status": "stable",
+        "string": "4.7.2-stable (official)",
+        "timestamp": 0
+      },
+      "gpu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "headless": false,
+      "kind": "environment",
+      "os": "Linux",
+      "pid": 9560,
+      "renderer": "gl_compatibility",
+      "scene": "procedural",
+      "schema": "asabiya/atlas2d-measure-v1",
+      "size": "(1920, 1080)",
+      "target_hardware_verified": false,
+      "ticks_us": 532226,
+      "vsync_requested": "disabled"
+    },
+    "frames": 260,
+    "fps_p50": 37.13192974638892,
+    "fps_mean": 25.899326727079174,
+    "frame_ms_p50": 26.931,
+    "frame_ms_p95": 146.97349999999983,
+    "frame_ms_p99": 252.4064400000002,
+    "frames_above_33_333ms_percent": 15.0,
+    "godot_static_peak_bytes": 1989453416.0,
+    "target_hardware_verified": false,
+    "ready": {
+      "digest_mode": "",
+      "framebuffer_size": [
+        1920.0,
+        1080.0
+      ],
+      "go_pid": 9607,
+      "history_seed": "1",
+      "kind": "ready",
+      "layer": "states",
+      "map_pixels": [
+        1574.0,
+        936.0
+      ],
+      "state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "ticks_us": 139322936,
+      "window_size": [
+        1920,
+        1080
+      ],
+      "world_config": {
+        "detail": 4,
+        "height": 200,
+        "landFraction": 0.33,
+        "seed": "Asabiya",
+        "width": 400
+      },
+      "world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "year": 1000,
+      "zoom_multiplier": 4.0
+    },
+    "selection_local_ms": {
+      "samples": 10,
+      "p50": 0.5495000000000001,
+      "p95": 0.9290499999999995
+    },
+    "selection_present_ms": {
+      "samples": 10,
+      "p50": 28.2505,
+      "p95": 36.3608
+    },
+    "selection_query_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "map_present_ms": {
+      "samples": 17,
+      "p50": 57.375,
+      "p95": 67.94619999999999
+    },
+    "projection_ms": {
+      "samples": 17,
+      "p50": 7.816,
+      "p95": 12.477
+    },
+    "upload_ms": {
+      "samples": 17,
+      "p50": 0.308,
+      "p95": 0.4502
+    },
+    "main_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null,
+      "p99": null
+    },
+    "render_cpu_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null,
+      "p99": null
+    },
+    "render_gpu_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null,
+      "p99": null
+    },
+    "main_thread_ticks_over_20ms": 0,
+    "years_per_second": 1.6987648280934933
+  },
+  {
+    "file": "bench-ab--pr27-paused-2.jsonl",
+    "environment": {
+      "build": {
+        "atlasSourcesSHA256": {
+          "experiments/atlas2d/godot/atlas.tscn": "0f71494638735511b31240f4114bd43a489471f89affc07323a284736edacbe7",
+          "experiments/atlas2d/godot/atlas_app.gd": "ffef0658b83a5def0b9c190a4ee389fa04450b03f6d9dda8fac00f4007541fab",
+          "experiments/atlas2d/godot/atlas_map.gd": "c9d2fa1d92655f0f322a1ab2c981236f8bc73c6b9615d50066cb01fa0c8b6cf6",
+          "experiments/atlas2d/godot/atlas_metrics.gd": "6dbdbf78f2db76d6c783d8fdacc6dacb8647c97bc9f74c661be6f4ad3636756c",
+          "experiments/atlas2d/godot/atlas_projection.gd": "b0ced0181b798133a327a6c6a68f13514fd43a593a2ab73a235fc2b4f4c0ae4d",
+          "experiments/atlas2d/godot/atlas_symbols.gd": "ce06da7a953b858a32c3fbb7dfb657f3369688d01a479562b7bffc3d0704b2fa",
+          "experiments/atlas2d/godot/probe.gd": "febd0b029c3dc3b4f752578ca2b27119cb908914ef2e13678436a9a87df6db15",
+          "experiments/atlas2d/godot/project.godot": "ac427e680e414a9f7b224b2b91f912fbd6a987af9ac522528fd256a89e86ed37",
+          "experiments/atlas2d/godot/terrain.gdshader": "a8e6c14ff7f320bc6145fd488baf08517d289d7e2da93e953fefa83ddbbf846e",
+          "experiments/atlas2d/godot/test_atlas.gd": "90167302a9843a458a16636c71f051fe21f14039f0cf3e2ce30a8bea8300d0ac"
+        },
+        "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
+        "commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+        "experimentTreeSHA256": "4bd7be39e8fbecc97153a0e2c76cdfcf85260407ba96d28d99b01e913f21a627",
+        "schema": "asabiya/atlas2d-build-v1",
+        "sharedAdaptersSHA256": {
+          "client/godot/scripts/data/annual_trace.gd": "fd396487a31699101ad1177ec5a8832d6b41ab8a3f3bd7ad50361ab06a0733a2",
+          "client/godot/scripts/data/bridge_source.gd": "13ce361acefc45523bd26e004b299ac7f25620c79386a17a3e1f2d17d7bff134",
+          "client/godot/scripts/data/history_frame.gd": "ad5c0a860b257de90e7204c3efd0a75fd46d01fc7641aa829a9e124b8ed39607",
+          "client/godot/scripts/data/history_source.gd": "1d7d4232b2f8897b8cad37dcc397e2c09203c4c382c366d34312c45a7260c103",
+          "client/godot/scripts/data/local_response_buffer.gd": "0e7e9305cb7f148471e9f8f9b5099c84a96c7cb3a98a57fe3caa29c795588be0",
+          "client/godot/scripts/data/native_frame_decoder.gd": "6ac3068a7dc14084cff69febba2915cb1d790e4be0ff55db93a24a0ca86848a0",
+          "client/godot/scripts/data/world_data.gd": "752ef238b536adea2b1b7b68b715b38f3db881ddb50e3a07492a2db7e2274763",
+          "client/godot/scripts/map/map_layers.gd": "c07ea7d149dae63e9b5f16bd9eeba828e4c8bb103599eba93caa359c3b237122"
+        }
+      },
+      "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+      "godot": {
+        "build": "official",
+        "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+        "hex": 263938,
+        "major": 4,
+        "minor": 7,
+        "patch": 2,
+        "status": "stable",
+        "string": "4.7.2-stable (official)",
+        "timestamp": 0
+      },
+      "gpu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "headless": false,
+      "kind": "environment",
+      "os": "Linux",
+      "pid": 11385,
+      "renderer": "gl_compatibility",
+      "scene": "procedural",
+      "schema": "asabiya/atlas2d-measure-v1",
+      "size": "(1920, 1080)",
+      "target_hardware_verified": false,
+      "ticks_us": 669894,
+      "vsync_requested": "disabled"
+    },
+    "frames": 483,
+    "fps_p50": 49.290220820189276,
+    "fps_mean": 48.16655936393815,
+    "frame_ms_p50": 20.288,
+    "frame_ms_p95": 24.369899999999998,
+    "frame_ms_p99": 26.634560000000004,
+    "frames_above_33_333ms_percent": 0.2070393374741201,
+    "godot_static_peak_bytes": 2024560443.0,
+    "target_hardware_verified": false,
+    "ready": {
+      "digest_mode": "",
+      "framebuffer_size": [
+        1920.0,
+        1080.0
+      ],
+      "go_pid": 11432,
+      "history_seed": "1",
+      "kind": "ready",
+      "layer": "states",
+      "map_pixels": [
+        1574.0,
+        936.0
+      ],
+      "state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "ticks_us": 140750400,
+      "window_size": [
+        1920,
+        1080
+      ],
+      "world_config": {
+        "detail": 4,
+        "height": 200,
+        "landFraction": 0.33,
+        "seed": "Asabiya",
+        "width": 400
+      },
+      "world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "year": 1000,
+      "zoom_multiplier": 4.0
+    },
+    "selection_local_ms": {
+      "samples": 10,
+      "p50": 0.5065,
+      "p95": 0.6054499999999999
+    },
+    "selection_present_ms": {
+      "samples": 10,
+      "p50": 21.554000000000002,
+      "p95": 24.277449999999995
+    },
+    "selection_query_ms": {
+      "samples": 10,
+      "p50": 21.3465,
+      "p95": 24.22555
+    },
+    "map_present_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "projection_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "upload_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "main_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null,
+      "p99": null
+    },
+    "render_cpu_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null,
+      "p99": null
+    },
+    "render_gpu_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null,
+      "p99": null
+    },
+    "main_thread_ticks_over_20ms": 0,
+    "years_per_second": 0.0
+  },
+  {
+    "file": "bench-ab--pr27-paused.jsonl",
+    "environment": {
+      "build": {
+        "atlasSourcesSHA256": {
+          "experiments/atlas2d/godot/atlas.tscn": "0f71494638735511b31240f4114bd43a489471f89affc07323a284736edacbe7",
+          "experiments/atlas2d/godot/atlas_app.gd": "ffef0658b83a5def0b9c190a4ee389fa04450b03f6d9dda8fac00f4007541fab",
+          "experiments/atlas2d/godot/atlas_map.gd": "c9d2fa1d92655f0f322a1ab2c981236f8bc73c6b9615d50066cb01fa0c8b6cf6",
+          "experiments/atlas2d/godot/atlas_metrics.gd": "6dbdbf78f2db76d6c783d8fdacc6dacb8647c97bc9f74c661be6f4ad3636756c",
+          "experiments/atlas2d/godot/atlas_projection.gd": "b0ced0181b798133a327a6c6a68f13514fd43a593a2ab73a235fc2b4f4c0ae4d",
+          "experiments/atlas2d/godot/atlas_symbols.gd": "ce06da7a953b858a32c3fbb7dfb657f3369688d01a479562b7bffc3d0704b2fa",
+          "experiments/atlas2d/godot/probe.gd": "febd0b029c3dc3b4f752578ca2b27119cb908914ef2e13678436a9a87df6db15",
+          "experiments/atlas2d/godot/project.godot": "ac427e680e414a9f7b224b2b91f912fbd6a987af9ac522528fd256a89e86ed37",
+          "experiments/atlas2d/godot/terrain.gdshader": "a8e6c14ff7f320bc6145fd488baf08517d289d7e2da93e953fefa83ddbbf846e",
+          "experiments/atlas2d/godot/test_atlas.gd": "90167302a9843a458a16636c71f051fe21f14039f0cf3e2ce30a8bea8300d0ac"
+        },
+        "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
+        "commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+        "experimentTreeSHA256": "4bd7be39e8fbecc97153a0e2c76cdfcf85260407ba96d28d99b01e913f21a627",
+        "schema": "asabiya/atlas2d-build-v1",
+        "sharedAdaptersSHA256": {
+          "client/godot/scripts/data/annual_trace.gd": "fd396487a31699101ad1177ec5a8832d6b41ab8a3f3bd7ad50361ab06a0733a2",
+          "client/godot/scripts/data/bridge_source.gd": "13ce361acefc45523bd26e004b299ac7f25620c79386a17a3e1f2d17d7bff134",
+          "client/godot/scripts/data/history_frame.gd": "ad5c0a860b257de90e7204c3efd0a75fd46d01fc7641aa829a9e124b8ed39607",
+          "client/godot/scripts/data/history_source.gd": "1d7d4232b2f8897b8cad37dcc397e2c09203c4c382c366d34312c45a7260c103",
+          "client/godot/scripts/data/local_response_buffer.gd": "0e7e9305cb7f148471e9f8f9b5099c84a96c7cb3a98a57fe3caa29c795588be0",
+          "client/godot/scripts/data/native_frame_decoder.gd": "6ac3068a7dc14084cff69febba2915cb1d790e4be0ff55db93a24a0ca86848a0",
+          "client/godot/scripts/data/world_data.gd": "752ef238b536adea2b1b7b68b715b38f3db881ddb50e3a07492a2db7e2274763",
+          "client/godot/scripts/map/map_layers.gd": "c07ea7d149dae63e9b5f16bd9eeba828e4c8bb103599eba93caa359c3b237122"
+        }
+      },
+      "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+      "godot": {
+        "build": "official",
+        "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+        "hex": 263938,
+        "major": 4,
+        "minor": 7,
+        "patch": 2,
+        "status": "stable",
+        "string": "4.7.2-stable (official)",
+        "timestamp": 0
+      },
+      "gpu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "headless": false,
+      "kind": "environment",
+      "os": "Linux",
+      "pid": 9318,
+      "renderer": "gl_compatibility",
+      "scene": "procedural",
+      "schema": "asabiya/atlas2d-measure-v1",
+      "size": "(1920, 1080)",
+      "target_hardware_verified": false,
+      "ticks_us": 605573,
+      "vsync_requested": "disabled"
+    },
+    "frames": 469,
+    "fps_p50": 48.62394242925217,
+    "fps_mean": 46.779981280027954,
+    "frame_ms_p50": 20.566,
+    "frame_ms_p95": 25.2378,
+    "frame_ms_p99": 30.79079999999999,
+    "frames_above_33_333ms_percent": 0.6396588486140725,
+    "godot_static_peak_bytes": 2024560387.0,
+    "target_hardware_verified": false,
+    "ready": {
+      "digest_mode": "",
+      "framebuffer_size": [
+        1920.0,
+        1080.0
+      ],
+      "go_pid": 9365,
+      "history_seed": "1",
+      "kind": "ready",
+      "layer": "states",
+      "map_pixels": [
+        1574.0,
+        936.0
+      ],
+      "state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "ticks_us": 138859553,
+      "window_size": [
+        1920,
+        1080
+      ],
+      "world_config": {
+        "detail": 4,
+        "height": 200,
+        "landFraction": 0.33,
+        "seed": "Asabiya",
+        "width": 400
+      },
+      "world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "year": 1000,
+      "zoom_multiplier": 4.0
+    },
+    "selection_local_ms": {
+      "samples": 10,
+      "p50": 0.535,
+      "p95": 0.6034499999999999
+    },
+    "selection_present_ms": {
+      "samples": 10,
+      "p50": 21.783,
+      "p95": 27.441599999999998
+    },
+    "selection_query_ms": {
+      "samples": 10,
+      "p50": 21.6325,
+      "p95": 27.20015
+    },
+    "map_present_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "projection_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "upload_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "main_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null,
+      "p99": null
+    },
+    "render_cpu_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null,
+      "p99": null
+    },
+    "render_gpu_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null,
+      "p99": null
+    },
+    "main_thread_ticks_over_20ms": 0,
+    "years_per_second": 0.0
+  },
+  {
+    "file": "bench-ab--sprint-active-2.jsonl",
+    "environment": {
+      "build": {
+        "atlasSourcesSHA256": {
+          "experiments/atlas2d/godot/atlas.tscn": "0f71494638735511b31240f4114bd43a489471f89affc07323a284736edacbe7",
+          "experiments/atlas2d/godot/atlas_app.gd": "0bd167b68703a63f5b3e17ad7867495146b8d3ecdb9fdb85a64cd6fd233d2ef5",
+          "experiments/atlas2d/godot/atlas_entities.gd": "0de7c4ddf7a3f17b8f196f7ccf879c8aae9b9b1a76e625c1ffb12d6a5ba2ef44",
+          "experiments/atlas2d/godot/atlas_map.gd": "c55a8e39af9767379fb0af362c306d9437575e8f06c9b5c2aa967710ac579d39",
+          "experiments/atlas2d/godot/atlas_metrics.gd": "ae0cbb431c1c5405e9cf90c7cafc2e0ffa9ffe34deeb74e5a1277745459978a7",
+          "experiments/atlas2d/godot/atlas_projection.gd": "0ccf44d1118126476738efcc4a311e031646288865fe20f46032c1666976a73c",
+          "experiments/atlas2d/godot/atlas_symbols.gd": "f35e6c3b5b550e55375218f0fe390ac0e791339bca0a8f68027c873a9c2df16a",
+          "experiments/atlas2d/godot/probe.gd": "febd0b029c3dc3b4f752578ca2b27119cb908914ef2e13678436a9a87df6db15",
+          "experiments/atlas2d/godot/project.godot": "ac427e680e414a9f7b224b2b91f912fbd6a987af9ac522528fd256a89e86ed37",
+          "experiments/atlas2d/godot/terrain.gdshader": "a8e6c14ff7f320bc6145fd488baf08517d289d7e2da93e953fefa83ddbbf846e",
+          "experiments/atlas2d/godot/test_atlas.gd": "90167302a9843a458a16636c71f051fe21f14039f0cf3e2ce30a8bea8300d0ac",
+          "experiments/atlas2d/godot/test_integrity.gd": "50a75e2f6eb31155c1936c1e6ce9205851bbdc52d15fc34193102faaf017d06e"
+        },
+        "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
+        "commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+        "experimentTreeSHA256": "8c4290dc1f3df90b897df5d6615d543d638f7243b0d2f8ac90e7815116ec5ca4",
+        "schema": "asabiya/atlas2d-build-v1",
+        "sharedAdaptersSHA256": {
+          "client/godot/scripts/data/annual_trace.gd": "fd396487a31699101ad1177ec5a8832d6b41ab8a3f3bd7ad50361ab06a0733a2",
+          "client/godot/scripts/data/bridge_source.gd": "13ce361acefc45523bd26e004b299ac7f25620c79386a17a3e1f2d17d7bff134",
+          "client/godot/scripts/data/history_frame.gd": "ad5c0a860b257de90e7204c3efd0a75fd46d01fc7641aa829a9e124b8ed39607",
+          "client/godot/scripts/data/history_source.gd": "1d7d4232b2f8897b8cad37dcc397e2c09203c4c382c366d34312c45a7260c103",
+          "client/godot/scripts/data/local_response_buffer.gd": "0e7e9305cb7f148471e9f8f9b5099c84a96c7cb3a98a57fe3caa29c795588be0",
+          "client/godot/scripts/data/native_frame_decoder.gd": "6ac3068a7dc14084cff69febba2915cb1d790e4be0ff55db93a24a0ca86848a0",
+          "client/godot/scripts/data/world_data.gd": "752ef238b536adea2b1b7b68b715b38f3db881ddb50e3a07492a2db7e2274763",
+          "client/godot/scripts/map/map_layers.gd": "c07ea7d149dae63e9b5f16bd9eeba828e4c8bb103599eba93caa359c3b237122"
+        }
+      },
+      "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+      "diag": "none",
+      "godot": {
+        "build": "official",
+        "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+        "hex": 263938,
+        "major": 4,
+        "minor": 7,
+        "patch": 2,
+        "status": "stable",
+        "string": "4.7.2-stable (official)",
+        "timestamp": 0
+      },
+      "gpu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "headless": false,
+      "kind": "environment",
+      "os": "Linux",
+      "pid": 10493,
+      "renderer": "gl_compatibility",
+      "scene": "procedural",
+      "schema": "asabiya/atlas2d-measure-v1",
+      "size": "(1920, 1080)",
+      "target_hardware_verified": false,
+      "ticks_us": 676591,
+      "vsync_requested": "disabled"
+    },
+    "frames": 312,
+    "fps_p50": 33.47784603538609,
+    "fps_mean": 31.102279747262077,
+    "frame_ms_p50": 29.8705,
+    "frame_ms_p95": 45.41515,
+    "frame_ms_p99": 61.796219999999956,
+    "frames_above_33_333ms_percent": 30.76923076923077,
+    "godot_static_peak_bytes": 2008501640.0,
+    "target_hardware_verified": false,
+    "ready": {
+      "digest_mode": "",
+      "framebuffer_size": [
+        1920.0,
+        1080.0
+      ],
+      "go_pid": 10540,
+      "history_seed": "1",
+      "kind": "ready",
+      "layer": "states",
+      "map_pixels": [
+        1414.0,
+        936.0
+      ],
+      "state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "ticks_us": 140165854,
+      "window_size": [
+        1920,
+        1080
+      ],
+      "world_config": {
+        "detail": 4,
+        "height": 200,
+        "landFraction": 0.33,
+        "seed": "Asabiya",
+        "width": 400
+      },
+      "world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "year": 1000,
+      "zoom_multiplier": 4.0
+    },
+    "selection_local_ms": {
+      "samples": 10,
+      "p50": 0.747,
+      "p95": 18.848799999999983
+    },
+    "selection_present_ms": {
+      "samples": 10,
+      "p50": 33.3365,
+      "p95": 59.40619999999998
+    },
+    "selection_query_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "map_present_ms": {
+      "samples": 21,
+      "p50": 69.297,
+      "p95": 97.243
+    },
+    "projection_ms": {
+      "samples": 21,
+      "p50": 10.519,
+      "p95": 16.782
+    },
+    "upload_ms": {
+      "samples": 21,
+      "p50": 0.301,
+      "p95": 0.4
+    },
+    "main_ms": {
+      "samples": 312,
+      "p50": 0.057,
+      "p95": 1.576499999999998,
+      "p99": 25.30969999999993
+    },
+    "render_cpu_ms": {
+      "samples": 312,
+      "p50": 1.622500002384185,
+      "p95": 5.032050013542176,
+      "p99": 7.665360202789304
+    },
+    "render_gpu_ms": {
+      "samples": 312,
+      "p50": 18.329999923706048,
+      "p95": 27.653049278259257,
+      "p99": 32.432349205017104
+    },
+    "main_thread_ticks_over_20ms": 3,
+    "years_per_second": 2.1024158860947115
+  },
+  {
+    "file": "bench-ab--sprint-active-notiming.jsonl",
+    "environment": {
+      "build": {
+        "atlasSourcesSHA256": {
+          "experiments/atlas2d/godot/atlas.tscn": "0f71494638735511b31240f4114bd43a489471f89affc07323a284736edacbe7",
+          "experiments/atlas2d/godot/atlas_app.gd": "c17255a1df68d78214f40580ed28cab0e649c26bf303417e469f9c472bf3b0f5",
+          "experiments/atlas2d/godot/atlas_entities.gd": "0de7c4ddf7a3f17b8f196f7ccf879c8aae9b9b1a76e625c1ffb12d6a5ba2ef44",
+          "experiments/atlas2d/godot/atlas_map.gd": "c55a8e39af9767379fb0af362c306d9437575e8f06c9b5c2aa967710ac579d39",
+          "experiments/atlas2d/godot/atlas_metrics.gd": "ae0cbb431c1c5405e9cf90c7cafc2e0ffa9ffe34deeb74e5a1277745459978a7",
+          "experiments/atlas2d/godot/atlas_projection.gd": "0ccf44d1118126476738efcc4a311e031646288865fe20f46032c1666976a73c",
+          "experiments/atlas2d/godot/atlas_symbols.gd": "f35e6c3b5b550e55375218f0fe390ac0e791339bca0a8f68027c873a9c2df16a",
+          "experiments/atlas2d/godot/probe.gd": "febd0b029c3dc3b4f752578ca2b27119cb908914ef2e13678436a9a87df6db15",
+          "experiments/atlas2d/godot/project.godot": "ac427e680e414a9f7b224b2b91f912fbd6a987af9ac522528fd256a89e86ed37",
+          "experiments/atlas2d/godot/terrain.gdshader": "a8e6c14ff7f320bc6145fd488baf08517d289d7e2da93e953fefa83ddbbf846e",
+          "experiments/atlas2d/godot/test_atlas.gd": "90167302a9843a458a16636c71f051fe21f14039f0cf3e2ce30a8bea8300d0ac",
+          "experiments/atlas2d/godot/test_integrity.gd": "50a75e2f6eb31155c1936c1e6ce9205851bbdc52d15fc34193102faaf017d06e"
+        },
+        "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
+        "commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+        "experimentTreeSHA256": "1d1e91dc9745e2b9de8283f45aaca405298d74fb98ef8be567342059c2582c8b",
+        "schema": "asabiya/atlas2d-build-v1",
+        "sharedAdaptersSHA256": {
+          "client/godot/scripts/data/annual_trace.gd": "fd396487a31699101ad1177ec5a8832d6b41ab8a3f3bd7ad50361ab06a0733a2",
+          "client/godot/scripts/data/bridge_source.gd": "13ce361acefc45523bd26e004b299ac7f25620c79386a17a3e1f2d17d7bff134",
+          "client/godot/scripts/data/history_frame.gd": "ad5c0a860b257de90e7204c3efd0a75fd46d01fc7641aa829a9e124b8ed39607",
+          "client/godot/scripts/data/history_source.gd": "1d7d4232b2f8897b8cad37dcc397e2c09203c4c382c366d34312c45a7260c103",
+          "client/godot/scripts/data/local_response_buffer.gd": "0e7e9305cb7f148471e9f8f9b5099c84a96c7cb3a98a57fe3caa29c795588be0",
+          "client/godot/scripts/data/native_frame_decoder.gd": "6ac3068a7dc14084cff69febba2915cb1d790e4be0ff55db93a24a0ca86848a0",
+          "client/godot/scripts/data/world_data.gd": "752ef238b536adea2b1b7b68b715b38f3db881ddb50e3a07492a2db7e2274763",
+          "client/godot/scripts/map/map_layers.gd": "c07ea7d149dae63e9b5f16bd9eeba828e4c8bb103599eba93caa359c3b237122"
+        }
+      },
+      "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+      "diag": "none",
+      "godot": {
+        "build": "official",
+        "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+        "hex": 263938,
+        "major": 4,
+        "minor": 7,
+        "patch": 2,
+        "status": "stable",
+        "string": "4.7.2-stable (official)",
+        "timestamp": 0
+      },
+      "gpu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "headless": false,
+      "kind": "environment",
+      "os": "Linux",
+      "pid": 11812,
+      "renderer": "gl_compatibility",
+      "scene": "procedural",
+      "schema": "asabiya/atlas2d-measure-v1",
+      "size": "(1920, 1080)",
+      "target_hardware_verified": false,
+      "ticks_us": 571204,
+      "vsync_requested": "disabled"
+    },
+    "frames": 301,
+    "fps_p50": 32.12644970604298,
+    "fps_mean": 30.04682913116948,
+    "frame_ms_p50": 31.127,
+    "frame_ms_p95": 47.818,
+    "frame_ms_p99": 75.075,
+    "frames_above_33_333ms_percent": 34.883720930232556,
+    "godot_static_peak_bytes": 1988942851.0,
+    "target_hardware_verified": false,
+    "ready": {
+      "digest_mode": "",
+      "framebuffer_size": [
+        1920.0,
+        1080.0
+      ],
+      "go_pid": 11859,
+      "history_seed": "1",
+      "kind": "ready",
+      "layer": "states",
+      "map_pixels": [
+        1414.0,
+        936.0
+      ],
+      "state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "ticks_us": 142521321,
+      "window_size": [
+        1920,
+        1080
+      ],
+      "world_config": {
+        "detail": 4,
+        "height": 200,
+        "landFraction": 0.33,
+        "seed": "Asabiya",
+        "width": 400
+      },
+      "world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "year": 1000,
+      "zoom_multiplier": 4.0
+    },
+    "selection_local_ms": {
+      "samples": 10,
+      "p50": 0.7095,
+      "p95": 3.970299999999994
+    },
+    "selection_present_ms": {
+      "samples": 10,
+      "p50": 31.643,
+      "p95": 45.65415
+    },
+    "selection_query_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "map_present_ms": {
+      "samples": 19,
+      "p50": 73.288,
+      "p95": 114.22679999999997
+    },
+    "projection_ms": {
+      "samples": 19,
+      "p50": 13.248,
+      "p95": 17.275199999999984
+    },
+    "upload_ms": {
+      "samples": 19,
+      "p50": 0.304,
+      "p95": 0.6015999999999997
+    },
+    "main_ms": {
+      "samples": 301,
+      "p50": 0.06,
+      "p95": 1.819,
+      "p99": 40.616
+    },
+    "render_cpu_ms": {
+      "samples": 301,
+      "p50": 0.0,
+      "p95": 0.0,
+      "p99": 0.0
+    },
+    "render_gpu_ms": {
+      "samples": 301,
+      "p50": 0.0,
+      "p95": 0.0,
+      "p99": 0.0
+    },
+    "main_thread_ticks_over_20ms": 5,
+    "years_per_second": 1.9015649879851118
+  },
+  {
+    "file": "bench-ab--sprint-active.jsonl",
+    "environment": {
+      "build": {
+        "atlasSourcesSHA256": {
+          "experiments/atlas2d/godot/atlas.tscn": "0f71494638735511b31240f4114bd43a489471f89affc07323a284736edacbe7",
+          "experiments/atlas2d/godot/atlas_app.gd": "0bd167b68703a63f5b3e17ad7867495146b8d3ecdb9fdb85a64cd6fd233d2ef5",
+          "experiments/atlas2d/godot/atlas_entities.gd": "0de7c4ddf7a3f17b8f196f7ccf879c8aae9b9b1a76e625c1ffb12d6a5ba2ef44",
+          "experiments/atlas2d/godot/atlas_map.gd": "c55a8e39af9767379fb0af362c306d9437575e8f06c9b5c2aa967710ac579d39",
+          "experiments/atlas2d/godot/atlas_metrics.gd": "ae0cbb431c1c5405e9cf90c7cafc2e0ffa9ffe34deeb74e5a1277745459978a7",
+          "experiments/atlas2d/godot/atlas_projection.gd": "0ccf44d1118126476738efcc4a311e031646288865fe20f46032c1666976a73c",
+          "experiments/atlas2d/godot/atlas_symbols.gd": "f35e6c3b5b550e55375218f0fe390ac0e791339bca0a8f68027c873a9c2df16a",
+          "experiments/atlas2d/godot/probe.gd": "febd0b029c3dc3b4f752578ca2b27119cb908914ef2e13678436a9a87df6db15",
+          "experiments/atlas2d/godot/project.godot": "ac427e680e414a9f7b224b2b91f912fbd6a987af9ac522528fd256a89e86ed37",
+          "experiments/atlas2d/godot/terrain.gdshader": "a8e6c14ff7f320bc6145fd488baf08517d289d7e2da93e953fefa83ddbbf846e",
+          "experiments/atlas2d/godot/test_atlas.gd": "90167302a9843a458a16636c71f051fe21f14039f0cf3e2ce30a8bea8300d0ac",
+          "experiments/atlas2d/godot/test_integrity.gd": "50a75e2f6eb31155c1936c1e6ce9205851bbdc52d15fc34193102faaf017d06e"
+        },
+        "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
+        "commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+        "experimentTreeSHA256": "8c4290dc1f3df90b897df5d6615d543d638f7243b0d2f8ac90e7815116ec5ca4",
+        "schema": "asabiya/atlas2d-build-v1",
+        "sharedAdaptersSHA256": {
+          "client/godot/scripts/data/annual_trace.gd": "fd396487a31699101ad1177ec5a8832d6b41ab8a3f3bd7ad50361ab06a0733a2",
+          "client/godot/scripts/data/bridge_source.gd": "13ce361acefc45523bd26e004b299ac7f25620c79386a17a3e1f2d17d7bff134",
+          "client/godot/scripts/data/history_frame.gd": "ad5c0a860b257de90e7204c3efd0a75fd46d01fc7641aa829a9e124b8ed39607",
+          "client/godot/scripts/data/history_source.gd": "1d7d4232b2f8897b8cad37dcc397e2c09203c4c382c366d34312c45a7260c103",
+          "client/godot/scripts/data/local_response_buffer.gd": "0e7e9305cb7f148471e9f8f9b5099c84a96c7cb3a98a57fe3caa29c795588be0",
+          "client/godot/scripts/data/native_frame_decoder.gd": "6ac3068a7dc14084cff69febba2915cb1d790e4be0ff55db93a24a0ca86848a0",
+          "client/godot/scripts/data/world_data.gd": "752ef238b536adea2b1b7b68b715b38f3db881ddb50e3a07492a2db7e2274763",
+          "client/godot/scripts/map/map_layers.gd": "c07ea7d149dae63e9b5f16bd9eeba828e4c8bb103599eba93caa359c3b237122"
+        }
+      },
+      "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+      "diag": "none",
+      "godot": {
+        "build": "official",
+        "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+        "hex": 263938,
+        "major": 4,
+        "minor": 7,
+        "patch": 2,
+        "status": "stable",
+        "string": "4.7.2-stable (official)",
+        "timestamp": 0
+      },
+      "gpu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "headless": false,
+      "kind": "environment",
+      "os": "Linux",
+      "pid": 9999,
+      "renderer": "gl_compatibility",
+      "scene": "procedural",
+      "schema": "asabiya/atlas2d-measure-v1",
+      "size": "(1920, 1080)",
+      "target_hardware_verified": false,
+      "ticks_us": 669985,
+      "vsync_requested": "disabled"
+    },
+    "frames": 306,
+    "fps_p50": 32.70913402567667,
+    "fps_mean": 30.46038785829031,
+    "frame_ms_p50": 30.5725,
+    "frame_ms_p95": 48.172250000000005,
+    "frame_ms_p99": 64.33084999999996,
+    "frames_above_33_333ms_percent": 34.967320261437905,
+    "godot_static_peak_bytes": 1973592922.0,
+    "target_hardware_verified": false,
+    "ready": {
+      "digest_mode": "",
+      "framebuffer_size": [
+        1920.0,
+        1080.0
+      ],
+      "go_pid": 10046,
+      "history_seed": "1",
+      "kind": "ready",
+      "layer": "states",
+      "map_pixels": [
+        1414.0,
+        936.0
+      ],
+      "state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "ticks_us": 139884658,
+      "window_size": [
+        1920,
+        1080
+      ],
+      "world_config": {
+        "detail": 4,
+        "height": 200,
+        "landFraction": 0.33,
+        "seed": "Asabiya",
+        "width": 400
+      },
+      "world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "year": 1000,
+      "zoom_multiplier": 4.0
+    },
+    "selection_local_ms": {
+      "samples": 10,
+      "p50": 0.683,
+      "p95": 3.924249999999994
+    },
+    "selection_present_ms": {
+      "samples": 10,
+      "p50": 35.311499999999995,
+      "p95": 47.661699999999996
+    },
+    "selection_query_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "map_present_ms": {
+      "samples": 21,
+      "p50": 65.755,
+      "p95": 106.192
+    },
+    "projection_ms": {
+      "samples": 21,
+      "p50": 13.098,
+      "p95": 22.296
+    },
+    "upload_ms": {
+      "samples": 21,
+      "p50": 0.309,
+      "p95": 0.422
+    },
+    "main_ms": {
+      "samples": 306,
+      "p50": 0.059,
+      "p95": 1.649,
+      "p99": 31.944349999999986
+    },
+    "render_cpu_ms": {
+      "samples": 306,
+      "p50": 1.68499994277954,
+      "p95": 5.370249867439273,
+      "p99": 7.8510501623153655
+    },
+    "render_gpu_ms": {
+      "samples": 306,
+      "p50": 18.79449939727785,
+      "p95": 27.300499439239527,
+      "p99": 31.166599273681665
+    },
+    "main_thread_ticks_over_20ms": 5,
+    "years_per_second": 2.097338686940142
+  },
+  {
+    "file": "bench-ab--sprint-paused-notiming-2.jsonl",
+    "environment": {
+      "build": {
+        "atlasSourcesSHA256": {
+          "experiments/atlas2d/godot/atlas.tscn": "0f71494638735511b31240f4114bd43a489471f89affc07323a284736edacbe7",
+          "experiments/atlas2d/godot/atlas_app.gd": "c17255a1df68d78214f40580ed28cab0e649c26bf303417e469f9c472bf3b0f5",
+          "experiments/atlas2d/godot/atlas_entities.gd": "0de7c4ddf7a3f17b8f196f7ccf879c8aae9b9b1a76e625c1ffb12d6a5ba2ef44",
+          "experiments/atlas2d/godot/atlas_map.gd": "c55a8e39af9767379fb0af362c306d9437575e8f06c9b5c2aa967710ac579d39",
+          "experiments/atlas2d/godot/atlas_metrics.gd": "ae0cbb431c1c5405e9cf90c7cafc2e0ffa9ffe34deeb74e5a1277745459978a7",
+          "experiments/atlas2d/godot/atlas_projection.gd": "0ccf44d1118126476738efcc4a311e031646288865fe20f46032c1666976a73c",
+          "experiments/atlas2d/godot/atlas_symbols.gd": "f35e6c3b5b550e55375218f0fe390ac0e791339bca0a8f68027c873a9c2df16a",
+          "experiments/atlas2d/godot/probe.gd": "febd0b029c3dc3b4f752578ca2b27119cb908914ef2e13678436a9a87df6db15",
+          "experiments/atlas2d/godot/project.godot": "ac427e680e414a9f7b224b2b91f912fbd6a987af9ac522528fd256a89e86ed37",
+          "experiments/atlas2d/godot/terrain.gdshader": "a8e6c14ff7f320bc6145fd488baf08517d289d7e2da93e953fefa83ddbbf846e",
+          "experiments/atlas2d/godot/test_atlas.gd": "90167302a9843a458a16636c71f051fe21f14039f0cf3e2ce30a8bea8300d0ac",
+          "experiments/atlas2d/godot/test_integrity.gd": "50a75e2f6eb31155c1936c1e6ce9205851bbdc52d15fc34193102faaf017d06e"
+        },
+        "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
+        "commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+        "experimentTreeSHA256": "1d1e91dc9745e2b9de8283f45aaca405298d74fb98ef8be567342059c2582c8b",
+        "schema": "asabiya/atlas2d-build-v1",
+        "sharedAdaptersSHA256": {
+          "client/godot/scripts/data/annual_trace.gd": "fd396487a31699101ad1177ec5a8832d6b41ab8a3f3bd7ad50361ab06a0733a2",
+          "client/godot/scripts/data/bridge_source.gd": "13ce361acefc45523bd26e004b299ac7f25620c79386a17a3e1f2d17d7bff134",
+          "client/godot/scripts/data/history_frame.gd": "ad5c0a860b257de90e7204c3efd0a75fd46d01fc7641aa829a9e124b8ed39607",
+          "client/godot/scripts/data/history_source.gd": "1d7d4232b2f8897b8cad37dcc397e2c09203c4c382c366d34312c45a7260c103",
+          "client/godot/scripts/data/local_response_buffer.gd": "0e7e9305cb7f148471e9f8f9b5099c84a96c7cb3a98a57fe3caa29c795588be0",
+          "client/godot/scripts/data/native_frame_decoder.gd": "6ac3068a7dc14084cff69febba2915cb1d790e4be0ff55db93a24a0ca86848a0",
+          "client/godot/scripts/data/world_data.gd": "752ef238b536adea2b1b7b68b715b38f3db881ddb50e3a07492a2db7e2274763",
+          "client/godot/scripts/map/map_layers.gd": "c07ea7d149dae63e9b5f16bd9eeba828e4c8bb103599eba93caa359c3b237122"
+        }
+      },
+      "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+      "diag": "none",
+      "godot": {
+        "build": "official",
+        "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+        "hex": 263938,
+        "major": 4,
+        "minor": 7,
+        "patch": 2,
+        "status": "stable",
+        "string": "4.7.2-stable (official)",
+        "timestamp": 0
+      },
+      "gpu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "headless": false,
+      "kind": "environment",
+      "os": "Linux",
+      "pid": 11595,
+      "renderer": "gl_compatibility",
+      "scene": "procedural",
+      "schema": "asabiya/atlas2d-measure-v1",
+      "size": "(1920, 1080)",
+      "target_hardware_verified": false,
+      "ticks_us": 597245,
+      "vsync_requested": "disabled"
+    },
+    "frames": 432,
+    "fps_p50": 44.39117503440316,
+    "fps_mean": 43.17393589490025,
+    "frame_ms_p50": 22.527,
+    "frame_ms_p95": 28.31615,
+    "frame_ms_p99": 31.34865,
+    "frames_above_33_333ms_percent": 0.23148148148148148,
+    "godot_static_peak_bytes": 2026337731.0,
+    "target_hardware_verified": false,
+    "ready": {
+      "digest_mode": "",
+      "framebuffer_size": [
+        1920.0,
+        1080.0
+      ],
+      "go_pid": 11644,
+      "history_seed": "1",
+      "kind": "ready",
+      "layer": "states",
+      "map_pixels": [
+        1414.0,
+        936.0
+      ],
+      "state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "ticks_us": 140601766,
+      "window_size": [
+        1920,
+        1080
+      ],
+      "world_config": {
+        "detail": 4,
+        "height": 200,
+        "landFraction": 0.33,
+        "seed": "Asabiya",
+        "width": 400
+      },
+      "world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "year": 1000,
+      "zoom_multiplier": 4.0
+    },
+    "selection_local_ms": {
+      "samples": 10,
+      "p50": 0.5925,
+      "p95": 0.74525
+    },
+    "selection_present_ms": {
+      "samples": 10,
+      "p50": 25.1055,
+      "p95": 27.480150000000002
+    },
+    "selection_query_ms": {
+      "samples": 10,
+      "p50": 24.8045,
+      "p95": 27.3287
+    },
+    "map_present_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "projection_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "upload_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "main_ms": {
+      "samples": 432,
+      "p50": 0.048,
+      "p95": 0.1319,
+      "p99": 0.89811
+    },
+    "render_cpu_ms": {
+      "samples": 432,
+      "p50": 0.0,
+      "p95": 0.0,
+      "p99": 0.0
+    },
+    "render_gpu_ms": {
+      "samples": 432,
+      "p50": 0.0,
+      "p95": 0.0,
+      "p99": 0.0
+    },
+    "main_thread_ticks_over_20ms": 0,
+    "years_per_second": 0.0
+  },
+  {
+    "file": "bench-ab--sprint-paused-notiming.jsonl",
+    "environment": {
+      "build": {
+        "atlasSourcesSHA256": {
+          "experiments/atlas2d/godot/atlas.tscn": "0f71494638735511b31240f4114bd43a489471f89affc07323a284736edacbe7",
+          "experiments/atlas2d/godot/atlas_app.gd": "c17255a1df68d78214f40580ed28cab0e649c26bf303417e469f9c472bf3b0f5",
+          "experiments/atlas2d/godot/atlas_entities.gd": "0de7c4ddf7a3f17b8f196f7ccf879c8aae9b9b1a76e625c1ffb12d6a5ba2ef44",
+          "experiments/atlas2d/godot/atlas_map.gd": "c55a8e39af9767379fb0af362c306d9437575e8f06c9b5c2aa967710ac579d39",
+          "experiments/atlas2d/godot/atlas_metrics.gd": "ae0cbb431c1c5405e9cf90c7cafc2e0ffa9ffe34deeb74e5a1277745459978a7",
+          "experiments/atlas2d/godot/atlas_projection.gd": "0ccf44d1118126476738efcc4a311e031646288865fe20f46032c1666976a73c",
+          "experiments/atlas2d/godot/atlas_symbols.gd": "f35e6c3b5b550e55375218f0fe390ac0e791339bca0a8f68027c873a9c2df16a",
+          "experiments/atlas2d/godot/probe.gd": "febd0b029c3dc3b4f752578ca2b27119cb908914ef2e13678436a9a87df6db15",
+          "experiments/atlas2d/godot/project.godot": "ac427e680e414a9f7b224b2b91f912fbd6a987af9ac522528fd256a89e86ed37",
+          "experiments/atlas2d/godot/terrain.gdshader": "a8e6c14ff7f320bc6145fd488baf08517d289d7e2da93e953fefa83ddbbf846e",
+          "experiments/atlas2d/godot/test_atlas.gd": "90167302a9843a458a16636c71f051fe21f14039f0cf3e2ce30a8bea8300d0ac",
+          "experiments/atlas2d/godot/test_integrity.gd": "50a75e2f6eb31155c1936c1e6ce9205851bbdc52d15fc34193102faaf017d06e"
+        },
+        "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
+        "commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+        "experimentTreeSHA256": "1d1e91dc9745e2b9de8283f45aaca405298d74fb98ef8be567342059c2582c8b",
+        "schema": "asabiya/atlas2d-build-v1",
+        "sharedAdaptersSHA256": {
+          "client/godot/scripts/data/annual_trace.gd": "fd396487a31699101ad1177ec5a8832d6b41ab8a3f3bd7ad50361ab06a0733a2",
+          "client/godot/scripts/data/bridge_source.gd": "13ce361acefc45523bd26e004b299ac7f25620c79386a17a3e1f2d17d7bff134",
+          "client/godot/scripts/data/history_frame.gd": "ad5c0a860b257de90e7204c3efd0a75fd46d01fc7641aa829a9e124b8ed39607",
+          "client/godot/scripts/data/history_source.gd": "1d7d4232b2f8897b8cad37dcc397e2c09203c4c382c366d34312c45a7260c103",
+          "client/godot/scripts/data/local_response_buffer.gd": "0e7e9305cb7f148471e9f8f9b5099c84a96c7cb3a98a57fe3caa29c795588be0",
+          "client/godot/scripts/data/native_frame_decoder.gd": "6ac3068a7dc14084cff69febba2915cb1d790e4be0ff55db93a24a0ca86848a0",
+          "client/godot/scripts/data/world_data.gd": "752ef238b536adea2b1b7b68b715b38f3db881ddb50e3a07492a2db7e2274763",
+          "client/godot/scripts/map/map_layers.gd": "c07ea7d149dae63e9b5f16bd9eeba828e4c8bb103599eba93caa359c3b237122"
+        }
+      },
+      "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+      "diag": "none",
+      "godot": {
+        "build": "official",
+        "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+        "hex": 263938,
+        "major": 4,
+        "minor": 7,
+        "patch": 2,
+        "status": "stable",
+        "string": "4.7.2-stable (official)",
+        "timestamp": 0
+      },
+      "gpu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "headless": false,
+      "kind": "environment",
+      "os": "Linux",
+      "pid": 11176,
+      "renderer": "gl_compatibility",
+      "scene": "procedural",
+      "schema": "asabiya/atlas2d-measure-v1",
+      "size": "(1920, 1080)",
+      "target_hardware_verified": false,
+      "ticks_us": 717613,
+      "vsync_requested": "disabled"
+    },
+    "frames": 447,
+    "fps_p50": 45.7205559619605,
+    "fps_mean": 44.619167915404454,
+    "frame_ms_p50": 21.872,
+    "frame_ms_p95": 27.154099999999996,
+    "frame_ms_p99": 32.177940000000035,
+    "frames_above_33_333ms_percent": 0.8948545861297539,
+    "godot_static_peak_bytes": 2026337715.0,
+    "target_hardware_verified": false,
+    "ready": {
+      "digest_mode": "",
+      "framebuffer_size": [
+        1920.0,
+        1080.0
+      ],
+      "go_pid": 11223,
+      "history_seed": "1",
+      "kind": "ready",
+      "layer": "states",
+      "map_pixels": [
+        1414.0,
+        936.0
+      ],
+      "state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "ticks_us": 141001693,
+      "window_size": [
+        1920,
+        1080
+      ],
+      "world_config": {
+        "detail": 4,
+        "height": 200,
+        "landFraction": 0.33,
+        "seed": "Asabiya",
+        "width": 400
+      },
+      "world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "year": 1000,
+      "zoom_multiplier": 4.0
+    },
+    "selection_local_ms": {
+      "samples": 10,
+      "p50": 0.55,
+      "p95": 0.6625499999999999
+    },
+    "selection_present_ms": {
+      "samples": 10,
+      "p50": 22.472499999999997,
+      "p95": 28.97895
+    },
+    "selection_query_ms": {
+      "samples": 10,
+      "p50": 22.282,
+      "p95": 29.469099999999997
+    },
+    "map_present_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "projection_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "upload_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "main_ms": {
+      "samples": 447,
+      "p50": 0.049,
+      "p95": 0.1112999999999999,
+      "p99": 0.8575600000000003
+    },
+    "render_cpu_ms": {
+      "samples": 447,
+      "p50": 0.0,
+      "p95": 0.0,
+      "p99": 0.0
+    },
+    "render_gpu_ms": {
+      "samples": 447,
+      "p50": 0.0,
+      "p95": 0.0,
+      "p99": 0.0
+    },
+    "main_thread_ticks_over_20ms": 0,
+    "years_per_second": 0.0
+  },
+  {
+    "file": "bench-ab--sprint-paused.jsonl",
+    "environment": {
+      "build": {
+        "atlasSourcesSHA256": {
+          "experiments/atlas2d/godot/atlas.tscn": "0f71494638735511b31240f4114bd43a489471f89affc07323a284736edacbe7",
+          "experiments/atlas2d/godot/atlas_app.gd": "0bd167b68703a63f5b3e17ad7867495146b8d3ecdb9fdb85a64cd6fd233d2ef5",
+          "experiments/atlas2d/godot/atlas_entities.gd": "0de7c4ddf7a3f17b8f196f7ccf879c8aae9b9b1a76e625c1ffb12d6a5ba2ef44",
+          "experiments/atlas2d/godot/atlas_map.gd": "c55a8e39af9767379fb0af362c306d9437575e8f06c9b5c2aa967710ac579d39",
+          "experiments/atlas2d/godot/atlas_metrics.gd": "ae0cbb431c1c5405e9cf90c7cafc2e0ffa9ffe34deeb74e5a1277745459978a7",
+          "experiments/atlas2d/godot/atlas_projection.gd": "0ccf44d1118126476738efcc4a311e031646288865fe20f46032c1666976a73c",
+          "experiments/atlas2d/godot/atlas_symbols.gd": "f35e6c3b5b550e55375218f0fe390ac0e791339bca0a8f68027c873a9c2df16a",
+          "experiments/atlas2d/godot/probe.gd": "febd0b029c3dc3b4f752578ca2b27119cb908914ef2e13678436a9a87df6db15",
+          "experiments/atlas2d/godot/project.godot": "ac427e680e414a9f7b224b2b91f912fbd6a987af9ac522528fd256a89e86ed37",
+          "experiments/atlas2d/godot/terrain.gdshader": "a8e6c14ff7f320bc6145fd488baf08517d289d7e2da93e953fefa83ddbbf846e",
+          "experiments/atlas2d/godot/test_atlas.gd": "90167302a9843a458a16636c71f051fe21f14039f0cf3e2ce30a8bea8300d0ac",
+          "experiments/atlas2d/godot/test_integrity.gd": "50a75e2f6eb31155c1936c1e6ce9205851bbdc52d15fc34193102faaf017d06e"
+        },
+        "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
+        "commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+        "experimentTreeSHA256": "8c4290dc1f3df90b897df5d6615d543d638f7243b0d2f8ac90e7815116ec5ca4",
+        "schema": "asabiya/atlas2d-build-v1",
+        "sharedAdaptersSHA256": {
+          "client/godot/scripts/data/annual_trace.gd": "fd396487a31699101ad1177ec5a8832d6b41ab8a3f3bd7ad50361ab06a0733a2",
+          "client/godot/scripts/data/bridge_source.gd": "13ce361acefc45523bd26e004b299ac7f25620c79386a17a3e1f2d17d7bff134",
+          "client/godot/scripts/data/history_frame.gd": "ad5c0a860b257de90e7204c3efd0a75fd46d01fc7641aa829a9e124b8ed39607",
+          "client/godot/scripts/data/history_source.gd": "1d7d4232b2f8897b8cad37dcc397e2c09203c4c382c366d34312c45a7260c103",
+          "client/godot/scripts/data/local_response_buffer.gd": "0e7e9305cb7f148471e9f8f9b5099c84a96c7cb3a98a57fe3caa29c795588be0",
+          "client/godot/scripts/data/native_frame_decoder.gd": "6ac3068a7dc14084cff69febba2915cb1d790e4be0ff55db93a24a0ca86848a0",
+          "client/godot/scripts/data/world_data.gd": "752ef238b536adea2b1b7b68b715b38f3db881ddb50e3a07492a2db7e2274763",
+          "client/godot/scripts/map/map_layers.gd": "c07ea7d149dae63e9b5f16bd9eeba828e4c8bb103599eba93caa359c3b237122"
+        }
+      },
+      "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+      "diag": "none",
+      "godot": {
+        "build": "official",
+        "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+        "hex": 263938,
+        "major": 4,
+        "minor": 7,
+        "patch": 2,
+        "status": "stable",
+        "string": "4.7.2-stable (official)",
+        "timestamp": 0
+      },
+      "gpu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "headless": false,
+      "kind": "environment",
+      "os": "Linux",
+      "pid": 9793,
+      "renderer": "gl_compatibility",
+      "scene": "procedural",
+      "schema": "asabiya/atlas2d-measure-v1",
+      "size": "(1920, 1080)",
+      "target_hardware_verified": false,
+      "ticks_us": 631599,
+      "vsync_requested": "disabled"
+    },
+    "frames": 434,
+    "fps_p50": 43.981176056647755,
+    "fps_mean": 43.26534095281845,
+    "frame_ms_p50": 22.737000000000002,
+    "frame_ms_p95": 27.67744999999999,
+    "frame_ms_p99": 30.029450000000004,
+    "frames_above_33_333ms_percent": 0.2304147465437788,
+    "godot_static_peak_bytes": 2026338819.0,
+    "target_hardware_verified": false,
+    "ready": {
+      "digest_mode": "",
+      "framebuffer_size": [
+        1920.0,
+        1080.0
+      ],
+      "go_pid": 9840,
+      "history_seed": "1",
+      "kind": "ready",
+      "layer": "states",
+      "map_pixels": [
+        1414.0,
+        936.0
+      ],
+      "state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "ticks_us": 139940741,
+      "window_size": [
+        1920,
+        1080
+      ],
+      "world_config": {
+        "detail": 4,
+        "height": 200,
+        "landFraction": 0.33,
+        "seed": "Asabiya",
+        "width": 400
+      },
+      "world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "year": 1000,
+      "zoom_multiplier": 4.0
+    },
+    "selection_local_ms": {
+      "samples": 10,
+      "p50": 0.5914999999999999,
+      "p95": 0.8267499999999999
+    },
+    "selection_present_ms": {
+      "samples": 10,
+      "p50": 23.8505,
+      "p95": 25.06355
+    },
+    "selection_query_ms": {
+      "samples": 10,
+      "p50": 23.785,
+      "p95": 24.833
+    },
+    "map_present_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "projection_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "upload_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "main_ms": {
+      "samples": 434,
+      "p50": 0.05,
+      "p95": 0.13184999999999894,
+      "p99": 0.9048900000000011
+    },
+    "render_cpu_ms": {
+      "samples": 434,
+      "p50": 1.6389999985694899,
+      "p95": 2.520150029659267,
+      "p99": 4.818509974479674
+    },
+    "render_gpu_ms": {
+      "samples": 434,
+      "p50": 14.173500061035199,
+      "p95": 17.817100048065168,
+      "p99": 20.280299510955803
+    },
+    "main_thread_ticks_over_20ms": 0,
+    "years_per_second": 0.0
+  },
+  {
+    "file": "bench-base--active-map-hidden.jsonl",
+    "environment": {
+      "build": {
+        "atlasSourcesSHA256": {
+          "experiments/atlas2d/godot/atlas.tscn": "0f71494638735511b31240f4114bd43a489471f89affc07323a284736edacbe7",
+          "experiments/atlas2d/godot/atlas_app.gd": "ce8e95bebfa8993c79ea35e6bc2fdca316f3656dbbf71fc05df31468feaa66c3",
+          "experiments/atlas2d/godot/atlas_entities.gd": "0de7c4ddf7a3f17b8f196f7ccf879c8aae9b9b1a76e625c1ffb12d6a5ba2ef44",
+          "experiments/atlas2d/godot/atlas_map.gd": "bbb921375c476539007dc95b42d4117c916cce43b2b573b2d597f4c8b4138d60",
+          "experiments/atlas2d/godot/atlas_metrics.gd": "ae0cbb431c1c5405e9cf90c7cafc2e0ffa9ffe34deeb74e5a1277745459978a7",
+          "experiments/atlas2d/godot/atlas_projection.gd": "0ccf44d1118126476738efcc4a311e031646288865fe20f46032c1666976a73c",
+          "experiments/atlas2d/godot/atlas_symbols.gd": "73f04121aea9aa1ab7e1d0c0bbbeb9143fb372b76460501b33ad13c356543c37",
+          "experiments/atlas2d/godot/probe.gd": "febd0b029c3dc3b4f752578ca2b27119cb908914ef2e13678436a9a87df6db15",
+          "experiments/atlas2d/godot/project.godot": "ac427e680e414a9f7b224b2b91f912fbd6a987af9ac522528fd256a89e86ed37",
+          "experiments/atlas2d/godot/terrain.gdshader": "a8e6c14ff7f320bc6145fd488baf08517d289d7e2da93e953fefa83ddbbf846e",
+          "experiments/atlas2d/godot/test_atlas.gd": "90167302a9843a458a16636c71f051fe21f14039f0cf3e2ce30a8bea8300d0ac",
+          "experiments/atlas2d/godot/test_integrity.gd": "ccd21aafd76d67c937c43d0bfa64f7bbd2c88866db55b8a8e835c35171efa6ce"
+        },
+        "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
+        "commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+        "experimentTreeSHA256": "7ab8af1ed409c04256b154076a5823d6461fd0fb56b10793e7b8a7f72b0e850f",
+        "schema": "asabiya/atlas2d-build-v1",
+        "sharedAdaptersSHA256": {
+          "client/godot/scripts/data/annual_trace.gd": "fd396487a31699101ad1177ec5a8832d6b41ab8a3f3bd7ad50361ab06a0733a2",
+          "client/godot/scripts/data/bridge_source.gd": "13ce361acefc45523bd26e004b299ac7f25620c79386a17a3e1f2d17d7bff134",
+          "client/godot/scripts/data/history_frame.gd": "ad5c0a860b257de90e7204c3efd0a75fd46d01fc7641aa829a9e124b8ed39607",
+          "client/godot/scripts/data/history_source.gd": "1d7d4232b2f8897b8cad37dcc397e2c09203c4c382c366d34312c45a7260c103",
+          "client/godot/scripts/data/local_response_buffer.gd": "0e7e9305cb7f148471e9f8f9b5099c84a96c7cb3a98a57fe3caa29c795588be0",
+          "client/godot/scripts/data/native_frame_decoder.gd": "6ac3068a7dc14084cff69febba2915cb1d790e4be0ff55db93a24a0ca86848a0",
+          "client/godot/scripts/data/world_data.gd": "752ef238b536adea2b1b7b68b715b38f3db881ddb50e3a07492a2db7e2274763",
+          "client/godot/scripts/map/map_layers.gd": "c07ea7d149dae63e9b5f16bd9eeba828e4c8bb103599eba93caa359c3b237122"
+        }
+      },
+      "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+      "diag": "map-hidden",
+      "godot": {
+        "build": "official",
+        "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+        "hex": 263938,
+        "major": 4,
+        "minor": 7,
+        "patch": 2,
+        "status": "stable",
+        "string": "4.7.2-stable (official)",
+        "timestamp": 0
+      },
+      "gpu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "headless": false,
+      "kind": "environment",
+      "os": "Linux",
+      "pid": 5686,
+      "renderer": "gl_compatibility",
+      "scene": "procedural",
+      "schema": "asabiya/atlas2d-measure-v1",
+      "size": "(1920, 1080)",
+      "target_hardware_verified": false,
+      "ticks_us": 692304,
+      "vsync_requested": "disabled"
+    },
+    "frames": 301,
+    "fps_p50": 44.10726887791108,
+    "fps_mean": 29.676753114752707,
+    "frame_ms_p50": 22.672,
+    "frame_ms_p95": 109.901,
+    "frame_ms_p99": 270.606,
+    "frames_above_33_333ms_percent": 10.631229235880399,
+    "godot_static_peak_bytes": 1990445738.0,
+    "target_hardware_verified": false,
+    "ready": {
+      "digest_mode": "",
+      "framebuffer_size": [
+        1920.0,
+        1080.0
+      ],
+      "go_pid": 5733,
+      "history_seed": "1",
+      "kind": "ready",
+      "layer": "states",
+      "map_pixels": [
+        320.0,
+        240.0
+      ],
+      "state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "ticks_us": 142636580,
+      "window_size": [
+        1920,
+        1080
+      ],
+      "world_config": {
+        "detail": 4,
+        "height": 200,
+        "landFraction": 0.33,
+        "seed": "Asabiya",
+        "width": 400
+      },
+      "world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "year": 1000,
+      "zoom_multiplier": 4.0
+    },
+    "selection_local_ms": {
+      "samples": 10,
+      "p50": 0.6984999999999999,
+      "p95": 2.8337499999999975
+    },
+    "selection_present_ms": {
+      "samples": 10,
+      "p50": 24.049,
+      "p95": 35.2733
+    },
+    "selection_query_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "map_present_ms": {
+      "samples": 16,
+      "p50": 52.105999999999995,
+      "p95": 94.47475
+    },
+    "projection_ms": {
+      "samples": 16,
+      "p50": 8.277999999999999,
+      "p95": 13.124
+    },
+    "upload_ms": {
+      "samples": 16,
+      "p50": 0.342,
+      "p95": 0.45499999999999996
+    },
+    "main_ms": {
+      "samples": 301,
+      "p50": 0.051,
+      "p95": 110.654,
+      "p99": 261.242
+    },
+    "render_cpu_ms": {
+      "samples": 301,
+      "p50": 1.59200000762939,
+      "p95": 4.40700006484985,
+      "p99": 6.67600011825562
+    },
+    "render_gpu_ms": {
+      "samples": 301,
+      "p50": 12.875,
+      "p95": 17.4850006103516,
+      "p99": 20.1520004272461
+    },
+    "main_thread_ticks_over_20ms": 0,
+    "years_per_second": 1.5805695839338263
+  },
+  {
+    "file": "bench-base--paused-map-hidden.jsonl",
+    "environment": {
+      "build": {
+        "atlasSourcesSHA256": {
+          "experiments/atlas2d/godot/atlas.tscn": "0f71494638735511b31240f4114bd43a489471f89affc07323a284736edacbe7",
+          "experiments/atlas2d/godot/atlas_app.gd": "ce8e95bebfa8993c79ea35e6bc2fdca316f3656dbbf71fc05df31468feaa66c3",
+          "experiments/atlas2d/godot/atlas_entities.gd": "0de7c4ddf7a3f17b8f196f7ccf879c8aae9b9b1a76e625c1ffb12d6a5ba2ef44",
+          "experiments/atlas2d/godot/atlas_map.gd": "bbb921375c476539007dc95b42d4117c916cce43b2b573b2d597f4c8b4138d60",
+          "experiments/atlas2d/godot/atlas_metrics.gd": "ae0cbb431c1c5405e9cf90c7cafc2e0ffa9ffe34deeb74e5a1277745459978a7",
+          "experiments/atlas2d/godot/atlas_projection.gd": "0ccf44d1118126476738efcc4a311e031646288865fe20f46032c1666976a73c",
+          "experiments/atlas2d/godot/atlas_symbols.gd": "73f04121aea9aa1ab7e1d0c0bbbeb9143fb372b76460501b33ad13c356543c37",
+          "experiments/atlas2d/godot/probe.gd": "febd0b029c3dc3b4f752578ca2b27119cb908914ef2e13678436a9a87df6db15",
+          "experiments/atlas2d/godot/project.godot": "ac427e680e414a9f7b224b2b91f912fbd6a987af9ac522528fd256a89e86ed37",
+          "experiments/atlas2d/godot/terrain.gdshader": "a8e6c14ff7f320bc6145fd488baf08517d289d7e2da93e953fefa83ddbbf846e",
+          "experiments/atlas2d/godot/test_atlas.gd": "90167302a9843a458a16636c71f051fe21f14039f0cf3e2ce30a8bea8300d0ac",
+          "experiments/atlas2d/godot/test_integrity.gd": "ccd21aafd76d67c937c43d0bfa64f7bbd2c88866db55b8a8e835c35171efa6ce"
+        },
+        "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
+        "commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+        "experimentTreeSHA256": "7ab8af1ed409c04256b154076a5823d6461fd0fb56b10793e7b8a7f72b0e850f",
+        "schema": "asabiya/atlas2d-build-v1",
+        "sharedAdaptersSHA256": {
+          "client/godot/scripts/data/annual_trace.gd": "fd396487a31699101ad1177ec5a8832d6b41ab8a3f3bd7ad50361ab06a0733a2",
+          "client/godot/scripts/data/bridge_source.gd": "13ce361acefc45523bd26e004b299ac7f25620c79386a17a3e1f2d17d7bff134",
+          "client/godot/scripts/data/history_frame.gd": "ad5c0a860b257de90e7204c3efd0a75fd46d01fc7641aa829a9e124b8ed39607",
+          "client/godot/scripts/data/history_source.gd": "1d7d4232b2f8897b8cad37dcc397e2c09203c4c382c366d34312c45a7260c103",
+          "client/godot/scripts/data/local_response_buffer.gd": "0e7e9305cb7f148471e9f8f9b5099c84a96c7cb3a98a57fe3caa29c795588be0",
+          "client/godot/scripts/data/native_frame_decoder.gd": "6ac3068a7dc14084cff69febba2915cb1d790e4be0ff55db93a24a0ca86848a0",
+          "client/godot/scripts/data/world_data.gd": "752ef238b536adea2b1b7b68b715b38f3db881ddb50e3a07492a2db7e2274763",
+          "client/godot/scripts/map/map_layers.gd": "c07ea7d149dae63e9b5f16bd9eeba828e4c8bb103599eba93caa359c3b237122"
+        }
+      },
+      "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+      "diag": "map-hidden",
+      "godot": {
+        "build": "official",
+        "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+        "hex": 263938,
+        "major": 4,
+        "minor": 7,
+        "patch": 2,
+        "status": "stable",
+        "string": "4.7.2-stable (official)",
+        "timestamp": 0
+      },
+      "gpu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "headless": false,
+      "kind": "environment",
+      "os": "Linux",
+      "pid": 5234,
+      "renderer": "gl_compatibility",
+      "scene": "procedural",
+      "schema": "asabiya/atlas2d-measure-v1",
+      "size": "(1920, 1080)",
+      "target_hardware_verified": false,
+      "ticks_us": 657077,
+      "vsync_requested": "disabled"
+    },
+    "frames": 566,
+    "fps_p50": 57.573838447809315,
+    "fps_mean": 56.53980772070054,
+    "frame_ms_p50": 17.369,
+    "frame_ms_p95": 21.82275,
+    "frame_ms_p99": 24.707,
+    "frames_above_33_333ms_percent": 0.0,
+    "godot_static_peak_bytes": 2026013282.0,
+    "target_hardware_verified": false,
+    "ready": {
+      "digest_mode": "",
+      "framebuffer_size": [
+        1920.0,
+        1080.0
+      ],
+      "go_pid": 5283,
+      "history_seed": "1",
+      "kind": "ready",
+      "layer": "states",
+      "map_pixels": [
+        320.0,
+        240.0
+      ],
+      "state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "ticks_us": 145287980,
+      "window_size": [
+        1920,
+        1080
+      ],
+      "world_config": {
+        "detail": 4,
+        "height": 200,
+        "landFraction": 0.33,
+        "seed": "Asabiya",
+        "width": 400
+      },
+      "world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "year": 1000,
+      "zoom_multiplier": 4.0
+    },
+    "selection_local_ms": {
+      "samples": 10,
+      "p50": 0.5885,
+      "p95": 0.8423999999999999
+    },
+    "selection_present_ms": {
+      "samples": 10,
+      "p50": 18.377000000000002,
+      "p95": 20.26025
+    },
+    "selection_query_ms": {
+      "samples": 10,
+      "p50": 18.3395,
+      "p95": 19.99785
+    },
+    "map_present_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "projection_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "upload_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "main_ms": {
+      "samples": 566,
+      "p50": 0.043,
+      "p95": 0.09325,
+      "p99": 0.8883500000000001
+    },
+    "render_cpu_ms": {
+      "samples": 566,
+      "p50": 1.52499997615814,
+      "p95": 2.3129999041557325,
+      "p99": 4.769100046157838
+    },
+    "render_gpu_ms": {
+      "samples": 566,
+      "p50": 9.795499801635746,
+      "p95": 12.809249639511101,
+      "p99": 14.3381503582001
+    },
+    "main_thread_ticks_over_20ms": 0,
+    "years_per_second": 0.0
+  },
+  {
+    "file": "bench-base--paused-panel-hidden.jsonl",
+    "environment": {
+      "build": {
+        "atlasSourcesSHA256": {
+          "experiments/atlas2d/godot/atlas.tscn": "0f71494638735511b31240f4114bd43a489471f89affc07323a284736edacbe7",
+          "experiments/atlas2d/godot/atlas_app.gd": "ce8e95bebfa8993c79ea35e6bc2fdca316f3656dbbf71fc05df31468feaa66c3",
+          "experiments/atlas2d/godot/atlas_entities.gd": "0de7c4ddf7a3f17b8f196f7ccf879c8aae9b9b1a76e625c1ffb12d6a5ba2ef44",
+          "experiments/atlas2d/godot/atlas_map.gd": "bbb921375c476539007dc95b42d4117c916cce43b2b573b2d597f4c8b4138d60",
+          "experiments/atlas2d/godot/atlas_metrics.gd": "ae0cbb431c1c5405e9cf90c7cafc2e0ffa9ffe34deeb74e5a1277745459978a7",
+          "experiments/atlas2d/godot/atlas_projection.gd": "0ccf44d1118126476738efcc4a311e031646288865fe20f46032c1666976a73c",
+          "experiments/atlas2d/godot/atlas_symbols.gd": "73f04121aea9aa1ab7e1d0c0bbbeb9143fb372b76460501b33ad13c356543c37",
+          "experiments/atlas2d/godot/probe.gd": "febd0b029c3dc3b4f752578ca2b27119cb908914ef2e13678436a9a87df6db15",
+          "experiments/atlas2d/godot/project.godot": "ac427e680e414a9f7b224b2b91f912fbd6a987af9ac522528fd256a89e86ed37",
+          "experiments/atlas2d/godot/terrain.gdshader": "a8e6c14ff7f320bc6145fd488baf08517d289d7e2da93e953fefa83ddbbf846e",
+          "experiments/atlas2d/godot/test_atlas.gd": "90167302a9843a458a16636c71f051fe21f14039f0cf3e2ce30a8bea8300d0ac",
+          "experiments/atlas2d/godot/test_integrity.gd": "ccd21aafd76d67c937c43d0bfa64f7bbd2c88866db55b8a8e835c35171efa6ce"
+        },
+        "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
+        "commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+        "experimentTreeSHA256": "7ab8af1ed409c04256b154076a5823d6461fd0fb56b10793e7b8a7f72b0e850f",
+        "schema": "asabiya/atlas2d-build-v1",
+        "sharedAdaptersSHA256": {
+          "client/godot/scripts/data/annual_trace.gd": "fd396487a31699101ad1177ec5a8832d6b41ab8a3f3bd7ad50361ab06a0733a2",
+          "client/godot/scripts/data/bridge_source.gd": "13ce361acefc45523bd26e004b299ac7f25620c79386a17a3e1f2d17d7bff134",
+          "client/godot/scripts/data/history_frame.gd": "ad5c0a860b257de90e7204c3efd0a75fd46d01fc7641aa829a9e124b8ed39607",
+          "client/godot/scripts/data/history_source.gd": "1d7d4232b2f8897b8cad37dcc397e2c09203c4c382c366d34312c45a7260c103",
+          "client/godot/scripts/data/local_response_buffer.gd": "0e7e9305cb7f148471e9f8f9b5099c84a96c7cb3a98a57fe3caa29c795588be0",
+          "client/godot/scripts/data/native_frame_decoder.gd": "6ac3068a7dc14084cff69febba2915cb1d790e4be0ff55db93a24a0ca86848a0",
+          "client/godot/scripts/data/world_data.gd": "752ef238b536adea2b1b7b68b715b38f3db881ddb50e3a07492a2db7e2274763",
+          "client/godot/scripts/map/map_layers.gd": "c07ea7d149dae63e9b5f16bd9eeba828e4c8bb103599eba93caa359c3b237122"
+        }
+      },
+      "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+      "diag": "panel-hidden",
+      "godot": {
+        "build": "official",
+        "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+        "hex": 263938,
+        "major": 4,
+        "minor": 7,
+        "patch": 2,
+        "status": "stable",
+        "string": "4.7.2-stable (official)",
+        "timestamp": 0
+      },
+      "gpu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "headless": false,
+      "kind": "environment",
+      "os": "Linux",
+      "pid": 5459,
+      "renderer": "gl_compatibility",
+      "scene": "procedural",
+      "schema": "asabiya/atlas2d-measure-v1",
+      "size": "(1920, 1080)",
+      "target_hardware_verified": false,
+      "ticks_us": 641615,
+      "vsync_requested": "disabled"
+    },
+    "frames": 457,
+    "fps_p50": 46.47704034207102,
+    "fps_mean": 45.55569323055358,
+    "frame_ms_p50": 21.516,
+    "frame_ms_p95": 25.9398,
+    "frame_ms_p99": 27.366480000000003,
+    "frames_above_33_333ms_percent": 0.0,
+    "godot_static_peak_bytes": 2025678146.0,
+    "target_hardware_verified": false,
+    "ready": {
+      "digest_mode": "",
+      "framebuffer_size": [
+        1920.0,
+        1080.0
+      ],
+      "go_pid": 5506,
+      "history_seed": "1",
+      "kind": "ready",
+      "layer": "states",
+      "map_pixels": [
+        1896.0,
+        936.0
+      ],
+      "state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "ticks_us": 153129563,
+      "window_size": [
+        1920,
+        1080
+      ],
+      "world_config": {
+        "detail": 4,
+        "height": 200,
+        "landFraction": 0.33,
+        "seed": "Asabiya",
+        "width": 400
+      },
+      "world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "year": 1000,
+      "zoom_multiplier": 4.0
+    },
+    "selection_local_ms": {
+      "samples": 10,
+      "p50": 0.5115000000000001,
+      "p95": 1.203599999999999
+    },
+    "selection_present_ms": {
+      "samples": 10,
+      "p50": 21.515,
+      "p95": 27.1946
+    },
+    "selection_query_ms": {
+      "samples": 10,
+      "p50": 21.4115,
+      "p95": 26.857
+    },
+    "map_present_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "projection_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "upload_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "main_ms": {
+      "samples": 457,
+      "p50": 0.041,
+      "p95": 0.1663999999999998,
+      "p99": 0.8522399999999999
+    },
+    "render_cpu_ms": {
+      "samples": 457,
+      "p50": 1.00899994373322,
+      "p95": 1.7753999710083,
+      "p99": 4.680080070495604
+    },
+    "render_gpu_ms": {
+      "samples": 457,
+      "p50": 13.3579998016357,
+      "p95": 16.481600189208958,
+      "p99": 17.919679565429696
+    },
+    "main_thread_ticks_over_20ms": 0,
+    "years_per_second": 0.0
+  },
+  {
+    "file": "bench-release--active-main-2.jsonl",
+    "environment": {
+      "build": {
+        "atlasSourcesSHA256": {
+          "experiments/atlas2d/godot/atlas.tscn": "0f71494638735511b31240f4114bd43a489471f89affc07323a284736edacbe7",
+          "experiments/atlas2d/godot/atlas_app.gd": "0bd167b68703a63f5b3e17ad7867495146b8d3ecdb9fdb85a64cd6fd233d2ef5",
+          "experiments/atlas2d/godot/atlas_entities.gd": "0de7c4ddf7a3f17b8f196f7ccf879c8aae9b9b1a76e625c1ffb12d6a5ba2ef44",
+          "experiments/atlas2d/godot/atlas_map.gd": "c55a8e39af9767379fb0af362c306d9437575e8f06c9b5c2aa967710ac579d39",
+          "experiments/atlas2d/godot/atlas_metrics.gd": "ae0cbb431c1c5405e9cf90c7cafc2e0ffa9ffe34deeb74e5a1277745459978a7",
+          "experiments/atlas2d/godot/atlas_projection.gd": "0ccf44d1118126476738efcc4a311e031646288865fe20f46032c1666976a73c",
+          "experiments/atlas2d/godot/atlas_symbols.gd": "f35e6c3b5b550e55375218f0fe390ac0e791339bca0a8f68027c873a9c2df16a",
+          "experiments/atlas2d/godot/probe.gd": "febd0b029c3dc3b4f752578ca2b27119cb908914ef2e13678436a9a87df6db15",
+          "experiments/atlas2d/godot/project.godot": "ac427e680e414a9f7b224b2b91f912fbd6a987af9ac522528fd256a89e86ed37",
+          "experiments/atlas2d/godot/terrain.gdshader": "a8e6c14ff7f320bc6145fd488baf08517d289d7e2da93e953fefa83ddbbf846e",
+          "experiments/atlas2d/godot/test_atlas.gd": "90167302a9843a458a16636c71f051fe21f14039f0cf3e2ce30a8bea8300d0ac",
+          "experiments/atlas2d/godot/test_integrity.gd": "50a75e2f6eb31155c1936c1e6ce9205851bbdc52d15fc34193102faaf017d06e"
+        },
+        "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
+        "commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+        "experimentTreeSHA256": "8c4290dc1f3df90b897df5d6615d543d638f7243b0d2f8ac90e7815116ec5ca4",
+        "schema": "asabiya/atlas2d-build-v1",
+        "sharedAdaptersSHA256": {
+          "client/godot/scripts/data/annual_trace.gd": "fd396487a31699101ad1177ec5a8832d6b41ab8a3f3bd7ad50361ab06a0733a2",
+          "client/godot/scripts/data/bridge_source.gd": "13ce361acefc45523bd26e004b299ac7f25620c79386a17a3e1f2d17d7bff134",
+          "client/godot/scripts/data/history_frame.gd": "ad5c0a860b257de90e7204c3efd0a75fd46d01fc7641aa829a9e124b8ed39607",
+          "client/godot/scripts/data/history_source.gd": "1d7d4232b2f8897b8cad37dcc397e2c09203c4c382c366d34312c45a7260c103",
+          "client/godot/scripts/data/local_response_buffer.gd": "0e7e9305cb7f148471e9f8f9b5099c84a96c7cb3a98a57fe3caa29c795588be0",
+          "client/godot/scripts/data/native_frame_decoder.gd": "6ac3068a7dc14084cff69febba2915cb1d790e4be0ff55db93a24a0ca86848a0",
+          "client/godot/scripts/data/world_data.gd": "752ef238b536adea2b1b7b68b715b38f3db881ddb50e3a07492a2db7e2274763",
+          "client/godot/scripts/map/map_layers.gd": "c07ea7d149dae63e9b5f16bd9eeba828e4c8bb103599eba93caa359c3b237122"
+        }
+      },
+      "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+      "diag": "none",
+      "godot": {
+        "build": "official",
+        "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+        "hex": 263938,
+        "major": 4,
+        "minor": 7,
+        "patch": 2,
+        "status": "stable",
+        "string": "4.7.2-stable (official)",
+        "timestamp": 0
+      },
+      "gpu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "headless": false,
+      "kind": "environment",
+      "os": "Linux",
+      "pid": 9044,
+      "renderer": "gl_compatibility",
+      "scene": "procedural",
+      "schema": "asabiya/atlas2d-measure-v1",
+      "size": "(1920, 1080)",
+      "target_hardware_verified": false,
+      "ticks_us": 666290,
+      "vsync_requested": "disabled"
+    },
+    "frames": 255,
+    "fps_p50": 36.075036075036074,
+    "fps_mean": 25.430911841799386,
+    "frame_ms_p50": 27.72,
+    "frame_ms_p95": 139.30839999999966,
+    "frame_ms_p99": 246.77202000000008,
+    "frames_above_33_333ms_percent": 16.470588235294116,
+    "godot_static_peak_bytes": 1988657263.0,
+    "target_hardware_verified": false,
+    "ready": {
+      "digest_mode": "",
+      "framebuffer_size": [
+        1920.0,
+        1080.0
+      ],
+      "go_pid": 9091,
+      "history_seed": "1",
+      "kind": "ready",
+      "layer": "states",
+      "map_pixels": [
+        1414.0,
+        936.0
+      ],
+      "state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "ticks_us": 142548326,
+      "window_size": [
+        1920,
+        1080
+      ],
+      "world_config": {
+        "detail": 4,
+        "height": 200,
+        "landFraction": 0.33,
+        "seed": "Asabiya",
+        "width": 400
+      },
+      "world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "year": 1000,
+      "zoom_multiplier": 4.0
+    },
+    "selection_local_ms": {
+      "samples": 10,
+      "p50": 0.632,
+      "p95": 0.7667999999999999
+    },
+    "selection_present_ms": {
+      "samples": 10,
+      "p50": 28.570999999999998,
+      "p95": 49.381399999999985
+    },
+    "selection_query_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "map_present_ms": {
+      "samples": 17,
+      "p50": 226.281,
+      "p95": 292.407
+    },
+    "projection_ms": {
+      "samples": 17,
+      "p50": 8.512,
+      "p95": 14.385199999999998
+    },
+    "upload_ms": {
+      "samples": 17,
+      "p50": 0.303,
+      "p95": 0.3962
+    },
+    "main_ms": {
+      "samples": 255,
+      "p50": 0.056,
+      "p95": 126.39869999999986,
+      "p99": 228.42354000000006
+    },
+    "render_cpu_ms": {
+      "samples": 255,
+      "p50": 1.55599999427795,
+      "p95": 5.197299909591673,
+      "p99": 6.672740058898929
+    },
+    "render_gpu_ms": {
+      "samples": 255,
+      "p50": 17.5540008544922,
+      "p95": 21.960299873352056,
+      "p99": 25.513979911804196
+    },
+    "main_thread_ticks_over_20ms": 17,
+    "years_per_second": 1.7002618403234098
+  },
+  {
+    "file": "bench-release--active-main.jsonl",
+    "environment": {
+      "build": {
+        "atlasSourcesSHA256": {
+          "experiments/atlas2d/godot/atlas.tscn": "0f71494638735511b31240f4114bd43a489471f89affc07323a284736edacbe7",
+          "experiments/atlas2d/godot/atlas_app.gd": "0bd167b68703a63f5b3e17ad7867495146b8d3ecdb9fdb85a64cd6fd233d2ef5",
+          "experiments/atlas2d/godot/atlas_entities.gd": "0de7c4ddf7a3f17b8f196f7ccf879c8aae9b9b1a76e625c1ffb12d6a5ba2ef44",
+          "experiments/atlas2d/godot/atlas_map.gd": "c55a8e39af9767379fb0af362c306d9437575e8f06c9b5c2aa967710ac579d39",
+          "experiments/atlas2d/godot/atlas_metrics.gd": "ae0cbb431c1c5405e9cf90c7cafc2e0ffa9ffe34deeb74e5a1277745459978a7",
+          "experiments/atlas2d/godot/atlas_projection.gd": "0ccf44d1118126476738efcc4a311e031646288865fe20f46032c1666976a73c",
+          "experiments/atlas2d/godot/atlas_symbols.gd": "f35e6c3b5b550e55375218f0fe390ac0e791339bca0a8f68027c873a9c2df16a",
+          "experiments/atlas2d/godot/probe.gd": "febd0b029c3dc3b4f752578ca2b27119cb908914ef2e13678436a9a87df6db15",
+          "experiments/atlas2d/godot/project.godot": "ac427e680e414a9f7b224b2b91f912fbd6a987af9ac522528fd256a89e86ed37",
+          "experiments/atlas2d/godot/terrain.gdshader": "a8e6c14ff7f320bc6145fd488baf08517d289d7e2da93e953fefa83ddbbf846e",
+          "experiments/atlas2d/godot/test_atlas.gd": "90167302a9843a458a16636c71f051fe21f14039f0cf3e2ce30a8bea8300d0ac",
+          "experiments/atlas2d/godot/test_integrity.gd": "50a75e2f6eb31155c1936c1e6ce9205851bbdc52d15fc34193102faaf017d06e"
+        },
+        "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
+        "commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+        "experimentTreeSHA256": "8c4290dc1f3df90b897df5d6615d543d638f7243b0d2f8ac90e7815116ec5ca4",
+        "schema": "asabiya/atlas2d-build-v1",
+        "sharedAdaptersSHA256": {
+          "client/godot/scripts/data/annual_trace.gd": "fd396487a31699101ad1177ec5a8832d6b41ab8a3f3bd7ad50361ab06a0733a2",
+          "client/godot/scripts/data/bridge_source.gd": "13ce361acefc45523bd26e004b299ac7f25620c79386a17a3e1f2d17d7bff134",
+          "client/godot/scripts/data/history_frame.gd": "ad5c0a860b257de90e7204c3efd0a75fd46d01fc7641aa829a9e124b8ed39607",
+          "client/godot/scripts/data/history_source.gd": "1d7d4232b2f8897b8cad37dcc397e2c09203c4c382c366d34312c45a7260c103",
+          "client/godot/scripts/data/local_response_buffer.gd": "0e7e9305cb7f148471e9f8f9b5099c84a96c7cb3a98a57fe3caa29c795588be0",
+          "client/godot/scripts/data/native_frame_decoder.gd": "6ac3068a7dc14084cff69febba2915cb1d790e4be0ff55db93a24a0ca86848a0",
+          "client/godot/scripts/data/world_data.gd": "752ef238b536adea2b1b7b68b715b38f3db881ddb50e3a07492a2db7e2274763",
+          "client/godot/scripts/map/map_layers.gd": "c07ea7d149dae63e9b5f16bd9eeba828e4c8bb103599eba93caa359c3b237122"
+        }
+      },
+      "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+      "diag": "none",
+      "godot": {
+        "build": "official",
+        "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+        "hex": 263938,
+        "major": 4,
+        "minor": 7,
+        "patch": 2,
+        "status": "stable",
+        "string": "4.7.2-stable (official)",
+        "timestamp": 0
+      },
+      "gpu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "headless": false,
+      "kind": "environment",
+      "os": "Linux",
+      "pid": 8335,
+      "renderer": "gl_compatibility",
+      "scene": "procedural",
+      "schema": "asabiya/atlas2d-measure-v1",
+      "size": "(1920, 1080)",
+      "target_hardware_verified": false,
+      "ticks_us": 613914,
+      "vsync_requested": "disabled"
+    },
+    "frames": 237,
+    "fps_p50": 32.25390272222939,
+    "fps_mean": 23.53415948494151,
+    "frame_ms_p50": 31.004,
+    "frame_ms_p95": 131.38619999999986,
+    "frame_ms_p99": 253.60891999999987,
+    "frames_above_33_333ms_percent": 30.80168776371308,
+    "godot_static_peak_bytes": 1989940039.0,
+    "target_hardware_verified": false,
+    "ready": {
+      "digest_mode": "",
+      "framebuffer_size": [
+        1920.0,
+        1080.0
+      ],
+      "go_pid": 8382,
+      "history_seed": "1",
+      "kind": "ready",
+      "layer": "states",
+      "map_pixels": [
+        1414.0,
+        936.0
+      ],
+      "state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "ticks_us": 141655146,
+      "window_size": [
+        1920,
+        1080
+      ],
+      "world_config": {
+        "detail": 4,
+        "height": 200,
+        "landFraction": 0.33,
+        "seed": "Asabiya",
+        "width": 400
+      },
+      "world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "year": 1000,
+      "zoom_multiplier": 4.0
+    },
+    "selection_local_ms": {
+      "samples": 10,
+      "p50": 0.6535,
+      "p95": 8.159199999999986
+    },
+    "selection_present_ms": {
+      "samples": 10,
+      "p50": 31.323999999999998,
+      "p95": 42.192649999999986
+    },
+    "selection_query_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "map_present_ms": {
+      "samples": 16,
+      "p50": 204.306,
+      "p95": 334.6275
+    },
+    "projection_ms": {
+      "samples": 16,
+      "p50": 8.2005,
+      "p95": 13.343
+    },
+    "upload_ms": {
+      "samples": 16,
+      "p50": 0.346,
+      "p95": 0.537
+    },
+    "main_ms": {
+      "samples": 237,
+      "p50": 0.058,
+      "p95": 116.35439999999996,
+      "p99": 239.64879999999965
+    },
+    "render_cpu_ms": {
+      "samples": 237,
+      "p50": 1.66299998760223,
+      "p95": 4.627400016784662,
+      "p99": 6.964759941101068
+    },
+    "render_gpu_ms": {
+      "samples": 237,
+      "p50": 19.2670001983643,
+      "p95": 25.882400131225573,
+      "p99": 29.598839874267608
+    },
+    "main_thread_ticks_over_20ms": 15,
+    "years_per_second": 1.604738632708525
+  },
+  {
+    "file": "bench-release--active-worker-2.jsonl",
+    "environment": {
+      "build": {
+        "atlasSourcesSHA256": {
+          "experiments/atlas2d/godot/atlas.tscn": "0f71494638735511b31240f4114bd43a489471f89affc07323a284736edacbe7",
+          "experiments/atlas2d/godot/atlas_app.gd": "0bd167b68703a63f5b3e17ad7867495146b8d3ecdb9fdb85a64cd6fd233d2ef5",
+          "experiments/atlas2d/godot/atlas_entities.gd": "0de7c4ddf7a3f17b8f196f7ccf879c8aae9b9b1a76e625c1ffb12d6a5ba2ef44",
+          "experiments/atlas2d/godot/atlas_map.gd": "c55a8e39af9767379fb0af362c306d9437575e8f06c9b5c2aa967710ac579d39",
+          "experiments/atlas2d/godot/atlas_metrics.gd": "ae0cbb431c1c5405e9cf90c7cafc2e0ffa9ffe34deeb74e5a1277745459978a7",
+          "experiments/atlas2d/godot/atlas_projection.gd": "0ccf44d1118126476738efcc4a311e031646288865fe20f46032c1666976a73c",
+          "experiments/atlas2d/godot/atlas_symbols.gd": "f35e6c3b5b550e55375218f0fe390ac0e791339bca0a8f68027c873a9c2df16a",
+          "experiments/atlas2d/godot/probe.gd": "febd0b029c3dc3b4f752578ca2b27119cb908914ef2e13678436a9a87df6db15",
+          "experiments/atlas2d/godot/project.godot": "ac427e680e414a9f7b224b2b91f912fbd6a987af9ac522528fd256a89e86ed37",
+          "experiments/atlas2d/godot/terrain.gdshader": "a8e6c14ff7f320bc6145fd488baf08517d289d7e2da93e953fefa83ddbbf846e",
+          "experiments/atlas2d/godot/test_atlas.gd": "90167302a9843a458a16636c71f051fe21f14039f0cf3e2ce30a8bea8300d0ac",
+          "experiments/atlas2d/godot/test_integrity.gd": "50a75e2f6eb31155c1936c1e6ce9205851bbdc52d15fc34193102faaf017d06e"
+        },
+        "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
+        "commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+        "experimentTreeSHA256": "8c4290dc1f3df90b897df5d6615d543d638f7243b0d2f8ac90e7815116ec5ca4",
+        "schema": "asabiya/atlas2d-build-v1",
+        "sharedAdaptersSHA256": {
+          "client/godot/scripts/data/annual_trace.gd": "fd396487a31699101ad1177ec5a8832d6b41ab8a3f3bd7ad50361ab06a0733a2",
+          "client/godot/scripts/data/bridge_source.gd": "13ce361acefc45523bd26e004b299ac7f25620c79386a17a3e1f2d17d7bff134",
+          "client/godot/scripts/data/history_frame.gd": "ad5c0a860b257de90e7204c3efd0a75fd46d01fc7641aa829a9e124b8ed39607",
+          "client/godot/scripts/data/history_source.gd": "1d7d4232b2f8897b8cad37dcc397e2c09203c4c382c366d34312c45a7260c103",
+          "client/godot/scripts/data/local_response_buffer.gd": "0e7e9305cb7f148471e9f8f9b5099c84a96c7cb3a98a57fe3caa29c795588be0",
+          "client/godot/scripts/data/native_frame_decoder.gd": "6ac3068a7dc14084cff69febba2915cb1d790e4be0ff55db93a24a0ca86848a0",
+          "client/godot/scripts/data/world_data.gd": "752ef238b536adea2b1b7b68b715b38f3db881ddb50e3a07492a2db7e2274763",
+          "client/godot/scripts/map/map_layers.gd": "c07ea7d149dae63e9b5f16bd9eeba828e4c8bb103599eba93caa359c3b237122"
+        }
+      },
+      "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+      "diag": "none",
+      "godot": {
+        "build": "official",
+        "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+        "hex": 263938,
+        "major": 4,
+        "minor": 7,
+        "patch": 2,
+        "status": "stable",
+        "string": "4.7.2-stable (official)",
+        "timestamp": 0
+      },
+      "gpu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "headless": false,
+      "kind": "environment",
+      "os": "Linux",
+      "pid": 8805,
+      "renderer": "gl_compatibility",
+      "scene": "procedural",
+      "schema": "asabiya/atlas2d-measure-v1",
+      "size": "(1920, 1080)",
+      "target_hardware_verified": false,
+      "ticks_us": 598854,
+      "vsync_requested": "disabled"
+    },
+    "frames": 331,
+    "fps_p50": 35.19639588906096,
+    "fps_mean": 32.980350586108656,
+    "frame_ms_p50": 28.412,
+    "frame_ms_p95": 41.64,
+    "frame_ms_p99": 52.9336,
+    "frames_above_33_333ms_percent": 23.564954682779454,
+    "godot_static_peak_bytes": 1968049844.0,
+    "target_hardware_verified": false,
+    "ready": {
+      "digest_mode": "",
+      "framebuffer_size": [
+        1920.0,
+        1080.0
+      ],
+      "go_pid": 8852,
+      "history_seed": "1",
+      "kind": "ready",
+      "layer": "states",
+      "map_pixels": [
+        1414.0,
+        936.0
+      ],
+      "state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "ticks_us": 140533326,
+      "window_size": [
+        1920,
+        1080
+      ],
+      "world_config": {
+        "detail": 4,
+        "height": 200,
+        "landFraction": 0.33,
+        "seed": "Asabiya",
+        "width": 400
+      },
+      "world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "year": 1000,
+      "zoom_multiplier": 4.0
+    },
+    "selection_local_ms": {
+      "samples": 10,
+      "p50": 0.59,
+      "p95": 1.1502499999999998
+    },
+    "selection_present_ms": {
+      "samples": 10,
+      "p50": 28.738500000000002,
+      "p95": 50.68239999999998
+    },
+    "selection_query_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "map_present_ms": {
+      "samples": 20,
+      "p50": 61.859,
+      "p95": 87.71245
+    },
+    "projection_ms": {
+      "samples": 20,
+      "p50": 11.643,
+      "p95": 16.891650000000002
+    },
+    "upload_ms": {
+      "samples": 20,
+      "p50": 0.2935,
+      "p95": 0.42155
+    },
+    "main_ms": {
+      "samples": 331,
+      "p50": 0.056,
+      "p95": 1.3944999999999999,
+      "p99": 21.901099999999936
+    },
+    "render_cpu_ms": {
+      "samples": 331,
+      "p50": 1.57099997997284,
+      "p95": 5.552000045776365,
+      "p99": 7.332800006866458
+    },
+    "render_gpu_ms": {
+      "samples": 331,
+      "p50": 17.492000579834,
+      "p95": 26.3219995498657,
+      "p99": 29.693200492858878
+    },
+    "main_thread_ticks_over_20ms": 3,
+    "years_per_second": 1.9978211762252087
+  },
+  {
+    "file": "bench-release--active-worker-rate5.jsonl",
+    "environment": {
+      "build": {
+        "atlasSourcesSHA256": {
+          "experiments/atlas2d/godot/atlas.tscn": "0f71494638735511b31240f4114bd43a489471f89affc07323a284736edacbe7",
+          "experiments/atlas2d/godot/atlas_app.gd": "0bd167b68703a63f5b3e17ad7867495146b8d3ecdb9fdb85a64cd6fd233d2ef5",
+          "experiments/atlas2d/godot/atlas_entities.gd": "0de7c4ddf7a3f17b8f196f7ccf879c8aae9b9b1a76e625c1ffb12d6a5ba2ef44",
+          "experiments/atlas2d/godot/atlas_map.gd": "c55a8e39af9767379fb0af362c306d9437575e8f06c9b5c2aa967710ac579d39",
+          "experiments/atlas2d/godot/atlas_metrics.gd": "ae0cbb431c1c5405e9cf90c7cafc2e0ffa9ffe34deeb74e5a1277745459978a7",
+          "experiments/atlas2d/godot/atlas_projection.gd": "0ccf44d1118126476738efcc4a311e031646288865fe20f46032c1666976a73c",
+          "experiments/atlas2d/godot/atlas_symbols.gd": "f35e6c3b5b550e55375218f0fe390ac0e791339bca0a8f68027c873a9c2df16a",
+          "experiments/atlas2d/godot/probe.gd": "febd0b029c3dc3b4f752578ca2b27119cb908914ef2e13678436a9a87df6db15",
+          "experiments/atlas2d/godot/project.godot": "ac427e680e414a9f7b224b2b91f912fbd6a987af9ac522528fd256a89e86ed37",
+          "experiments/atlas2d/godot/terrain.gdshader": "a8e6c14ff7f320bc6145fd488baf08517d289d7e2da93e953fefa83ddbbf846e",
+          "experiments/atlas2d/godot/test_atlas.gd": "90167302a9843a458a16636c71f051fe21f14039f0cf3e2ce30a8bea8300d0ac",
+          "experiments/atlas2d/godot/test_integrity.gd": "50a75e2f6eb31155c1936c1e6ce9205851bbdc52d15fc34193102faaf017d06e"
+        },
+        "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
+        "commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+        "experimentTreeSHA256": "8c4290dc1f3df90b897df5d6615d543d638f7243b0d2f8ac90e7815116ec5ca4",
+        "schema": "asabiya/atlas2d-build-v1",
+        "sharedAdaptersSHA256": {
+          "client/godot/scripts/data/annual_trace.gd": "fd396487a31699101ad1177ec5a8832d6b41ab8a3f3bd7ad50361ab06a0733a2",
+          "client/godot/scripts/data/bridge_source.gd": "13ce361acefc45523bd26e004b299ac7f25620c79386a17a3e1f2d17d7bff134",
+          "client/godot/scripts/data/history_frame.gd": "ad5c0a860b257de90e7204c3efd0a75fd46d01fc7641aa829a9e124b8ed39607",
+          "client/godot/scripts/data/history_source.gd": "1d7d4232b2f8897b8cad37dcc397e2c09203c4c382c366d34312c45a7260c103",
+          "client/godot/scripts/data/local_response_buffer.gd": "0e7e9305cb7f148471e9f8f9b5099c84a96c7cb3a98a57fe3caa29c795588be0",
+          "client/godot/scripts/data/native_frame_decoder.gd": "6ac3068a7dc14084cff69febba2915cb1d790e4be0ff55db93a24a0ca86848a0",
+          "client/godot/scripts/data/world_data.gd": "752ef238b536adea2b1b7b68b715b38f3db881ddb50e3a07492a2db7e2274763",
+          "client/godot/scripts/map/map_layers.gd": "c07ea7d149dae63e9b5f16bd9eeba828e4c8bb103599eba93caa359c3b237122"
+        }
+      },
+      "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+      "diag": "none",
+      "godot": {
+        "build": "official",
+        "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+        "hex": 263938,
+        "major": 4,
+        "minor": 7,
+        "patch": 2,
+        "status": "stable",
+        "string": "4.7.2-stable (official)",
+        "timestamp": 0
+      },
+      "gpu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "headless": false,
+      "kind": "environment",
+      "os": "Linux",
+      "pid": 8568,
+      "renderer": "gl_compatibility",
+      "scene": "procedural",
+      "schema": "asabiya/atlas2d-measure-v1",
+      "size": "(1920, 1080)",
+      "target_hardware_verified": false,
+      "ticks_us": 615255,
+      "vsync_requested": "disabled"
+    },
+    "frames": 320,
+    "fps_p50": 34.14192799467386,
+    "fps_mean": 31.926371402272082,
+    "frame_ms_p50": 29.2895,
+    "frame_ms_p95": 42.84980000000001,
+    "frame_ms_p99": 57.69494000000001,
+    "frames_above_33_333ms_percent": 29.375,
+    "godot_static_peak_bytes": 1966781852.0,
+    "target_hardware_verified": false,
+    "ready": {
+      "digest_mode": "",
+      "framebuffer_size": [
+        1920.0,
+        1080.0
+      ],
+      "go_pid": 8615,
+      "history_seed": "1",
+      "kind": "ready",
+      "layer": "states",
+      "map_pixels": [
+        1414.0,
+        936.0
+      ],
+      "state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "ticks_us": 140986735,
+      "window_size": [
+        1920,
+        1080
+      ],
+      "world_config": {
+        "detail": 4,
+        "height": 200,
+        "landFraction": 0.33,
+        "seed": "Asabiya",
+        "width": 400
+      },
+      "world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "year": 1000,
+      "zoom_multiplier": 4.0
+    },
+    "selection_local_ms": {
+      "samples": 10,
+      "p50": 0.6859999999999999,
+      "p95": 0.9348999999999998
+    },
+    "selection_present_ms": {
+      "samples": 10,
+      "p50": 27.930500000000002,
+      "p95": 44.153999999999975
+    },
+    "selection_query_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "map_present_ms": {
+      "samples": 20,
+      "p50": 66.3555,
+      "p95": 93.88855000000001
+    },
+    "projection_ms": {
+      "samples": 20,
+      "p50": 8.400500000000001,
+      "p95": 18.247300000000013
+    },
+    "upload_ms": {
+      "samples": 20,
+      "p50": 0.305,
+      "p95": 0.4753000000000008
+    },
+    "main_ms": {
+      "samples": 320,
+      "p50": 0.058,
+      "p95": 1.5998500000000004,
+      "p99": 22.872280000000018
+    },
+    "render_cpu_ms": {
+      "samples": 320,
+      "p50": 1.58599996566772,
+      "p95": 5.006999874114988,
+      "p99": 7.503180112838746
+    },
+    "render_gpu_ms": {
+      "samples": 320,
+      "p50": 17.9089994430542,
+      "p95": 26.386100482940645,
+      "p99": 30.015399932861303
+    },
+    "main_thread_ticks_over_20ms": 3,
+    "years_per_second": 2.003597459238062
+  },
+  {
+    "file": "bench-release--active-worker.jsonl",
+    "environment": {
+      "build": {
+        "atlasSourcesSHA256": {
+          "experiments/atlas2d/godot/atlas.tscn": "0f71494638735511b31240f4114bd43a489471f89affc07323a284736edacbe7",
+          "experiments/atlas2d/godot/atlas_app.gd": "0bd167b68703a63f5b3e17ad7867495146b8d3ecdb9fdb85a64cd6fd233d2ef5",
+          "experiments/atlas2d/godot/atlas_entities.gd": "0de7c4ddf7a3f17b8f196f7ccf879c8aae9b9b1a76e625c1ffb12d6a5ba2ef44",
+          "experiments/atlas2d/godot/atlas_map.gd": "c55a8e39af9767379fb0af362c306d9437575e8f06c9b5c2aa967710ac579d39",
+          "experiments/atlas2d/godot/atlas_metrics.gd": "ae0cbb431c1c5405e9cf90c7cafc2e0ffa9ffe34deeb74e5a1277745459978a7",
+          "experiments/atlas2d/godot/atlas_projection.gd": "0ccf44d1118126476738efcc4a311e031646288865fe20f46032c1666976a73c",
+          "experiments/atlas2d/godot/atlas_symbols.gd": "f35e6c3b5b550e55375218f0fe390ac0e791339bca0a8f68027c873a9c2df16a",
+          "experiments/atlas2d/godot/probe.gd": "febd0b029c3dc3b4f752578ca2b27119cb908914ef2e13678436a9a87df6db15",
+          "experiments/atlas2d/godot/project.godot": "ac427e680e414a9f7b224b2b91f912fbd6a987af9ac522528fd256a89e86ed37",
+          "experiments/atlas2d/godot/terrain.gdshader": "a8e6c14ff7f320bc6145fd488baf08517d289d7e2da93e953fefa83ddbbf846e",
+          "experiments/atlas2d/godot/test_atlas.gd": "90167302a9843a458a16636c71f051fe21f14039f0cf3e2ce30a8bea8300d0ac",
+          "experiments/atlas2d/godot/test_integrity.gd": "50a75e2f6eb31155c1936c1e6ce9205851bbdc52d15fc34193102faaf017d06e"
+        },
+        "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
+        "commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+        "experimentTreeSHA256": "8c4290dc1f3df90b897df5d6615d543d638f7243b0d2f8ac90e7815116ec5ca4",
+        "schema": "asabiya/atlas2d-build-v1",
+        "sharedAdaptersSHA256": {
+          "client/godot/scripts/data/annual_trace.gd": "fd396487a31699101ad1177ec5a8832d6b41ab8a3f3bd7ad50361ab06a0733a2",
+          "client/godot/scripts/data/bridge_source.gd": "13ce361acefc45523bd26e004b299ac7f25620c79386a17a3e1f2d17d7bff134",
+          "client/godot/scripts/data/history_frame.gd": "ad5c0a860b257de90e7204c3efd0a75fd46d01fc7641aa829a9e124b8ed39607",
+          "client/godot/scripts/data/history_source.gd": "1d7d4232b2f8897b8cad37dcc397e2c09203c4c382c366d34312c45a7260c103",
+          "client/godot/scripts/data/local_response_buffer.gd": "0e7e9305cb7f148471e9f8f9b5099c84a96c7cb3a98a57fe3caa29c795588be0",
+          "client/godot/scripts/data/native_frame_decoder.gd": "6ac3068a7dc14084cff69febba2915cb1d790e4be0ff55db93a24a0ca86848a0",
+          "client/godot/scripts/data/world_data.gd": "752ef238b536adea2b1b7b68b715b38f3db881ddb50e3a07492a2db7e2274763",
+          "client/godot/scripts/map/map_layers.gd": "c07ea7d149dae63e9b5f16bd9eeba828e4c8bb103599eba93caa359c3b237122"
+        }
+      },
+      "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+      "diag": "none",
+      "godot": {
+        "build": "official",
+        "hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+        "hex": 263938,
+        "major": 4,
+        "minor": 7,
+        "patch": 2,
+        "status": "stable",
+        "string": "4.7.2-stable (official)",
+        "timestamp": 0
+      },
+      "gpu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+      "headless": false,
+      "kind": "environment",
+      "os": "Linux",
+      "pid": 8099,
+      "renderer": "gl_compatibility",
+      "scene": "procedural",
+      "schema": "asabiya/atlas2d-measure-v1",
+      "size": "(1920, 1080)",
+      "target_hardware_verified": false,
+      "ticks_us": 563757,
+      "vsync_requested": "disabled"
+    },
+    "frames": 304,
+    "fps_p50": 32.48071457572066,
+    "fps_mean": 30.335806400076798,
+    "frame_ms_p50": 30.7875,
+    "frame_ms_p95": 47.53639999999997,
+    "frame_ms_p99": 55.98737999999992,
+    "frames_above_33_333ms_percent": 37.828947368421055,
+    "godot_static_peak_bytes": 1989405715.0,
+    "target_hardware_verified": false,
+    "ready": {
+      "digest_mode": "",
+      "framebuffer_size": [
+        1920.0,
+        1080.0
+      ],
+      "go_pid": 8146,
+      "history_seed": "1",
+      "kind": "ready",
+      "layer": "states",
+      "map_pixels": [
+        1414.0,
+        936.0
+      ],
+      "state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "ticks_us": 139279034,
+      "window_size": [
+        1920,
+        1080
+      ],
+      "world_config": {
+        "detail": 4,
+        "height": 200,
+        "landFraction": 0.33,
+        "seed": "Asabiya",
+        "width": 400
+      },
+      "world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "year": 1000,
+      "zoom_multiplier": 4.0
+    },
+    "selection_local_ms": {
+      "samples": 10,
+      "p50": 0.6665,
+      "p95": 0.91065
+    },
+    "selection_present_ms": {
+      "samples": 10,
+      "p50": 40.6115,
+      "p95": 46.747949999999996
+    },
+    "selection_query_ms": {
+      "samples": 0,
+      "p50": null,
+      "p95": null
+    },
+    "map_present_ms": {
+      "samples": 19,
+      "p50": 72.745,
+      "p95": 103.00999999999998
+    },
+    "projection_ms": {
+      "samples": 19,
+      "p50": 13.5,
+      "p95": 19.239499999999996
+    },
+    "upload_ms": {
+      "samples": 19,
+      "p50": 0.333,
+      "p95": 0.4231999999999999
+    },
+    "main_ms": {
+      "samples": 304,
+      "p50": 0.059,
+      "p95": 1.47685,
+      "p99": 30.873289999999564
+    },
+    "render_cpu_ms": {
+      "samples": 304,
+      "p50": 1.6669999957084651,
+      "p95": 5.9123500823974515,
+      "p99": 8.344630203247055
+    },
+    "render_gpu_ms": {
+      "samples": 304,
+      "p50": 19.076000213623047,
+      "p95": 29.074250411987297,
+      "p99": 34.49385963439933
+    },
+    "main_thread_ticks_over_20ms": 3,
+    "years_per_second": 1.9008591883531356
+  }
+]
