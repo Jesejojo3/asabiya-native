@@ -8,6 +8,9 @@ var target_center := center
 var zoom := 1.0
 var target_zoom := 1.0
 var selected := -1
+var routes_visible := false
+var _dirty := true
+signal redrawn
 var dragging := false
 var moved := false
 var drag_origin := Vector2.ZERO
@@ -45,15 +48,15 @@ func set_world(value: WorldData) -> void:
 	_empty=ImageTexture.create_from_image(blank)
 	shader.set_shader_parameter("overlay",_empty)
 	shader.set_shader_parameter("grouping",_float_texture(ids,world.width,world.height))
-	queue_redraw()
+	_dirty=true
 
 func publish(packet: Dictionary) -> float:
 	var started := Time.get_ticks_usec()
 	frame=packet.frame
 	shader.set_shader_parameter("overlay",ImageTexture.create_from_image(Image.create_from_data(world.width,world.height,false,Image.FORMAT_RGBA8,packet.colors)))
 	shader.set_shader_parameter("grouping",_float_texture(packet.keys,world.width,world.height))
-	shader.set_shader_parameter("border_strength",float(MapLayers.def(packet.layer).get("borders",0.0)))
-	queue_redraw()
+	shader.set_shader_parameter("border_strength",float(packet.get("borders",MapLayers.def(packet.layer).get("borders",0.0))))
+	_dirty=true
 	return (Time.get_ticks_usec()-started)/1000.0
 
 func zoom_to(multiplier: float) -> void:
@@ -62,21 +65,34 @@ func zoom_to(multiplier: float) -> void:
 		target_center=Vector2(world.width,world.height)*0.5
 	elif selected>=0:
 		target_center=Vector2(selected%world.width,floori(float(selected)/world.width))+Vector2(0.5,0.5)
-	target_zoom=maxf(0.1,minf(size.x/world.width,size.y/world.height))*multiplier
+	target_zoom=zoom_base()*multiplier
+
+func zoom_base() -> float:
+	return maxf(0.1,minf(size.x/world.width,size.y/world.height)) if world!=null else 1.0
 
 func screen_to_world(point: Vector2) -> Vector2:
 	return center + (point-size*0.5)/zoom
 
 func _process(delta: float) -> void:
 	if world == null: return
-	var weight := 1.0-exp(-delta*16.0)
 	var shift := target_center-center
 	shift.x=wrapf(shift.x,-world.width*0.5,world.width*0.5)
-	center+=shift*weight
-	center.x=fposmod(center.x,world.width)
-	zoom=lerpf(zoom,target_zoom,weight)
+	# Redraw only while the camera moves or after a published change. The
+	# easing tail ends once it is far below one screen pixel.
+	if shift.length()*zoom<0.01 and absf(zoom-target_zoom)<target_zoom*1e-5:
+		if center==target_center and zoom==target_zoom and not _dirty: return
+		center=Vector2(fposmod(target_center.x,world.width),target_center.y)
+		zoom=target_zoom
+	else:
+		var weight := 1.0-exp(-delta*16.0)
+		center+=shift*weight
+		center.x=fposmod(center.x,world.width)
+		zoom=lerpf(zoom,target_zoom,weight)
+	target_center.x=fposmod(target_center.x,world.width)
+	_dirty=false
 	shader.set_shader_parameter("cell_pixels",zoom)
 	queue_redraw()
+	redrawn.emit()
 
 func _gui_input(event: InputEvent) -> void:
 	if world==null: return
@@ -103,8 +119,12 @@ func select_at(point: Vector2) -> int:
 	var started := Time.get_ticks_usec()
 	selected=AtlasProjection.pick(world,screen_to_world(point))
 	shader.set_shader_parameter("selected",float(selected))
+	_dirty=true
 	province_selected.emit(selected,started)
 	return selected
+
+func _notification(what: int) -> void:
+	if what==NOTIFICATION_RESIZED: _dirty=true
 
 func _draw() -> void:
 	if world==null: return

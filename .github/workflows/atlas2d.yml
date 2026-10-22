@@ -17,6 +17,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
+          fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
         with:
@@ -31,6 +32,9 @@ jobs:
           unzip -q "$f"
           mv "Godot_v${v}_linux.x86_64" godot
           chmod +x godot
+      - name: Engine, protocol, reference, golden and 3D client unchanged by the Atlas
+        run: |
+          git diff --exit-code 79035761f1e61041a3ccbf74b648577e53ba7150 -- internal cmd go.mod go.sum reference tests/native client
       - name: Tools, producer and deterministic observer contracts
         run: |
           python3 -m unittest discover -s experiments/atlas2d/tests -v
@@ -43,6 +47,9 @@ jobs:
           timeout 60 ./godot --headless --path build/atlas2d/project --script res://test_atlas.gd -- --server="$PWD/build/bin/asabiya-server" --small --expected="$PWD/build/atlas2d/test-fixture/state.json" | tee build/atlas2d/tests.log
           if grep -E 'SCRIPT ERROR|ERROR:' build/atlas2d/tests.log; then exit 1; fi
           grep -F 'ATLAS TESTS: 0 failures' build/atlas2d/tests.log
+          timeout 180 ./godot --headless --path build/atlas2d/project --script res://test_integrity.gd -- --server="$PWD/build/bin/asabiya-server" --small | tee build/atlas2d/integrity.log
+          if grep -E 'SCRIPT ERROR|ERROR:' build/atlas2d/integrity.log; then exit 1; fi
+          grep -E 'ATLAS INTEGRITY: [0-9]+ checks, 0 failures' build/atlas2d/integrity.log
           go run ./experiments/atlas2d/probes/fixture --small --years 6 --out build/atlas2d/test-fixture6
           timeout 30 ./godot --headless --path build/atlas2d/project -- --server="$PWD/build/bin/asabiya-server" --small --prepare-years=3 --smoke-out="$PWD/build/atlas2d/prepare-check.json" --expected="$PWD/build/atlas2d/test-fixture6/state.json" > build/atlas2d/prepare.log 2>&1
           python3 -c "import json; assert json.load(open('build/atlas2d/prepare-check.json'))['ok']"
@@ -107,6 +114,8 @@ jobs:
           & "build/atlas2d/tools/engine/Godot_v${v}_win64_console.exe" --headless --path build/atlas2d/project --script res://test_atlas.gd -- "--server=$pwd/build/atlas2d/windows/asabiya-server.exe" --small "--expected=$pwd/build/atlas2d/test-fixture/state.json" 2>&1 | Tee-Object build/atlas2d/windows-tests.log
           if ($LASTEXITCODE -ne 0) { throw 'Observer tests failed' }
           if (!(Select-String -Path build/atlas2d/windows-tests.log -SimpleMatch 'ATLAS TESTS: 0 failures')) { throw 'Missing test success marker' }
+          & "build/atlas2d/tools/engine/Godot_v${v}_win64_console.exe" --headless --path build/atlas2d/project --script res://test_integrity.gd -- "--server=$pwd/build/atlas2d/windows/asabiya-server.exe" --small 2>&1 | Tee-Object build/atlas2d/windows-integrity.log
+          if ($LASTEXITCODE -ne 0 -or !(Select-String -Path build/atlas2d/windows-integrity.log -Pattern 'ATLAS INTEGRITY: \d+ checks, 0 failures')) { throw 'Integrity tests failed' }
           $exe = (Resolve-Path build/atlas2d/windows/AsabiyaAtlas2D.exe).Path
           $raw = "$pwd/build/atlas2d/export-smoke.json"
           $p = Start-Process $exe -ArgumentList @('--headless','--','--small',"--smoke-out=$raw","--expected=$pwd/build/atlas2d/test-fixture/state.json") -PassThru

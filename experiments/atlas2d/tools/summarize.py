@@ -45,6 +45,12 @@ def summary(path):
     for field in ("projection_ms", "upload_ms"):
         values = [r[field] for r in measured if r["kind"] == "map_update"]
         result[field] = {"samples": len(values), "p50": percentile(values, .5), "p95": percentile(values, .95)}
+    # Sprint 01 per-frame subsystem timings (absent in older captures).
+    for field in ("main_ms", "render_cpu_ms", "render_gpu_ms"):
+        values = [r[field] for r in rows if r["kind"] == "frame" and isinstance(r.get(field), (int, float))]
+        result[field] = {"samples": len(values), "p50": percentile(values, .5), "p95": percentile(values, .95), "p99": percentile(values, .99)}
+    slow = [r for r in measured if r["kind"] == "slow_tick"]
+    result["main_thread_ticks_over_20ms"] = len(slow)
     result["years_per_second"] = ((end["year"] - sample["year"]) * 1e6 / (end["ticks_us"] - sample["ticks_us"])) if sample and end else None
     memory_path = Path(path).with_suffix(".memory.jsonl")
     if memory_path.exists():
