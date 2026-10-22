@@ -1,87 +1,113 @@
-# ASABIYA — Roadmap conceptual por capacidades
+# ASABIYA — Roadmap por hitos (Atlas 2D primero)
 
-**Edición:** 21 de octubre de 2026  
-**Uso:** secuencia de decisiones y criterios verificables, **sin fechas de lanzamiento comprometidas**.
+**Edición:** 21 de octubre de 2026 · **Estado:** plan de producto, no compromisos de fecha ni constatación de funciones ya terminadas.
 
-## Estado del proyecto al redactar este documento
+## 0. Hechos, intención y límites
 
-- **Referencia conservada:** HTML v0.6 en reference/v0.6, junto con su historial de validación.
-- **Arquitectura nativa de trabajo:** motor histórico Go, puente TCP local, cliente 3D Godot para Windows x64.
-- **Integración pendiente:** PR #21 de consolidación todavía separada de main.
-- **Rendimiento pendiente de aceptación:** PR #22, Fase 2.2, en borrador; las mediciones Windows aportadas indican progreso en aplicación histórica y picking, pero todavía se observan alrededor de 13 FPS al acercar mucho la cámara en ciertas condiciones.
-- **Todavía no implementado como producto principal:** atlas terrestre real 3D plano, patrimonio material/ruinas causales y extensión integral a eras de fusión u orbitales.
+**Hechos técnicos:** existe una referencia HTML v0.6 preservada, trabajo del motor Go y cliente Godot 3D desarrollado en PR separadas; la rama `main` no contiene necesariamente esos cambios. La PR #21 es consolidación y #22–#25 son investigación/optimización gráfica no integrada. No presentar un pipeline CI correcto como validación de FPS en Iris Xe.
 
-El README y las instrucciones antiguas en main pueden reflejar fases previas. No interpretar su contenido como estado actualizado del código de PR #21/#22. Consultar los contratos y resultados de las ramas técnicas correspondientes.
+**Decisión nueva:** 2D cartográfico de alto detalle pasa a ser la **dirección principal de producto**. Go mantiene toda la simulación. La experiencia 3D deja de estar en el camino crítico y se retomará **solo cuando financiación, hardware, herramientas de IA, especialización y capacidad de reclutar equipo lo justifiquen**.
 
-## Etapa 0 — Crear una base estable, medible y mantenible
+**Sin decisiones aún:** cliente 2D definitivo, fuente terrestre, licencias de datos, presupuesto, fecha inicial, alcance de sim histórica, financiación y motor 3D posterior.
 
-**Objetivo:** poder reproducir, ejecutar, diagnosticar y validar una versión Windows sin depender de conocimiento tribal ni de PR superpuestas.
+## Etapa A — Congelar evidencia y preparar transición reversible
 
-**Trabajo:** cerrar aceptación de consolidación y cliente, inventariar ramas y documentación, automatizar pruebas apropiadas, reducir cuellos de botella de render cercano y medir CPU/worker/GPU sin confundirlos.
+**Objetivo:** asegurar continuidad del trabajo antes de cambiar la representación.
 
-**Puerta de salida:** compilación reproducible, pruebas causales y de UI relevantes aprobadas, referencia v0.6 preservada, instrucciones simples y mediciones comparables documentadas. No exigir una cifra arbitraria de FPS sin presupuesto de hardware y calidad.
+**Entregables:**
+- Inventario del código y PR que contienen la última simulación Go, TCP, exportaciones y cliente 3D.
+- Estado de tests Go, determinismo, replay, golden, UI y rendimiento realmente ejecutados.
+- Conservación de builds, artefactos y capturas 3D sin eliminar archivos ni rehacer historia.
+- Contrato de vista independiente de presentación: IDs, coordenadas, snapshots, diffs, eventos y consultas bajo demanda.
+- Documentación de decisiones y de lo que **no** se ha migrado.
 
-## Etapa 1 — Atlas terrestre versionado
+**Salida:** se puede ejecutar y comparar el mismo estado Go con el visor existente y con un prototipo sin alterar la simulación.
 
-**Objetivo:** sustituir gradualmente la generación de geografía ficticia en la experiencia principal por la Tierra real, manteniendo el motor Go como autoridad de simulación.
+## Etapa B — Competencia técnica de clientes 2D
 
-**Trabajo:** seleccionar y licenciar fuentes cartográficas; definir proyección y coordenadas; construir celdas/topología/vecindad verificables; importación reproducible de elevación, tierras, mares y ríos; representación 3D con LOD y carga regional. Mantener el mapa procedural anterior para comparación técnica hasta cerrar la migración.
+**Objetivo:** escoger mediante evidencia entre **Godot 2D**, **Go + Ebitengine** y **web de escritorio/cartografía** (p. ej., Wails/MapLibre, sujetos a evaluación).
 
-**Puerta de salida:** la misma semilla/atlas genera entradas idénticas; costas, relieve y selección concuerdan entre Go y Godot; navega sin discontinuidades graves ni regresión inaceptable; ninguna frontera moderna se impone como Estado simulado.
+**Prototipo idéntico en las tres opciones o en finalistas:**
+- Vista mundial y una región cargada desde datos reales de Go.
+- Zoom, desplazamiento, selección de provincia, un mapa político y una capa física.
+- Inspector y cronología conectados a estado real; una transición anual visible.
+- Prueba de cientos/miles de símbolos o eventos a diferentes escalas, sin inventar complejidad causal.
+- Mismas condiciones Windows, resolución y escenarios para comparar.
 
-**Decisiones abiertas:** fecha geográfica de referencia, extensión y fidelidad de costas históricas, resolución terrestre, tratamiento del antimeridiano y polos, licencias de datos.
+**Evaluación:** FPS y frame P50/P95/P99, carga inicial, RAM, velocidad de consulta, años/s durante reproducción, accesibilidad/legibilidad de la interfaz, mantenibilidad, dificultad de migración y calidad visual. **60 FPS a 1080p en hardware actual es meta aspiracional**, no resultado garantizado; publicar el mínimo aceptado al medir.
 
-## Etapa 2 — Observatorio histórico utilizable
+**Salida:** ADR de cliente seleccionado con evidencias; los prototipos descartados quedan como experimentos, no se fusionan por defecto.
 
-**Objetivo:** hacer accesibles y explicables los acontecimientos de las simulaciones.
+## Etapa C — Atlas terrestre 2D de alta fidelidad
 
-**Trabajo:** zoom mundial-regional-local coherente, filtros y capas, búsqueda de entidad, cronologías de pueblos/Estados/ciudades, navegación de periodos y registros causales de acontecimientos. Modo observador puro e intervenciones opcionales claramente separadas.
+**Objetivo:** pasar a Tierra reconocible con cartografía estéticamente cuidada.
 
-**Puerta de salida:** seguir una sociedad durante siglos, identificar al menos un cambio político o demográfico y reconstruir sus causas modeladas desde la interfaz sin inventar hechos.
+**Trabajo:**
+- Seleccionar fuentes de elevación, costas, hidrografía, biomas/uso del suelo según alcance y licencias.
+- Versionar dataset, proyección, topología, traducción coordenadas→celdas y semilla de historia.
+- Preprocesar mapas base, relieve sombreado, niveles de escala y regiones/cachés.
+- Mantener las fronteras políticas como capa dinámica de la historia, no copiar países modernos.
+- Manejar antimeridiano, polos, selección y cambios físicos donde las reglas lo permitan.
 
-## Etapa 3 — Ciclo completo de asentamiento, crisis y legado
+**Salida:** mismo dataset y semilla reproducen geografía/IDs; selección y fronteras encajan; no se asignan falsamente culturas o Estados modernos.
 
-**Objetivo:** validar el núcleo diferenciador antes de ampliar siglos y eras.
+## Etapa D — Atlas exploratorio y observador
 
-**Vertical slice:** en una región terrestre, observar de forma emergente establecimiento → crecimiento → infraestructura → crisis → posible abandono o transformación → nueva ocupación.
+**Objetivo:** que el usuario investigue la historia, no solo vea colores cambiantes.
 
-**Trabajo:** persistencia de construcciones y sitios, degradación/recuperación, historial material, representación inicial con assets placeholder y reglas de reutilización.
+**Trabajo:** capas política/cultural/religiosa/económica/ambiental, nombres adaptativos, ciudades y rutas; paneles profundos, navegación entre entidades, búsqueda, mapas históricos y cronología por provincia/civilización/ciudad; velocidad, pausa y modo observador puro.
 
-**Puerta de salida:** el sitio persiste tras desaparecer su constructor; otra sociedad puede interactuar con el legado; mismo evento y estado aparecen en motor, panel y atlas; repetible mediante semilla y datos iniciales.
+**Salida:** seguir durante siglos una sociedad real de Go, hallar cambios y consultar estados/causas registradas; ninguna afirmación de la interfaz no tiene respaldo.
 
-## Etapa 4 — Profundización sistémica y presentación
+## Etapa E — Vertical slice de transformación y legado
 
-**Objetivo:** enriquecer la emergencia sin introducir funcionalidades aisladas.
+**Objetivo:** demostrar la identidad específica de Asabiya antes de aumentar el catálogo de mecánicas.
 
-**Trabajo posible:** instituciones, cultura/religión, economía y rutas, relaciones sociales, ecología, mantenimiento de infraestructura, selección y navegación refinadas, estilos arquitectónicos por contexto y LOD, assets artísticos definitivos.
+**Ciclo:** comunidad → desarrollo → asentamiento/instituciones → crisis posible → transformación/abandono → persistencia → ocupación/reutilización posterior.
 
-**Puerta de salida:** cada incorporación presenta evidencia causal, efecto visible, coste de rendimiento y regresiones automatizadas; el ciclo completo anterior continúa funcionando.
+**Trabajo pendiente:** IDs estables de sitios/construcciones; condición material, reparación/daño, demolición, ruina, reutilización; registros de causas y eventos; símbolos e ilustraciones 2D por condición/época y capas arqueológicas.
 
-## Etapa 5 — Capacidades modernas, futuristas y regresiones
+**Salida:** varias configuraciones reproducibles producen consecuencias persistentes; una sociedad posterior encuentra datos reales de un sitio anterior; historia visible a escala mundial/provincial/local. Una presentación guionizada no certifica emergencia.
 
-**Objetivo:** permitir desarrollos tecnológicos no lineales y colapsos de sociedades complejas manteniendo continuidad.
+## Etapa F — Profundidad sistémica y siglos de historia
 
-**Trabajo futuro, sujeto a validación:** capacidades industriales y científicas especializadas, redes de energía, fusión, infraestructura espacial, posibles sociedades cyberpunk, guerras de gran escala, pérdida de conocimientos prácticos y complejos en ruinas.
+**Objetivo:** ampliar capacidad causal sin multiplicar deuda técnica.
 
-**Puerta de salida:** coexistencia regional de capacidades distintas; pérdida gradual de mantenimiento y producción; infraestructura heredada no se transforma mágicamente en edificios de otra era; consecuencias persistentes e investigables.
+**Candidatos:** economía y rutas comerciales emergentes; ciudades capitales/abandono/saqueo; instituciones, legitimidad, cohesión y estratos sociales; sucesión; recursos minerales/energía; religiones y culturas; plagas, ecología y cataclismos. La prioridad se define por dependencias causales y observabilidad, **no por cantidad de features**.
 
-Esta etapa **no obliga** a que toda sociedad alcance una era futura ni a que una guerra nuclear provoque un Neolítico global.
+**Salida:** evidencia de interacción entre sistemas, estado, consecuencias y trazabilidad; benchmarks históricos largos reproducibles, sin perder UX del atlas.
 
-## Orden de gestión
+## Etapa G — Futuro tecnológico, regresiones y patrimonio complejo
 
-1. No agregar nuevos sistemas a una rama de optimización que aún necesita aceptación.
-2. Auditar estado real del código y dependencias **antes** de reorganizar archivos.
-3. Especificar cada etapa con tareas pequeñas, dueño de archivos y pruebas.
-4. Mantener un registro separado de decisiones de producto y de resultados técnicos.
-5. Preferir una vertical slice causal comprobable a muchas mecánicas incompletas.
-6. Aprobar el merge de cada PR solo después de revisar sus evidencias.
+**Objetivo:** permitir crecimiento desigual y regresiones creíbles desde edades tempranas hasta industrias complejas, fusión, cyberpunk u operaciones orbitales.
 
-## Alcance deliberadamente excluido del compromiso inmediato
+**Trabajo:** separar conocimiento, manufactura, infraestructura, fuentes de energía, especialistas y mantenimiento; introducir destrucción y obsolescencia; trazabilidad de ruinas avanzadas y herencia cultural.
 
-- Recreación exhaustiva o exacta de toda la historia terrestre.
-- Simulación individual de todos los habitantes del planeta en todo momento.
-- Modelos 3D finales para todas las culturas y eras.
-- Simulación física detallada y autónoma de cada satélite o construcción orbital.
-- Cronogramas fijos de entrega de fusión, cyberpunk o regresiones nucleares.
+**Salida:** una región puede perder capacidades sin borrar automáticamente su patrimonio; no se fuerza transición global simultánea ni una ruta tecnológica única.
 
-**Próxima decisión de producto:** fijar criterios del atlas terrestre e inicio histórico **después** de contar con una base técnica estable y un inventario aprobado del repositorio.
+## Etapa H — Sostenibilidad, financiación y equipo
+
+**No bloquea el producto 2D personal.** Cuando exista una demostración estable, investigable y atractiva, evaluar opciones sostenibles de financiación y colaboradores según necesidades reales. El uso actual es personal/no comercial; otro modelo de distribución requiere decisión específica.
+
+Documentar arquitectura, procesos de build, licencias, arte, diseño, perfilado y onboarding para que cualquier especialista pueda trabajar sin depender permanentemente de un asistente de IA.
+
+**Salida:** capacidad presupuestaria y operativa demostrable, equipo o socios adecuados, IP/assets auditados y plan verificable de desarrollo 3D.
+
+## Etapa I — Cliente 3D futuro, condicionado
+
+**No se inicia automáticamente por terminar la etapa G.** Evaluar un renderizador según requisitos de ciudades, terreno, cámara, atlas y hardware, sin asumir que Godot, Unity o Unreal será la elección final.
+
+Portar **representación** (terreno, modelos, vegetación, LOD, materiales, UI de inspección), no los cálculos históricos. Validar equivalencia de IDs/estados/eventos entre 2D y 3D. Conservar atlas 2D como modo de consulta cuando aporte valor.
+
+**Salida:** comparación verificable, rendimiento medido, arte aprobable y presupuesto sostenible; ningún compromiso de calendario antes de esa evidencia.
+
+## Reglas para ordenar el trabajo
+
+1. Una prioridad técnica o de UI a la vez cuando compitan por los mismos archivos; PR independientes y sin merge automático.
+2. Mantener los documentos técnicos anteriores como **historia de sus ramas**, no reescribir resultados retroactivamente.
+3. Las metas de rendimiento son **criterios a validar en hardware real**, nunca resultados anticipados.
+4. No agregar Tierra, ruinas o eras futuristas como si fueran funcionalidades existentes.
+5. Preferir la vertical slice causal y consultable a una lista extensa de mecánicas incompletas.
+6. Revisar dependencias y decisiones abiertas al terminar cada etapa.
+
+**Próxima acción recomendada:** inventario de contratos Go y una prueba Atlas 2D usando un estado existente, separada de PR #22–#25. No cancelar ni fusionar esas PR por este cambio de dirección.
