@@ -211,9 +211,17 @@ de normales/rugosidad.
 * **Evidencia de equivalencia:** `tests/render_optimization_contracts.gd` (174 237 comprobaciones,
   0 fallos: la lógica de red de `vnoise_cross` reproduce `vnoise` en 5 puntos, incluidos bordes de
   celda, costura longitudinal y cruces exactos; `posmod` en ±60 000 y bordes). En imagen
-  [lavapipe]: **0 píxeles distintos de 2 073 600** frente a la copia literal del shader de #22, en la
-  vista de medida y en las vistas de costa, relieve extremo, polos y zoom mundial; la vista de la
-  costura se descarta si sus dos capturas de control no coinciden (ver `equivalence.json`).
+  [lavapipe], comparando con la copia literal del shader de #22 (`tests/baseline/`), mar oculto y
+  marcadores animados ocultos, y descartando una vista si sus dos capturas de control difieren:
+
+  | Mundo / resolución | Vistas | Píxeles distintos |
+  |---|---|---|
+  | 10 000 años, 1920×1080 | medida, costa, relieve extremo, polo norte, polo sur, zoom mundial, costura | **0** en las 7 (2 073 600 por vista) |
+  | 300 años, 1280×720 | costa, costura | 0 y **1** (borde de un árbol, Δ 13/255) |
+
+  El píxel aislado es compatible con una diferencia de último bit (otra contracción de operaciones
+  del compilador en el vértice o el fragmento) que cambia un borde de profundidad; por eso se
+  describe como equivalente y no como idéntico bit a bit en cualquier GPU.
 * **Evidencia de rendimiento [lavapipe]:** −10 % a −15 % de GPU frente al shader de #22 en el mismo
   proceso (dos sesiones, 3 pares A/B intercalados en cada una). **Pendiente [Iris Xe]**; allí las divisiones enteras pesan
   previsiblemente más que en una CPU, pero no se afirma.
@@ -230,9 +238,11 @@ de normales/rugosidad.
   por completo (todas las muestras de la tesela y de sus vecinas > 0 m). Mismo plano y altura.
   Para el mundo Asabiya quedan 4413 de 5000 teselas por copia.
 * **Archivos:** `client/godot/scripts/map/terrain_renderer.gd`.
-* **Evidencia visual [lavapipe]:** vista de medida, polo norte y relieve: 0 píxeles distintos.
-  Costa, polo sur y zoom mundial: diferencias de 1 nivel de 255 por redondeo de la interpolación
-  (otros triángulos) y 3–13 píxeles de la línea de costa que cambian de lado. Ver `equivalence.json`.
+* **Evidencia visual [lavapipe, 10 000 años, 1080p, olas congeladas en ambas capturas]:** medida,
+  polo norte y relieve: 0 píxeles distintos. Costa: 10 680 píxeles con Δ 1/255 y 13 con más de 8
+  (la línea de costa cambia de lado). Polo sur: 8361 con Δ 1. Zoom mundial: 212 con Δ 1 y 3 de
+  costa. Costura: 49 con Δ 1. Causa: otros triángulos interpolan la misma posición con otro
+  redondeo. Ver `equivalence.json`.
 * **Evidencia de rendimiento [lavapipe]:** ≈ −10 % en esta vista (3 pares A/B). **Pendiente [Iris Xe]**:
   con early-z de hardware el ahorro puede ser menor.
 * **Riesgo:** ≈ 0,4 s más al construir el mundo (bucle sobre 1,28 M muestras; se registra en la
@@ -309,7 +319,7 @@ servidor Go Windows y el runner. No hay que instalar nada.
 | Draw calls / primitivas (visibles, sombras) | 24 / 746 557; 28 / 1 001 232 | pendiente (≈ +17 k primitivas visibles por las teselas de mar [lavapipe]) |
 | RAM del proceso gráfico | no medida (problema A) | pendiente |
 | Estabilidad (3 repeticiones, segundos < 30 frames) | 15 frames mín. | pendiente |
-| Calidad visual | referencia | terreno idéntico en píxeles [lavapipe]; mar equivalente; Iris Xe pendiente |
+| Calidad visual | referencia | terreno: 0 píxeles distintos en 7 vistas a 1080p y 1 píxel en 720p [lavapipe]; mar equivalente con diferencias de redondeo; Iris Xe pendiente |
 | Ejecutable exportado | no medido | pendiente |
 
 Puerta estricta: en las tres repeticiones pausadas y activas, P99 ≤ 33,33 ms y ningún segundo

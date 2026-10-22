@@ -279,6 +279,7 @@ func _equivalence() -> bool:
 		metadata["equivalence"] = {"available":false, "reason":"baseline shader copy not present in this tree"}
 		return true
 	var saved := {"target":camera.target, "distance":camera.distance, "yaw":camera._goal_yaw, "tilt":camera._goal_tilt}
+	var before: Image = await _static_shot()
 	var still := Shader.new()
 	still.code = _baseline_water_shader.code.replace("TIME", "0.0")
 	var views := _equivalence_views()
@@ -327,6 +328,11 @@ func _equivalence() -> bool:
 	camera.moved.emit()
 	await _settle(_settle_seconds())
 	await _visual_idle()
+	# Timed experiments must start from exactly the measurement view again.
+	var restored := _image_difference(before, await _static_shot())
+	if int(restored.get("differingPixels", -1)) != 0:
+		_fail("The measurement view was not restored after the equivalence check.")
+		return false
 	# A view whose two candidate shots differ is unstable and proves nothing.
 	var summary := {"available":true, "stableViews":0, "unstableViews":[], "terrainShaderIdentical":true,
 		"seaTilesDifferingPixels":0, "seaTilesPixelsOver8":0}
@@ -357,7 +363,7 @@ func _equivalence_views() -> Dictionary:
 	var w: float = app.map_view.mm.map_w
 	var h: float = app.map_view.mm.map_h
 	var views := {"measurement":[world.cell_center(populated), float(args.get("distance", 18.0)), 0.0],
-		"seam":[Vector2(0.0, h * 0.5), 40.0, 90.0], "north-pole":[Vector2(w * 0.5, 12.0), 60.0, 0.0],
+		"seam":[Vector2(0.0, h * 0.5), 40.0, 0.0], "north-pole":[Vector2(w * 0.5, 12.0), 60.0, 0.0],
 		"south-pole":[Vector2(w * 0.25, h - 12.0), 60.0, 0.0], "world":[Vector2(w * 0.5, h * 0.5), 1000.0, 0.0]}
 	if coast >= 0: views["coast"] = [world.cell_center(coast), 12.0, 0.0]
 	if high >= 0: views["relief"] = [world.cell_center(high), 8.0, 0.0]
@@ -366,6 +372,18 @@ func _equivalence_views() -> Dictionary:
 		for name: String in views.keys():
 			if not keep.has(name): views.erase(name)
 	return views
+
+
+## The view without its time-animated parts (sea waves, event markers).
+func _static_shot() -> Image:
+	var terrain = app.map_view.terrain
+	app.history.visible = false
+	for plane: MeshInstance3D in terrain.water_planes: plane.visible = false
+	await _settle(1.0)
+	var shot := root.get_texture().get_image()
+	app.history.visible = true
+	for plane: MeshInstance3D in terrain.water_planes: plane.visible = true
+	return shot
 
 
 func _visual_idle() -> void:
