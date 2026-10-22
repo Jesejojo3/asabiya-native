@@ -40,6 +40,7 @@ var _closing := false
 var _failure := false
 var _smoke_start := -2147483648
 var _smoke_pausing := false
+var _status_due_ms := 0
 
 func _ready() -> void:
 	get_tree().auto_accept_quit=false
@@ -155,6 +156,12 @@ func _initialize() -> void:
 	world=null
 	map.world=null
 	map.frame=null
+	map.selected=-1
+	map.shader.set_shader_parameter("selected",-2.0)
+	inspector.text="Selecciona una provincia del nuevo mundo."
+	legend.text=""
+	chronicle.text=""
+	review.clear()
 	map.queue_redraw()
 	selected=-1
 	query_key=""
@@ -252,6 +259,9 @@ func _process(_delta: float) -> void:
 		if elapsed>_next_selection:
 			_next_selection=elapsed+1.0
 			map.select_at(map.size*0.5)
+	if current!=null and not preparing and not _failure and Time.get_ticks_msec()>=_status_due_ms:
+		_status_due_ms=Time.get_ticks_msec()+1000
+		_update_status()
 	init_button.disabled=source.busy or playing or preparing
 	step_button.disabled=preparing or not source.can_advance() or playing or worker!=null or not queue.is_empty()
 	play_button.disabled=not source.connected or preparing
@@ -293,10 +303,13 @@ func _selected(id: int, started_us := 0) -> void:
 	metrics.record("selection_local",{"ms":(Time.get_ticks_usec()-started)/1000.0,"id":id,"year":current.year if current!=null else 0})
 	metrics.selection_us=started
 
-func _update_panel() -> void:
-	if current==null or world==null: return
+func _update_status() -> void:
 	var fingerprint := "SHA diferido explícito; pausa para verificar" if current.state_digest=="" else current.state_digest
 	status.text="Año %d · %s · %.0f habitantes · %.1f FPS · %s\n%s" % [current.year,layer_names[layer_ids.find(shown_layer)],current.world_population,Engine.get_frames_per_second(),"Preparación Go · muestra cada 100 años" if preparing else ("Reproduciendo" if playing else "Pausa / revisión"),fingerprint]
+
+func _update_panel() -> void:
+	if current==null or world==null: return
+	_update_status()
 	chronicle.text="Crónica Go · últimos 5 de hasta 1000 eventos publicados\n"
 	for i in range(maxi(0,current.events.size()-5),current.events.size()):
 		var event: Dictionary=current.events[i]

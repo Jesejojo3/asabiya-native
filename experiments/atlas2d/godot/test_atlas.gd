@@ -72,5 +72,10 @@ func _run() -> void:
 	if await until(func(): return app.current.year==first.year,"historical observation"):
 		require(app.current.population==initial_pop,"Review changed old population")
 		require(app.source.years()[-1]==first.year+3,"Review rewound causal Go state")
+	app._initialize()
+	if await until(func(): return app.current!=null and app.worker==null and app.queue.is_empty(),"new session"):
+		require(app.selected==-1 and app.map.selected==-1,"New session retained selection from a different world")
+		require(not app.inspector.text.contains("Provincia Go #"),"New session retained old provincial panel")
+		require(app.current.year==first.year,"New session retained previous calendar")
 	print("ATLAS TESTS: %d failures · exact Go SHA %s" % [failures,expected.get("stateSHA256")])
 	app._close(1 if failures>0 else 0)
