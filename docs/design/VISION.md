@@ -1,124 +1,111 @@
-# ASABIYA — Visión fundacional
+# ASABIYA — Visión fundacional y dirección vigente
 
-**Versión conceptual:** 0.1 · **Fecha:** 21 de octubre de 2026  
-**Naturaleza:** documento rector de producto, sujeto a revisión; no especificación de funciones ya implementadas.
+**Versión conceptual:** 0.2 · **Decisión:** 21 de octubre de 2026  
+**Estado:** dirección de producto acordada; no equivale a capacidades ya implementadas.
 
 > **Un mundo. Infinitas historias.**
 
-## 1. Premisa
+## 1. Qué es Asabiya
 
-Asabiya es un **simulador histórico emergente y principalmente contemplativo**. El usuario observa, investiga y, si lo desea, interviene de forma ocasional en la evolución autónoma de sociedades humanas sobre la Tierra.
+Asabiya es un **simulador histórico emergente principalmente observacional**. El usuario contempla, investiga y, si lo desea, interviene ocasionalmente en la evolución autónoma de sociedades humanas sobre la Tierra. No existe un imperio, una dinastía o una cronología obligatorios; tampoco es necesario «ganar».
 
-No intenta reproducir obligatoriamente la historia conocida ni convertir toda partida en una competición. Busca responder: **¿qué otras historias podrían surgir de una misma geografía y de procesos sociales, económicos, ecológicos y políticos interrelacionados?**
+El principio rector es la **continuidad histórica**. Las sociedades se organizan, prosperan, entran en crisis, se recuperan, se transforman o desaparecen; sus poblaciones, instituciones, culturas, conocimientos, paisajes y construcciones pueden afectar a nuevas sociedades siglos o milenios después.
 
-Su objeto central es la **continuidad histórica**. Las sociedades crecen, se transforman, se fragmentan y desaparecen, pero sus decisiones, instituciones, construcciones y alteraciones del territorio pueden afectar a sociedades posteriores.
+No buscamos simular todas las variables del mundo con el mismo detalle. Priorizamos las **relaciones causales que producen transformación histórica** y la capacidad del observador de comprenderlas.
 
-## 2. La experiencia del observador
+## 2. Decisión estratégica: 2D primero, 3D después
 
-La simulación debe resultar interesante **sin intervención del usuario**. La actividad principal es:
+La **experiencia principal que desarrollaremos ahora es Asabiya Atlas 2D**, un atlas terrestre interactivo de alta calidad cartográfica e histórica. El paso a 2D **no reduce la ambición sistémica**: permite invertir esfuerzo en simulación, historia material, análisis y legibilidad en lugar de geometría, luces, sombras y pipeline 3D.
 
-1. Poner en marcha una historia alternativa.
-2. Observar cambios en el atlas y seguir pueblos, culturas, Estados, ciudades y territorios.
-3. Detener o controlar el paso del tiempo, consultar cronologías y preguntar qué produjo determinado cambio.
-4. Acercarse de la escala mundial a provincias y asentamientos para contemplar sus consecuencias materiales.
-5. Continuar observando o introducir, opcionalmente, una perturbación cuyas consecuencias resuelve la misma simulación.
+El **3D no se cancela**. Será una etapa futura condicionada a financiación disponible, hardware apropiado, herramientas de IA adecuadas, equipo técnico/artístico y pruebas de que la base histórica es sólida. No se promete un motor, presupuesto ni fecha de transición.
 
-La intervención no equivale a gobernar continuamente un Estado o una dinastía. Se prevén un **modo de observación puro** y mecanismos acotados de intervención; sus reglas concretas siguen abiertas. No hay una condición de victoria obligatoria.
+**La versión 2D debe ser un producto útil y completo en términos de simulación e investigación**, no un prototipo desechable. Eventualmente 2D y 3D podrán coexistir como dos formas de observar el mismo mundo.
 
-La información debe distinguir **hechos registrados por la simulación**, **causas modeladas** e **interpretaciones de la interfaz**. Un resumen narrativo nunca debe inventar acontecimientos.
+El cliente Godot 3D existente se **conserva como trabajo técnico y referencia experimental**. No se elimina ni se declara inválido por el cambio de estrategia.
 
-## 3. La Tierra como escenario principal
+## 3. La Tierra es reconocible; su historia no está predeterminada
 
-La base del mundo será un **atlas terrestre 3D plano**, navegable de forma fluida e inspirado en la legibilidad y las escalas cartográficas de la gran estrategia de Paradox, especialmente CKIII. No se pretende reproducir su interfaz ni sus recursos artísticos.
+La meta geográfica es una **Tierra real**, representada inicialmente por un **atlas 2D plano** con costas, relieve, ríos, biomas y coordenadas sustentados en datos versionados y licencias comprobadas. No se reutilizan las fronteras políticas actuales como Estados iniciales obligatorios.
 
-La geografía física procede, en la medida que permita el alcance del proyecto, de datos terrestres identificables y versionados: relieve, costas, hidrografía y condiciones ambientales. Los límites de resolución, fidelidad y licencias deberán documentarse antes de integrar datos.
+Pueblos, Estados, ciudades, religión, comercio, migraciones, culturas y tecnologías emergen de reglas y condiciones. Una misma geografía puede producir historias diferentes; semillas y versiones de datos permiten reproducirlas.
 
-**La geografía es reconocible; la historia es alternativa.** No se predeterminan las fronteras actuales, la existencia de Roma ni la fundación de las ciudades de nuestra historia. Pueblos, territorios políticos, rutas, asentamientos y acontecimientos emergen de la simulación.
+La geografía y su ecología también pueden cambiar causalmente (clima, nivel del mar, cataclismos), pero los mecanismos, fuentes y escalas deben especificarse. **La Tierra real aún es un objetivo de integración**, no una geografía entregada en producción. El generador procedural existente sigue siendo útil para test y como legado.
 
-La generación procedural continúa donde es útil para la historia, la distribución de condiciones y el contenido derivado; deja de ser la fuente principal de continentes ficticios. Las semillas, condiciones iniciales y versiones de datos permiten reproducir partidas.
+## 4. El atlas 2D debe tener máximo detalle útil
 
-Un atlas de referencia estable no significa geografía absolutamente inmutable: clima, inundaciones, costas y efectos de cataclismos pueden modificarse cuando existan reglas causales verificables. La fecha inicial y el tratamiento de las costas antiguas aún requieren una decisión.
+**2D no significa baja fidelidad.** Aspiramos a un atlas histórico vivo, bello y legible, con dirección artística propia: relieve sombreado, hidrografía, paisajes, capas temáticas, toponimia, rutas, fronteras y símbolos contextuales.
 
-## 4. Un mismo mundo a distintas escalas
+El contenido emerge progresivamente por **escala de zoom**:
 
-- **Mundo:** distribución y evolución de pueblos, culturas, religiones, Estados, migraciones, guerras y tendencias ambientales.
-- **Región/provincia:** titularidad política, población, economía, infraestructura, rutas, sucesos y evolución histórica del territorio.
-- **Localidad:** asentamientos, construcciones, paisaje transformado, monumentos, ruinas y reutilización de espacios.
+- **Mundial:** civilizaciones, culturas, grandes Estados, religiones, migraciones, clima, cataclismos y tendencias.
+- **Regional:** provincias, cambios de fronteras, ciudades, caminos, rutas comerciales, guerras, recursos y actividades económicas.
+- **Provincial/local:** asentamientos, construcciones, minas, puertos, monumentos, ruinas, ocupaciones sucesivas y huellas del paisaje.
 
-Estas vistas presentan **el mismo estado histórico**, no mundos desconectados. El usuario puede investigar qué hay en una provincia, quién la habitó, qué sucedió allí y qué persiste de épocas anteriores.
+El detalle no significa dibujar todo simultáneamente. Culling, cachés por región, capas activables, etiquetas adaptativas, agrupación de iconos y consultas bajo demanda permiten un mapa limpio de lejos y muy rico al acercarse.
 
-No se exige simular individualmente a cada habitante o edificio en todo momento. El detalle visual puede depender del zoom sin alterar la causalidad subyacente.
+Cada ficha y cronología puede ofrecer una **profundidad de información superior a la de la escena dibujada**: demografía, instituciones, cultura, lengua, economía, tecnología, genealogías, edificios, cambios de dueño, causas y consecuencias.
 
-## 5. Sociedades y causalidad emergente
+La calidad visual se juzgará por **claridad, belleza y fidelidad al estado histórico**, no por cantidad de sprites o efectos. Los assets provisionales son válidos durante desarrollo y deben identificarse como tales.
 
-Las transformaciones históricas se explican mediante relaciones entre:
+## 5. Una misma historia en todas las escalas
 
-- **Población y sociedad:** reproducción, migración, culturas, cohesión social, estratificación y transmisión.
-- **Economía y entorno:** recursos, producción, excedentes, comercio, clima y ecología.
-- **Poder e instituciones:** Estados, élites, legitimidad, conflictos, administración y organización.
-- **Conocimiento y capacidades:** educación, especialización, tecnologías, producción, energía y mantenimiento.
-- **Territorio e infraestructura:** asentamientos, ciudades, caminos, agricultura, instalaciones y construcciones heredadas.
+Las diferentes escalas, mapas temáticos, inspectores, búsquedas, cronologías y explicaciones deben derivar del **mismo estado y registro de eventos de Go**. El cliente no asigna acontecimientos ficticios para llenar huecos.
 
-Asabiya debe favorecer procesos y condiciones antes que acontecimientos obligatorios programados para una fecha. Puede usar eventos para representar consecuencias, pero no para sustituir la causalidad. La plausibilidad y la legibilidad importan tanto como la complejidad.
+La experiencia principal es observar una civilización, localizar sus provincias, seguir su auge, descubrir su crisis y consultar el legado presente después de su desaparición.
 
-La historia real inspira parámetros y preguntas; la simulación **no afirma predecir** cómo habría evolucionado realmente la humanidad.
+Si un acontecimiento no está soportado por datos causales, la interfaz debe mostrar incertidumbre, dato no disponible o un resumen explícitamente interpretativo, nunca presentar una inferencia como hecho.
 
-## 6. Eras no lineales y regresiones
+## 6. El mundo se mueve aunque no intervengamos
 
-No habrá una escalera tecnológica mundial por la que todas las sociedades asciendan a la vez. Una región podría desarrollar capacidad industrial mientras otra conserva formas de producción mucho más locales. Asimismo, el conocimiento, la capacidad de fabricar, la energía disponible, las instituciones y el mantenimiento evolucionan de forma parcialmente independiente.
+El simulador debe sostener un **modo Observador puro**. El usuario controla pausa, velocidad, filtros y consultas; las intervenciones opcionales entran en Go como comandos trazables, no como resultados fabricados por la UI.
 
-El colapso político **no borra instantáneamente** tecnología y edificaciones. Una guerra, pandemia, crisis comercial o cataclismo puede destruir infraestructura, reducir especialistas, fragmentar redes e interrumpir su mantenimiento. Tras generaciones, algunas regiones podrían experimentar regresiones profundas; otras conservarán capacidades o se recuperarán.
+Asabiya no será principalmente un juego de conquista, ni una recreación fija de la historia real, ni un constructor manual de imperios.
 
-La posibilidad de llegar a eras de **fusión, sociedades cyberpunk u operaciones orbitales**, y de que posteriormente aparezcan sociedades de baja tecnología entre sus restos, es un **horizonte de diseño**, no una función implementada ni una consecuencia automática de una guerra nuclear.
+## 7. Un modelo causal común
 
-No existe una última era que deba terminar la partida.
+La historia emerge de interacciones entre:
 
-## 7. Palimpsesto histórico: el mundo recuerda
+- **Sociedad:** población, migraciones, cohesión, culturas, lenguas, religión, estratificación y transmisión.
+- **Economía y ecología:** recursos, producción, excedentes, rutas, comercio, clima, alimentos y capacidad de carga.
+- **Poder:** Estados, élites, legitimidad, sucesiones, administración, diplomacia y conflictos.
+- **Conocimiento y tecnología:** instituciones, aprendizaje, especialistas, energía, manufactura y capacidad operativa.
+- **Territorio:** ciudades, infraestructuras, suelo, caminos, monumentos y transformaciones persistentes.
 
-**Palimpsesto Histórico** es el nombre provisional del principio de **memoria material**: las sucesivas sociedades transforman un territorio y encuentran restos de quienes lo habitaron antes.
+La cohesión social da significado al nombre *Asabiya*, pero no es una ley rígida que condene a todas las civilizaciones a un ciclo invariable.
 
-Una construcción tiene origen, lugar, edad, uso, condición y trayectoria. Puede permanecer, deteriorarse, ser abandonada, destruirse, quedar enterrada, ser saqueada, repararse o recibir un uso nuevo. Su efecto futuro depende de su estado y de las capacidades de la sociedad actual.
+## 8. Eras regionales, no una escalera tecnológica universal
 
-Una aldea podría asentarse junto a una planta de fusión abandonada sin poder operarla. Un puerto espacial podría convertirse en cantera, santuario o vestigio arqueológico. Estos resultados deberán nacer de reglas materiales y sociales; **las ruinas no son accesorios distribuidos al azar**.
+Sociedades contemporáneas pueden tener capacidades radicalmente distintas. El avance y la regresión tecnológica se modelan mediante dimensiones separadas: conocimiento disponible, especialistas, industria, infraestructura, energía y organización social.
 
-La memoria incluye también tradiciones, nombres, instituciones, conocimientos y percepciones culturales; no todo legado tiene que ser un edificio.
+Una guerra o cataclismo puede destruir instalaciones, redes y especialistas sin borrar instantáneamente bibliotecas o conocimientos. Recuperaciones y regresiones pueden tardar generaciones, diferir entre regiones y no coincidir con etiquetas únicas de «era».
 
-## 8. Lenguaje visual
+Sociedades industriales, **fusión, cyberpunk y orbitales**, así como colapsos y regresiones posteriores, son horizontes del diseño a largo plazo. **No son capacidades actualmente verificadas ni resultados garantizados** de una sola catástrofe.
 
-La presentación perseguirá un **atlas histórico vivo**: cartografía clara a escala mundial, terreno tridimensional atractivo y construcciones reconocibles al acercarse. Culturas, materiales y capacidades técnicas pueden cambiar la arquitectura sin romper la coherencia del lenguaje visual.
+## 9. Palimpsesto histórico: legados y ruinas
 
-Los recursos provisionales son aceptables durante el desarrollo. Los assets finales deberán ser eficientes, admitir niveles de detalle y corresponder a épocas, culturas y estados de conservación.
+La memoria material es un sistema causal futuro, no un decorado aleatorio. Cada sitio o construcción podrá conservar ID, localización, origen, cultura constructora, material, función, fecha, condición, daño, mantenimiento, abandono, reparación, reutilización y destrucción.
 
-La historia visible debe ser fiel a la historia computada. Ni la UI ni Godot deben introducir consecuencias históricas independientes de Go.
+Una civilización tardía puede encontrarse con restos muy avanzados que no sabe operar. Puede transformarlos en cantera, santuario, asentamiento o sitio de estudio. La historia cultural (nombres, relatos, tabúes, conocimientos y memoria institucional) también puede sobrevivir.
 
-## 9. Límites y promesa
+En 2D estos resultados se mostrarán mediante **símbolos situados, ilustraciones, capas arqueológicas, fichas y líneas temporales**. En un 3D futuro podrán visualizarse como estructuras físicas sin modificar su historia subyacente.
 
-Asabiya **no** es principalmente un juego de conquista, un constructor manual de imperios, una recreación fija de nuestra cronología ni una simulación microscópica de absolutamente todos los fenómenos.
+## 10. Primera experiencia completa
 
-Su promesa es permitir que una persona observe el nacimiento de una sociedad, siga su auge y su crisis, vea sus transformaciones y descubra cómo otra sociedad hereda —o pierde— su legado.
+Antes de expandir a todas las eras, construir una **vertical slice emergente y comprobable** en una región:
 
-**La prueba de esta visión no será la cantidad de funciones, sino que podamos investigar una historia causal completa sobre un territorio reconocible.**
+1. Una comunidad establece población y asentamiento.
+2. Desarrolla actividades, vínculos e instituciones.
+3. La combinación de presiones económicas, políticas o ambientales puede provocar crisis.
+4. Se transforma, pierde capacidad o abandona infraestructuras.
+5. Su legado permanece e influye en ocupaciones posteriores.
+6. El observador puede reconstruir causas y consecuencias desde el atlas y el historial.
 
-## 10. Primera demostración de la visión
+Una demostración guionizada sirve para probar UI, pero **no prueba emergencia**. Deben existir casos reproducibles de simulación real.
 
-Una vertical slice suficiente para validar la identidad mostrará, en una región real de la Tierra y sin secuencia obligatoria:
+## 11. Límites de promesa y decisiones abiertas
 
-1. Una comunidad establece población y un asentamiento.
-2. Sus redes productivas e instituciones le permiten crecer y construir.
-3. Presiones del entorno y de otras sociedades desencadenan una crisis posible.
-4. El asentamiento se transforma, decae o queda abandonado.
-5. Sus restos siguen presentes e influyen en la siguiente ocupación.
-6. El usuario puede seguir y explicar esa cadena desde la vista regional y local.
+Se mantienen abiertos: fecha inicial, poblamiento, resolución y proyección terrestre, granularidad provincial, archivos y datos licenciados, alcance de intervenciones, detalle de cronologías, persistencia/guardados, modelos concretos de colapsos y extensión de eras.
 
-Un guion de demostración puede ayudar a probar la interfaz, pero no constituye evidencia de emergencia histórica.
+Tampoco se ha escogido definitivamente el cliente 2D: comparar **Godot 2D, Go/Ebitengine y una interfaz cartográfica web** con el mismo estado real de Go antes de decidir.
 
-## 11. Decisiones todavía abiertas
-
-- Fecha inicial, poblamiento de referencia y posibilidad de escenarios alternativos.
-- Fuentes, resolución, proyección, límites y licencias del atlas terrestre.
-- Granularidad de celdas territoriales y tratamiento histórico de costas y cataclismos.
-- Alcance, restricciones y trazabilidad de las intervenciones del observador.
-- Profundidad de archivos, cronologías y consultas causales.
-- Niveles de abstracción para eras avanzadas, infraestructuras complejas y poblaciones.
-
-**Estado:** visión aprobada como dirección conceptual; su ejecución es incremental y requiere especificaciones, pruebas y presupuestos de rendimiento separados.
+**Restricción transversal:** Go conserva la autoridad histórica. La cartografía 2D, la variante 3D y los visores externos son representaciones reemplazables. El éxito es **una historia emergente profunda, visible, trazable y reproducible**, no un determinado motor gráfico.
