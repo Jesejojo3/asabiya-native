@@ -38,6 +38,8 @@ var review_year := -2147483648
 var _next_selection := 0.0
 var _closing := false
 var _failure := false
+var _smoke_start := -2147483648
+var _smoke_pausing := false
 
 func _ready() -> void:
 	get_tree().auto_accept_quit=false
@@ -50,6 +52,9 @@ func _ready() -> void:
 		DisplayServer.window_set_size(Vector2i(int(options.width),int(options.get("height","1080"))))
 	if benchmark: DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	_build_ui()
+	if benchmark and DisplayServer.get_name()=="headless":
+		_fail("La captura de FPS necesita una ventana real. Usa --smoke-out para una comprobación headless.")
+		return
 	RenderingServer.frame_post_draw.connect(_post_draw)
 	if benchmark:
 		metrics.open(str(options["bench-out"]),float(options.get("seconds","30")),{
@@ -217,6 +222,9 @@ func _process(_delta: float) -> void:
 		var next: HistoryFrame=queue.pop_front()
 		worker=Thread.new()
 		worker.start(AtlasProjection.layer.bind(world,next,desired_layer))
+	if options.has("smoke-out") and current!=null and source.can_advance() and worker==null and queue.is_empty():
+		_export_smoke()
+		if _closing: return
 	if benchmark and not bench_ready and current!=null and not preparing and not source.busy and queue.is_empty() and worker==null:
 		bench_ready=true
 		playing=options.has("active")
@@ -347,12 +355,27 @@ func _finish_benchmark() -> void:
 		get_viewport().get_texture().get_image().save_png(str(options.screenshot))
 	_close(0 if not source.busy and not _failure else 1)
 
+func _export_smoke() -> void:
+	if _smoke_start==-2147483648: _smoke_start=current.year
+	if current.year<_smoke_start+3:
+		source.advance(1)
+	elif not _smoke_pausing:
+		_smoke_pausing=true
+		source.pause()
+	else:
+		var expected: Dictionary=JSON.parse_string(FileAccess.get_file_as_string(str(options.expected)))
+		var success := current.year==int(expected.get("year")) and current.state_digest==expected.get("stateSHA256") and current.state_digest!=""
+		var file := FileAccess.open(str(options["smoke-out"]),FileAccess.WRITE)
+		file.store_line(JSON.stringify({"ok":success,"year":current.year,"state_sha256":current.state_digest,"pid":OS.get_process_id(),"go_pid":source._pid,"mode":"functional; no GPU/FPS measurement"}))
+		file.close()
+		_close(0 if success else 1)
+
 func _fail(message: String) -> void:
 	_failure=true
 	playing=false
 	status.text="ERROR · "+message
 	metrics.record("error",{"message":message})
-	if benchmark: _close(1)
+	if benchmark or options.has("smoke-out"): _close(1)
 
 func _notification(what: int) -> void:
 	if what==NOTIFICATION_WM_CLOSE_REQUEST: _close(0)

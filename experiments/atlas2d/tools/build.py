@@ -23,17 +23,17 @@ def build(godot, go, template, destination):
     project = stage(ROOT / "build/atlas2d/project")
     destination = Path(destination).resolve()
     destination.mkdir(parents=True, exist_ok=True)
-    preset = (ROOT / "client/godot/export_presets.cfg").read_text()
+    preset = (ROOT / "client/godot/export_presets.cfg").read_text(encoding="utf-8")
     preset = preset.replace('custom_template/release=""', 'custom_template/release=' + json.dumps(str(Path(template).resolve()).replace('\\', '/')))
     preset = preset.replace('application/product_name="Asabiya Native"', 'application/product_name="Asabiya Atlas 2D"')
     preset = preset.replace('Asabiya Native - cliente 3D', 'Atlas 2D experimental')
-    preset = preset.replace('exclude_filter="tests/*, tools/*"', 'exclude_filter="test_*.gd,probe.gd"')
+    preset = preset.replace('exclude_filter="tests/*, tools/*"', 'exclude_filter="test_*.gd,probe.gd,licenses.gd"')
     (project / "export_presets.cfg").write_text(preset)
     environment = os.environ.copy()
     environment.update(GOOS="windows", GOARCH="amd64", GOAMD64="v1", CGO_ENABLED="0", GOTOOLCHAIN="local")
     run([go, "build", "-trimpath", "-ldflags=-s -w", "-o", destination / "asabiya-server.exe", "./cmd/asabiya-server"], env=environment)
     # Import must be checked in addition to exit status: Godot can report script errors with exit 0.
-    imported = subprocess.run([godot, "--headless", "--path", str(project), "--import"], cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    imported = subprocess.run([godot, "--headless", "--path", str(project), "--import"], cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf-8")
     (ROOT / "build/atlas2d/build-import.log").write_text(imported.stdout)
     if imported.returncode or "SCRIPT ERROR" in imported.stdout or "Parse Error" in imported.stdout:
         raise RuntimeError("Godot import failed; see build-import.log")
@@ -44,6 +44,7 @@ def build(godot, go, template, destination):
     for name in ("benchmark.ps1", "summarize.py"):
         shutil.copyfile(ROOT / "experiments/atlas2d/tools" / name, destination / name)
     (destination / "Medir rendimiento.cmd").write_text('@echo off\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0benchmark.ps1"\r\npause\r\n')
+    (destination / "Medir completo.cmd").write_text('@echo off\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0benchmark.ps1" -Full\r\npause\r\n')
     if (ROOT / "LICENSE").exists():
         shutil.copyfile(ROOT / "LICENSE", destination / "LICENSE-Asabiya.txt")
     else:
@@ -51,10 +52,10 @@ def build(godot, go, template, destination):
     goroot = subprocess.check_output([go, "env", "GOROOT"], text=True).strip()
     shutil.copyfile(Path(goroot) / "LICENSE", destination / "LICENSE-Go.txt")
     # Engine license database includes third-party notices, independent of exporter installation.
-    license_script = project / "licenses.gd"
+    license_script = ROOT / "build/atlas2d/licenses.gd"
     license_script.write_text('extends SceneTree\nfunc _initialize():\n\tprint(JSON.stringify({"godot":Engine.get_license_text(),"thirdParty":Engine.get_license_info(),"copyright":Engine.get_copyright_info()}))\n\tquit()\n')
-    notices = subprocess.check_output([godot, "--headless", "--path", str(project), "--script", "res://licenses.gd"], text=True)
-    (destination / "Godot-licenses.json").write_text(notices[notices.index('{'):])
+    notices = subprocess.check_output([godot, "--headless", "--path", str(project), "--script", str(license_script)], text=True, encoding="utf-8")
+    (destination / "Godot-licenses.json").write_text(notices[notices.index('{'):], encoding="utf-8")
     manifest = json.loads((project / "build-manifest.json").read_text())
     manifest.update(godot=gdversion, go=version.strip(), target="windows/amd64/v1", mode="official release template", files={})
     for file in sorted(destination.rglob("*")):

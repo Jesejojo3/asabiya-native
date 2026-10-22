@@ -104,12 +104,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Observer tests failed' }
           if (!(Select-String -Path build/atlas2d/windows-tests.log -SimpleMatch 'ATLAS TESTS: 0 failures')) { throw 'Missing test success marker' }
           $exe = (Resolve-Path build/atlas2d/windows/AsabiyaAtlas2D.exe).Path
-          $raw = "$pwd/build/atlas2d/export-smoke.jsonl"
-          $p = Start-Process $exe -ArgumentList @('--headless','--','--small',"--bench-out=$raw",'--seconds=3') -PassThru
+          $raw = "$pwd/build/atlas2d/export-smoke.json"
+          $p = Start-Process $exe -ArgumentList @('--headless','--','--small',"--smoke-out=$raw","--expected=$pwd/build/atlas2d/test-fixture/state.json") -PassThru
+          $null = $p.Handle
           if (!$p.WaitForExit(60000)) { Stop-Process -Id $p.Id; throw 'Export smoke timed out' }
           if ($p.ExitCode -ne 0) { throw 'Export smoke failed' }
-          python experiments/atlas2d/tools/summarize.py $raw --out build/atlas2d/export-summary.json
-          if ($LASTEXITCODE -ne 0) { throw 'Export capture invalid' }
+          Get-Content $raw
+          if (!(Get-Content -Raw $raw | ConvertFrom-Json).ok) { throw 'Export state invalid' }
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: asabiya-atlas2d-windows-x64

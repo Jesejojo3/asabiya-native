@@ -2,7 +2,8 @@ param(
     [string]$Directory = $PSScriptRoot,
     [int]$Seconds = 30,
     [int]$PreparationYears = 10000,
-    [int]$Repeats = 3
+    [int]$Repeats = 1,
+    [switch]$Full
 )
 $ErrorActionPreference = 'Stop'
 $Directory = (Resolve-Path $Directory).Path
@@ -19,9 +20,11 @@ New-Item -ItemType Directory -Path $out | Out-Null
     targetHardwareVerified = $false
 } | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $out 'equipo.json') -Encoding UTF8
 $files = @()
+$zooms = if ($Full) { @(1,4,24) } else { @(24) }
+if ($Full -and !$PSBoundParameters.ContainsKey("Repeats")) { $Repeats = 3 }
 foreach ($repeat in 1..$Repeats) {
     foreach ($resolution in @(@(1920,1080),@(1280,720))) {
-        foreach ($zoom in @(1,4,24)) {
+        foreach ($zoom in $zooms) {
             foreach ($active in @($false,$true)) {
                 $name = "$($resolution[0])x$($resolution[1])-zoom$zoom-active$active-r$repeat"
                 Write-Host "Midiendo $name. No uses otras aplicaciones durante la captura."

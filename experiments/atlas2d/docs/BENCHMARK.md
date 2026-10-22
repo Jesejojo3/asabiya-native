@@ -10,8 +10,9 @@ TCP existente. Se avisa de que esta preparación no muestra cada año intermedio
 La medición normal sí solicita/publica años consecutivos, con backpressure del
 renderizador. No hay años ocultos en reproducción. Pausa obtiene SHA exacto.
 
-Matriz: 1920×1080 y 1280×720, zoom 1/4/24, pausa/activo máximo, 3 repeticiones,
-3 s de calentamiento +30 s de muestra. Ventana, no pantalla completa; tamaño
+Matriz completa (`-Full`): 1920×1080 y 1280×720, zoom 1/4/24, pausa/activo máximo, 3 repeticiones,
+3 s de calentamiento +30 s de muestra. El doble clic básico mide sólo zoom 24,
+una repetición, ambas resoluciones y pausa/activo: cuatro capturas. Ventana, no pantalla completa; tamaño
 físico registrado. Misma trayectoria sinusoidal en coordenadas del mundo,
 selección del centro cada segundo, política. El panel reduce el área útil del
 mapa; se registra ventana y viewport. VSync se solicita desactivado: comprobar
@@ -31,8 +32,8 @@ Go y suma cada 500 ms (incluye arranque; puede perder picos entre muestras).
 Identifica PID real con `OS.get_process_id`, hijo Go con ready; no mide launcher.
 
 ```powershell
-.\benchmark.ps1 -Seconds 30 -PreparationYears 10000 -Repeats 3
-python summarize.py mediciones-*/*.jsonl --out resumen.json
+.\benchmark.ps1 -Full -Seconds 30 -PreparationYears 10000 -Repeats 3
+# El runner invoca summarize.py con los archivos correctos si hay Python.
 ```
 
 Al resumir, incluye sólo capturas de aplicación, no `.memory.jsonl` ni equipo.json.

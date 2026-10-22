@@ -29,8 +29,9 @@ No se dibujan edificios ni ruinas inventados.
 
 Conecta el portátil a corriente, cierra otras cargas y haz doble clic en
 `Medir rendimiento.cmd`. Conserva la carpeta `mediciones-*` completa. El conjunto
-por defecto recorre 1080p/720p, tres zooms, pausa/activo, tres repeticiones (36
-capturas de 30 s, más preparación). El resumen automático requiere Python,
+por defecto recorre 1080p/720p, zoom provincial y pausa/activo (4 capturas de
+30 s, más preparación). `Medir completo.cmd` recorre tres zooms y tres
+repeticiones (36 capturas); puede tardar bastante por la preparación causal. El resumen automático requiere Python,
 pero la captura y la aplicación no lo requieren. Véase `BENCHMARK.md`.
 No hay una medición confirmada de la Iris Xe ni garantía de 30 FPS todavía.
 
