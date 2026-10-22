@@ -139,7 +139,7 @@ function Get-GpuCounters([int[]]$ids) {
  return $result
 }
 
-$campaign = New-Object System.Collections.Generic.List[object]
+$sessionRecords = New-Object System.Collections.Generic.List[object]
 $imported = @{}
 foreach ($session in $sessions) {
  $directory = Join-Path $out $session.id
@@ -267,14 +267,14 @@ foreach ($session in $sessions) {
   }
   $record.error | Set-Content -LiteralPath (Join-Path $directory 'session-error.txt') -Encoding UTF8
  }
- $campaign.Add([pscustomobject]$record)
- ConvertTo-Json -InputObject @($campaign.ToArray()) -Depth 10 | Set-Content -LiteralPath (Join-Path $out 'campaign.json') -Encoding UTF8
+ $sessionRecords.Add([pscustomobject]$record)
+ ConvertTo-Json -InputObject @($sessionRecords.ToArray()) -Depth 10 | Set-Content -LiteralPath (Join-Path $out 'campaign.json') -Encoding UTF8
 }
 
 # Human summary: one row per captured experiment, without averaging across sessions.
 $lines = New-Object System.Collections.Generic.List[string]
 $lines.Add('session,index,experiment,valid,samples,fpsP50,frameP50,frameP95,frameP99,gpuP50,gpuP95,gpuP99,renderCpuP50,processP50,drawCalls,shadowDrawCalls,primitives,shadowPrimitives,over33msPercent,minFullSecondFrames')
-foreach ($record in $campaign) {
+foreach ($record in $sessionRecords) {
  $experiments = Read-Json (Join-Path (Join-Path $out $record.id) 'experiments.json')
  if (!$experiments) { continue }
  foreach ($e in $experiments.experiments) {
@@ -284,8 +284,8 @@ foreach ($record in $campaign) {
  }
 }
 $lines | Set-Content -LiteralPath (Join-Path $out 'summary.csv') -Encoding UTF8
-$proofs = @($campaign | Where-Object { $_.status -eq 'valid' } | ForEach-Object { $_.initialSHA256 } | Sort-Object -Unique)
+$proofs = @($sessionRecords | Where-Object { $_.status -eq 'valid' } | ForEach-Object { $_.initialSHA256 } | Sort-Object -Unique)
 if ($proofs.Count -gt 1) { Write-Host 'ATENCION: las sesiones no partieron del mismo estado historico; no son comparables.' -ForegroundColor Red }
-$failed = @($campaign | Where-Object { $_.status -ne 'valid' }).Count
-Write-Host "Campana terminada: $($campaign.Count - $failed) sesiones validas, $failed fallidas."
+$failed = @($sessionRecords | Where-Object { $_.status -ne 'valid' }).Count
+Write-Host "Campana terminada: $($sessionRecords.Count - $failed) sesiones validas, $failed fallidas."
 Write-Host "Comprime y entrega la carpeta completa: $out"
