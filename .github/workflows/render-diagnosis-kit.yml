@@ -126,6 +126,7 @@ jobs:
       - name: Export the candidate product executable (unchanged preset)
         run: |
           $editor = Resolve-Path build/godot/editor/Godot_v4.7.2-stable_win64_console.exe
+          New-Item -ItemType Directory -Force build/export | Out-Null
           & $editor --headless --editor --path client/godot --import *> build/import.log
           & $editor --headless --path client/godot --export-release 'Windows x64' (Join-Path $PWD 'build/export/AsabiyaNative.exe') *> build/export.log
           if (!(Test-Path build/export/AsabiyaNative.exe) -or (Select-String -LiteralPath build/export.log -Pattern 'SCRIPT ERROR|Parse Error|Export failed' -Quiet)) { Get-Content build/export.log; throw 'Export failed' }
