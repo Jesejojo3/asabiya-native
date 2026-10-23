@@ -130,7 +130,12 @@ jobs:
           foreach ($f in $manifest.files.PSObject.Properties) {
             if ((Get-FileHash (Join-Path $dir $f.Name) -Algorithm SHA256).Hash.ToLowerInvariant() -ne $f.Value) { throw "Package hash mismatch: $($f.Name)" }
           }
-          & "$dir/PresentMon.exe" --help > build/atlas2d/presentmon-help.log
+          $probe = Start-Process "$dir/PresentMon.exe" -ArgumentList @('--process_id',[string]$PID,'--no_csv','--no_console_stats','--timed','1','--terminate_after_timed','--session_name',('AtlasCI-'+[guid]::NewGuid().ToString('N'))) -PassThru -RedirectStandardOutput "$pwd/build/atlas2d/presentmon-preflight.stdout.log" -RedirectStandardError "$pwd/build/atlas2d/presentmon-preflight.stderr.log"
+          $null = $probe.Handle
+          try {
+            if (!$probe.WaitForExit(15000)) { throw 'PresentMon ETW preflight timed out' }
+            if ($probe.ExitCode -ne 0) { throw "PresentMon ETW preflight exit $($probe.ExitCode)" }
+          } finally { if (!$probe.HasExited) { $probe.Kill() } }
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: asabiya-atlas2d-measurement-windows-x64
