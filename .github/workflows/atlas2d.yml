@@ -1,4 +1,4 @@
-name: Atlas 2D experiment
+name: Atlas 2D measurement harness
 on:
   pull_request:
     paths:
@@ -92,6 +92,13 @@ jobs:
           Add-Type -AssemblyName System.IO.Compression.FileSystem
           $zip = [IO.Compression.ZipFile]::OpenRead((Resolve-Path "build/atlas2d/tools/Godot_v${v}_export_templates.tpz"))
           try { [IO.Compression.ZipFileExtensions]::ExtractToFile($zip.GetEntry('templates/windows_release_x86_64.exe'), "$pwd/build/atlas2d/tools/windows_release_x86_64.exe", $true) } finally { $zip.Dispose() }
+      - name: Pinned presentation profiler and harness tests
+        shell: powershell
+        run: |
+          Invoke-WebRequest -UseBasicParsing "https://github.com/GameTechDev/PresentMon/releases/download/v2.3.0/PresentMon-2.3.0-x64.exe" -OutFile build/atlas2d/tools/PresentMon.exe
+          if ((Get-FileHash build/atlas2d/tools/PresentMon.exe -Algorithm SHA256).Hash.ToLowerInvariant() -ne '690533cf5c2591ef571a3037aa4c205c8e75860ef3f56927bf3a98acf7198485') { throw 'PresentMon hash mismatch' }
+          & experiments/atlas2d/tests/test_telemetry.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Harness tests failed' }
       - name: Build Windows package and probe
         shell: pwsh
         run: |
@@ -115,9 +122,18 @@ jobs:
           if ($p.ExitCode -ne 0) { throw 'Export smoke failed' }
           Get-Content $raw
           if (!(Get-Content -Raw $raw | ConvertFrom-Json).ok) { throw 'Export state invalid' }
+      - name: Verify complete package manifest
+        shell: powershell
+        run: |
+          $dir = (Resolve-Path build/atlas2d/windows).Path
+          $manifest = Get-Content -Raw "$dir/build-manifest.json" | ConvertFrom-Json
+          foreach ($f in $manifest.files.PSObject.Properties) {
+            if ((Get-FileHash (Join-Path $dir $f.Name) -Algorithm SHA256).Hash.ToLowerInvariant() -ne $f.Value) { throw "Package hash mismatch: $($f.Name)" }
+          }
+          & "$dir/PresentMon.exe" --help > build/atlas2d/presentmon-help.log
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: asabiya-atlas2d-windows-x64
+          name: asabiya-atlas2d-measurement-windows-x64
           path: build/atlas2d/windows/**
           if-no-files-found: error
           retention-days: 14

@@ -41,10 +41,15 @@ def build(godot, go, template, destination):
     for name in ("README.md", "docs/SYSTEMS.md", "docs/BENCHMARK.md"):
         shutil.copyfile(ROOT / "experiments/atlas2d" / name, destination / Path(name).name)
     shutil.copytree(ROOT / "experiments/atlas2d/docs", destination / "docs", dirs_exist_ok=True)
-    for name in ("benchmark.ps1", "summarize.py"):
+    for name in ("benchmark.ps1", "telemetry.ps1", "summarize.py", "presentation.py"):
         shutil.copyfile(ROOT / "experiments/atlas2d/tools" / name, destination / name)
-    (destination / "Medir rendimiento.cmd").write_text('@echo off\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0benchmark.ps1"\r\npause\r\n')
-    (destination / "Medir completo.cmd").write_text('@echo off\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0benchmark.ps1" -Full\r\npause\r\n')
+    presentmon = ROOT / "build/atlas2d/tools/PresentMon.exe"
+    if hashlib.sha256(presentmon.read_bytes()).hexdigest() != "690533cf5c2591ef571a3037aa4c205c8e75860ef3f56927bf3a98acf7198485":
+        raise RuntimeError("Pinned PresentMon 2.3.0 required")
+    shutil.copyfile(presentmon, destination / "PresentMon.exe")
+    shutil.copyfile(ROOT / "experiments/atlas2d/tools/PresentMon-LICENSE.txt", destination / "PresentMon-LICENSE.txt")
+    (destination / "Medir rendimiento.cmd").write_text('@echo off\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0benchmark.ps1"\r\nif errorlevel 1 echo ERROR: captura incompleta. Conserva los logs.\r\npause\r\n')
+    (destination / "Medir completo.cmd").write_text('@echo off\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0benchmark.ps1" -Full\r\nif errorlevel 1 echo ERROR: captura incompleta. Conserva los logs.\r\npause\r\n')
     (destination / "Abrir historia avanzada.cmd").write_text('@echo off\r\nstart "" "%~dp0AsabiyaAtlas2D.exe" -- --prepare-years=10000\r\n')
     if (ROOT / "LICENSE").exists():
         shutil.copyfile(ROOT / "LICENSE", destination / "LICENSE-Asabiya.txt")

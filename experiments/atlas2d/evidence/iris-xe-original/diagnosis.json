@@ -1,0 +1,161 @@
+{
+  "archive_sha256": "0683f81ed189463d133c25f943e87fd3d7327c57b17d6be2975086f597648190",
+  "files": {
+    "mediciones-20261022-202503/1280x720-zoom24-activeFalse-r1.jsonl": "7208834ddead2ec6d293cd279e17d85d476bc9baf4ff9da607e6f165c9062b2d",
+    "mediciones-20261022-202503/1280x720-zoom24-activeFalse-r1.memory.jsonl": "e94b82759886f986973ba6f0ecc59e88cdfc18cde1fe1bf475ba07d6ed27a220",
+    "mediciones-20261022-202503/1280x720-zoom24-activeFalse-r1.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "mediciones-20261022-202503/1280x720-zoom24-activeFalse-r1.stdout.log": "ddb6213ddb1aefb260a5dee2e97fa8c23da6a371731a5c3486f76843e7b87c01",
+    "mediciones-20261022-202503/1280x720-zoom24-activeTrue-r1.jsonl": "6c95f7a19631df39701f5014a7b4ca9d160c22b0b28c51983c8ace2baf22e193",
+    "mediciones-20261022-202503/1280x720-zoom24-activeTrue-r1.memory.jsonl": "145a678563db2b91f7131798061cf4d5517d981652bfbe71083e503784856162",
+    "mediciones-20261022-202503/1280x720-zoom24-activeTrue-r1.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "mediciones-20261022-202503/1280x720-zoom24-activeTrue-r1.stdout.log": "ddb6213ddb1aefb260a5dee2e97fa8c23da6a371731a5c3486f76843e7b87c01",
+    "mediciones-20261022-202503/1920x1080-zoom24-activeFalse-r1.jsonl": "dd077b5f474ea3fd9258625404e50337d80663167beac8b5c0d89d358e4b5728",
+    "mediciones-20261022-202503/1920x1080-zoom24-activeFalse-r1.memory.jsonl": "f6469d427772ad4bac334b2058f9a2a93699a075dcb7ff28c91b620d2abe4e57",
+    "mediciones-20261022-202503/1920x1080-zoom24-activeFalse-r1.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "mediciones-20261022-202503/1920x1080-zoom24-activeFalse-r1.stdout.log": "ddb6213ddb1aefb260a5dee2e97fa8c23da6a371731a5c3486f76843e7b87c01",
+    "mediciones-20261022-202503/1920x1080-zoom24-activeTrue-r1.jsonl": "82d2bf55a6ca1d8b913d4a4205c5ca23a98598e0ab8fd65cedfc546586bf236f",
+    "mediciones-20261022-202503/1920x1080-zoom24-activeTrue-r1.memory.jsonl": "0ea4601f9de0a78416562fd971a9088299b2af94a8c82f31c5cad8bd2d6d8782",
+    "mediciones-20261022-202503/1920x1080-zoom24-activeTrue-r1.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "mediciones-20261022-202503/1920x1080-zoom24-activeTrue-r1.stdout.log": "ddb6213ddb1aefb260a5dee2e97fa8c23da6a371731a5c3486f76843e7b87c01",
+    "mediciones-20261022-202503/equipo.json": "b5979e1dee02cb6289b6240c733230e9c874eb0f4c6bb5dda0557243c98d94ed"
+  },
+  "captures": [
+    {
+      "file": "1280x720-zoom24-activeFalse-r1.jsonl",
+      "gpu": "Intel(R) Iris(R) Xe Graphics",
+      "cpu": "13th Gen Intel(R) Core(TM) i5-1340P",
+      "source_commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+      "prepared_year": 1000,
+      "prepared_world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "prepared_state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "verified_pause": {
+        "digest_mode": "",
+        "exact": true,
+        "kind": "verified_pause",
+        "state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+        "ticks_us": 148515290,
+        "year": 1000
+      },
+      "sample_seconds": 29.999696,
+      "sample_begin_year": 1000,
+      "end_year": 1000,
+      "years_per_second": 0.0,
+      "post_draw_callbacks": 29705,
+      "post_draw_callbacks_per_second": 990.1767004572313,
+      "callback_gaps_above_1s": [],
+      "memory_samples": 237,
+      "go_pid_unknown": 216,
+      "go_zero_with_known_pid": 1,
+      "memory_interval_median_s": 0.5297365,
+      "memory_interval_max_s": 4.804092,
+      "presentation": "unavailable: no ETW/display events in original archive"
+    },
+    {
+      "file": "1280x720-zoom24-activeTrue-r1.jsonl",
+      "gpu": "Intel(R) Iris(R) Xe Graphics",
+      "cpu": "13th Gen Intel(R) Core(TM) i5-1340P",
+      "source_commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+      "prepared_year": 1000,
+      "prepared_world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "prepared_state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "verified_pause": {
+        "digest_mode": "",
+        "exact": true,
+        "kind": "verified_pause",
+        "state_sha256": "2f64b4ed69000f6f5cae8b0b46a24bb3941965fedf63287a16836ecb0bb5d8fc",
+        "ticks_us": 148121209,
+        "year": 1113
+      },
+      "sample_seconds": 29.99985,
+      "sample_begin_year": 1011,
+      "end_year": 1112,
+      "years_per_second": 3.366683500084167,
+      "post_draw_callbacks": 25130,
+      "post_draw_callbacks_per_second": 837.6708550209418,
+      "callback_gaps_above_1s": [],
+      "memory_samples": 234,
+      "go_pid_unknown": 214,
+      "go_zero_with_known_pid": 1,
+      "memory_interval_median_s": 0.528605,
+      "memory_interval_max_s": 5.682009,
+      "presentation": "unavailable: no ETW/display events in original archive"
+    },
+    {
+      "file": "1920x1080-zoom24-activeFalse-r1.jsonl",
+      "gpu": "Intel(R) Iris(R) Xe Graphics",
+      "cpu": "13th Gen Intel(R) Core(TM) i5-1340P",
+      "source_commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+      "prepared_year": 1000,
+      "prepared_world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "prepared_state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "verified_pause": {
+        "digest_mode": "",
+        "exact": true,
+        "kind": "verified_pause",
+        "state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+        "ticks_us": 227885849,
+        "year": 1000
+      },
+      "sample_seconds": 29.999855,
+      "sample_begin_year": 1000,
+      "end_year": 1000,
+      "years_per_second": 0.0,
+      "post_draw_callbacks": 5301,
+      "post_draw_callbacks_per_second": 176.70085405412792,
+      "callback_gaps_above_1s": [
+        {
+          "ticks_us": 205462591,
+          "interval_ms": 7124.06
+        },
+        {
+          "ticks_us": 209101708,
+          "interval_ms": 1298.097
+        },
+        {
+          "ticks_us": 212659942,
+          "interval_ms": 1872.597
+        },
+        {
+          "ticks_us": 223881585,
+          "interval_ms": 7094.171
+        }
+      ],
+      "memory_samples": 345,
+      "go_pid_unknown": 322,
+      "go_zero_with_known_pid": 5,
+      "memory_interval_median_s": 0.569206,
+      "memory_interval_max_s": 8.027145,
+      "presentation": "unavailable: no ETW/display events in original archive"
+    },
+    {
+      "file": "1920x1080-zoom24-activeTrue-r1.jsonl",
+      "gpu": "Intel(R) Iris(R) Xe Graphics",
+      "cpu": "13th Gen Intel(R) Core(TM) i5-1340P",
+      "source_commit": "6f234dbe8313eef68aaa195254335643b8b1a295",
+      "prepared_year": 1000,
+      "prepared_world_sha256": "04f336d80022d6e07f1ff9eb96559033742b98db9086164db781d2499675497f",
+      "prepared_state_sha256": "e7df456c262d6bf4f01918de79a8ff1b3eb8f736f347c7d5c3cf12e44d1c27e9",
+      "verified_pause": {
+        "digest_mode": "",
+        "exact": true,
+        "kind": "verified_pause",
+        "state_sha256": "dc828608992cd1d07e199e14b8b7c75839a69a7cd51d031a694dc84ac6a62b06",
+        "ticks_us": 199786332,
+        "year": 1109
+      },
+      "sample_seconds": 30.000797,
+      "sample_begin_year": 1009,
+      "end_year": 1108,
+      "years_per_second": 3.299912332329038,
+      "post_draw_callbacks": 16947,
+      "post_draw_callbacks_per_second": 564.884992888689,
+      "callback_gaps_above_1s": [],
+      "memory_samples": 318,
+      "go_pid_unknown": 296,
+      "go_zero_with_known_pid": 0,
+      "memory_interval_median_s": 0.547397,
+      "memory_interval_max_s": 3.400374,
+      "presentation": "unavailable: no ETW/display events in original archive"
+    }
+  ]
+}
