@@ -33,7 +33,7 @@ New-Item -ItemType Directory -Path $out | Out-Null
 Copy-Item $manifestPath $out
 # Check ETW permission before spending minutes on historical preparation.
 if (@($Modes | Where-Object {$_ -ne 'baseline'}).Count -gt 0) {
-    $preflight=Start-Process $presentmon -ArgumentList @('--process_id',[string]$PID,'--no_csv','--no_console_stats','--timed','1','--terminate_after_timed','--session_name',('AtlasPreflight-'+[guid]::NewGuid().ToString('N'))) -PassThru -RedirectStandardOutput (Join-Path $out 'presentmon-preflight.stdout.log') -RedirectStandardError (Join-Path $out 'presentmon-preflight.stderr.log')
+    $preflight=Start-Process $presentmon -WindowStyle Hidden -ArgumentList @('--process_id',[string]$PID,'--no_csv','--no_console_stats','--timed','1','--terminate_after_timed','--session_name',('AtlasPreflight-'+[guid]::NewGuid().ToString('N'))) -PassThru -RedirectStandardOutput (Join-Path $out 'presentmon-preflight.stdout.log') -RedirectStandardError (Join-Path $out 'presentmon-preflight.stderr.log')
     $null=$preflight.Handle
     try {
         if (!$preflight.WaitForExit(15000)) {throw 'PresentMon preflight agotado; revisa los logs ETW.'}
@@ -113,7 +113,8 @@ foreach ($repeat in 1..$Repeats) {
                                 if ($mode -ne 'baseline') {
                                     $session='Atlas-'+[guid]::NewGuid().ToString('N')
                                     $pmArgs=@('--process_id',[string]$gd.id,'--output_file',('"'+$prefix+'.presentmon.csv"'),'--qpc_time','--no_console_stats','--session_name',$session,'--terminate_on_proc_exit')
-                                    $pm=Start-Process $presentmon -ArgumentList $pmArgs -PassThru -RedirectStandardOutput ($prefix+'.presentmon.stdout.log') -RedirectStandardError ($prefix+'.presentmon.stderr.log')
+                                    # A profiler console must not steal focus from the measured window.
+                                    $pm=Start-Process $presentmon -WindowStyle Hidden -ArgumentList $pmArgs -PassThru -RedirectStandardOutput ($prefix+'.presentmon.stdout.log') -RedirectStandardError ($prefix+'.presentmon.stderr.log')
                                     $null=$pm.Handle;$pmIdentity=Get-AtlasIdentity $pm.Id $presentmon
                                 }
                             }

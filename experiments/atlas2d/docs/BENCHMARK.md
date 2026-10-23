@@ -98,7 +98,8 @@ python .\summarize.py $files.FullName --out .\resumen.json
 telemetría de procesos y eventos de etapa. `minimal`: lo mismo más PresentMon.
 `detailed`: añade una fila por callback y monitores Godot. Los tres conservan el
 mismo escenario, semillas, estado preparado, VSync desactivado, cámara y selección
-automáticas. Reproducción arranca después del calentamiento, desde año 1000 en
+automáticas. La consola del profiler se inicia oculta para no robar foco al Atlas.
+Reproducción arranca después del calentamiento, desde año 1000 en
 la preparación estándar. Cada ejecución comienza con mundo/Go nuevos.
 
 Orden de escenarios invertido en la segunda repetición y modos rotados por

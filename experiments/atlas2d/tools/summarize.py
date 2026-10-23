@@ -57,6 +57,7 @@ def summary(path):
     callbacks = end.get('post_draw_callbacks',len(frames)) if end else len(frames)
     result = {'file':path.name,'environment':environment,'ready':ready,
               'sample_seconds':seconds,'sample_begin':sample,'end':end,
+              'protocol':next((r for r in rows if r['kind']=='begin'),{}),
               'post_draw':{'callbacks':callbacks,'callbacks_per_second':callbacks/seconds,
                            'interval_ms_p50':percentile(frames,.5),'interval_ms_p95':percentile(frames,.95),
                            'interval_ms_p99':percentile(frames,.99),
@@ -105,10 +106,18 @@ def comparison(results):
     groups={}
     for r in results:
         e=r['environment'];ready=r['ready'];mode=e.get('instrumentation','legacy')
-        key=json.dumps([ready['framebuffer_size'],ready.get('zoom_multiplier'),r.get('sample_begin',{}).get('year'),
-                        next((x for x in [e.get('build',{}).get('commit')] if x),None),ready.get('world_sha256'),e.get('camera_pan'),e.get('automated_selection'),ready.get('world_config'),ready.get('history_seed'),
-                        # Active is encoded in the end's year movement; prefer explicit environment flag.
-                        e.get('active',(r['years_per_second'] or 0)>0)],sort_keys=True)
+        key=json.dumps({'framebuffer':ready['framebuffer_size'],'zoom':ready.get('zoom_multiplier'),
+                        'sample_start_year':(r.get('sample_begin') or {}).get('year'),
+                        'source_commit':e.get('build',{}).get('commit'),
+                        'source_tree_hash':e.get('build',{}).get('experimentTreeSHA256'),
+                        'world_sha':ready.get('world_sha256'),'config':ready.get('world_config'),
+                        'prepared_sha':ready.get('state_sha256'),'layer':ready.get('layer'),
+                        'history_seed':ready.get('history_seed'),'pan':e.get('camera_pan'),
+                        'selection':e.get('automated_selection'),'active':e.get('active',(r['years_per_second'] or 0)>0),
+                        'cpu':e.get('cpu'),'gpu':e.get('gpu'),'os':e.get('os'),'renderer':e.get('renderer'),
+                        'godot':e.get('godot'),'vsync':e.get('vsync_requested'),
+                        'duration_seconds':r.get('protocol',{}).get('duration_seconds'),
+                        'warmup_seconds':r.get('protocol',{}).get('warmup_seconds')},sort_keys=True)
         groups.setdefault(key,{}).setdefault(mode,[]).append(r)
     output=[]
     for key,modes in groups.items():
