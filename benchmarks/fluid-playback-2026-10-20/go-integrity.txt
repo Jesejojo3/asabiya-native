@@ -1,0 +1,1 @@
+ok  	github.com/Jesejojo3/asabiya-native/internal/interop	6.550s

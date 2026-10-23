@@ -1,0 +1,4 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+{"address":"127.0.0.1:41623","protocol":"asabiya/local-v1","schema":"asabiya/local-endpoint-v1"}
+PIPELINE {"app":true,"digest":"d2a907dbeb1b8f9838ae939e98d44fc7c73a2bfb42075cd973ac4ad4207c79a3","digestMode":"deferred-v1","elapsedMs":2697.209,"exact":false,"fast":false,"headless":true,"height":200,"layer":"terrain","msPerYear":50.8907358490566,"publicationDigest":"","staticBytes":117439707.0,"width":400,"years":53,"yearsPerSecond":19.6499418472947}

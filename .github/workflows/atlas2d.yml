@@ -1,0 +1,167 @@
+name: Atlas 2D measurement harness
+on:
+  pull_request:
+    paths:
+      - 'experiments/atlas2d/**'
+      - '.github/workflows/atlas2d.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  GOTOOLCHAIN: local
+jobs:
+  contracts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version-file: '.go-version'
+          check-latest: false
+      - name: Download pinned Godot
+        run: |
+          v=$(cat client/tools/godot-version.txt)
+          f="Godot_v${v}_linux.x86_64.zip"
+          curl -fsSL -o "$f" "https://github.com/godotengine/godot-builds/releases/download/$v/$f"
+          awk -v f="$f" '$1==f {print $2"  "$1}' client/tools/godot-pins.txt | sha256sum -c -
+          unzip -q "$f"
+          mv "Godot_v${v}_linux.x86_64" godot
+          chmod +x godot
+      - name: Engine, protocol, reference, golden and 3D client unchanged by the Atlas
+        run: |
+          git diff --exit-code 79035761f1e61041a3ccbf74b648577e53ba7150 -- internal cmd go.mod go.sum reference tests/native client
+      - name: Tools, producer and deterministic observer contracts
+        run: |
+          python3 -m unittest discover -s experiments/atlas2d/tests -v
+          go vet ./experiments/atlas2d/probes/fixture ./experiments/atlas2d/probes/ebiten
+          go build -o build/bin/asabiya-server ./cmd/asabiya-server
+          go run ./experiments/atlas2d/probes/fixture --small --years 3 --out build/atlas2d/test-fixture
+          python3 experiments/atlas2d/tools/stage.py
+          ./godot --headless --path build/atlas2d/project --import > build/atlas2d/import.log 2>&1
+          if grep -E 'SCRIPT ERROR|Parse Error' build/atlas2d/import.log; then exit 1; fi
+          timeout 60 ./godot --headless --path build/atlas2d/project --script res://test_atlas.gd -- --server="$PWD/build/bin/asabiya-server" --small --expected="$PWD/build/atlas2d/test-fixture/state.json" | tee build/atlas2d/tests.log
+          if grep -E 'SCRIPT ERROR|ERROR:' build/atlas2d/tests.log; then exit 1; fi
+          grep -F 'ATLAS TESTS: 0 failures' build/atlas2d/tests.log
+          timeout 180 ./godot --headless --path build/atlas2d/project --script res://test_integrity.gd -- --server="$PWD/build/bin/asabiya-server" --small | tee build/atlas2d/integrity.log
+          if grep -E 'SCRIPT ERROR|ERROR:' build/atlas2d/integrity.log; then exit 1; fi
+          grep -E 'ATLAS INTEGRITY: [0-9]+ checks, 0 failures' build/atlas2d/integrity.log
+          go run ./experiments/atlas2d/probes/fixture --small --years 6 --out build/atlas2d/test-fixture6
+          timeout 30 ./godot --headless --path build/atlas2d/project -- --server="$PWD/build/bin/asabiya-server" --small --prepare-years=3 --smoke-out="$PWD/build/atlas2d/prepare-check.json" --expected="$PWD/build/atlas2d/test-fixture6/state.json" > build/atlas2d/prepare.log 2>&1
+          python3 -c "import json; assert json.load(open('build/atlas2d/prepare-check.json'))['ok']"
+      - name: Graphical software integration smoke (not target GPU)
+        run: |
+          LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe xvfb-run -a -s '-screen 0 1920x1080x24' timeout 60 ./godot --path build/atlas2d/project --audio-driver Dummy -- --server="$PWD/build/bin/asabiya-server" --small --width=1920 --height=1080 --bench-out="$PWD/build/atlas2d/smoke.jsonl" --seconds=3 --screenshot="$PWD/build/atlas2d/smoke.png" > build/atlas2d/graphical.log 2>&1
+          if grep -E 'SCRIPT ERROR|SHADER ERROR' build/atlas2d/graphical.log; then exit 1; fi
+          python3 -c "import struct; assert struct.unpack('>II',open('build/atlas2d/smoke.png','rb').read(24)[16:24]) == (1920,1080)"
+          python3 experiments/atlas2d/tools/summarize.py build/atlas2d/smoke.jsonl --out build/atlas2d/summary.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: atlas2d-linux-contract-evidence
+          path: |
+            build/atlas2d/*.jsonl
+            build/atlas2d/*.json
+            build/atlas2d/*.log
+            build/atlas2d/*.png
+          retention-days: 14
+  windows:
+    needs: contracts
+    runs-on: windows-2022
+    timeout-minutes: 25
+    steps:
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version-file: '.go-version'
+          check-latest: false
+      - name: Pinned engine and release template
+        shell: pwsh
+        run: |
+          $v = (Get-Content client/tools/godot-version.txt).Trim()
+          New-Item -ItemType Directory -Force build/atlas2d/tools | Out-Null
+          foreach ($file in @("Godot_v${v}_win64.exe.zip", "Godot_v${v}_export_templates.tpz")) {
+            $path = "build/atlas2d/tools/$file"
+            Invoke-WebRequest "https://github.com/godotengine/godot-builds/releases/download/$v/$file" -OutFile $path
+            $line = Get-Content client/tools/godot-pins.txt | Where-Object { ($_ -split '\s+')[0] -eq $file }
+            $expected = ($line -split '\s+')[1]
+            if ((Get-FileHash $path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected) { throw "Hash mismatch: $file" }
+          }
+          Expand-Archive "build/atlas2d/tools/Godot_v${v}_win64.exe.zip" build/atlas2d/tools/engine
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $zip = [IO.Compression.ZipFile]::OpenRead((Resolve-Path "build/atlas2d/tools/Godot_v${v}_export_templates.tpz"))
+          try { [IO.Compression.ZipFileExtensions]::ExtractToFile($zip.GetEntry('templates/windows_release_x86_64.exe'), "$pwd/build/atlas2d/tools/windows_release_x86_64.exe", $true) } finally { $zip.Dispose() }
+      - name: Pinned presentation profiler and harness tests
+        shell: powershell
+        run: |
+          Invoke-WebRequest -UseBasicParsing "https://github.com/GameTechDev/PresentMon/releases/download/v2.3.0/PresentMon-2.3.0-x64.exe" -OutFile build/atlas2d/tools/PresentMon.exe
+          if ((Get-FileHash build/atlas2d/tools/PresentMon.exe -Algorithm SHA256).Hash.ToLowerInvariant() -ne '690533cf5c2591ef571a3037aa4c205c8e75860ef3f56927bf3a98acf7198485') { throw 'PresentMon hash mismatch' }
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File experiments/atlas2d/tests/test_telemetry.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Harness tests failed' }
+      - name: Build Windows package and probe
+        shell: pwsh
+        run: |
+          $v = (Get-Content client/tools/godot-version.txt).Trim()
+          python experiments/atlas2d/tools/build.py --godot "$pwd/build/atlas2d/tools/engine/Godot_v${v}_win64_console.exe" --go (Get-Command go).Source --template "$pwd/build/atlas2d/tools/windows_release_x86_64.exe"
+          if ($LASTEXITCODE -ne 0) { throw 'Package build failed' }
+          go build -trimpath -o build/atlas2d/ebiten-probe.exe ./experiments/atlas2d/probes/ebiten
+          go run ./experiments/atlas2d/probes/fixture --small --years 3 --out build/atlas2d/test-fixture
+      - name: Complete benchmark flow regression (Windows PowerShell 5.1)
+        shell: powershell
+        run: |
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File experiments/atlas2d/tests/test_benchmark.ps1 -PackageDirectory build/atlas2d/windows -EvidenceDirectory build/atlas2d/benchmark-regression
+          if ($LASTEXITCODE -ne 0) { throw 'Benchmark flow regression failed' }
+      - name: Windows observer contracts and exported executable smoke (headless, not GPU benchmark)
+        shell: pwsh
+        run: |
+          $v = (Get-Content client/tools/godot-version.txt).Trim()
+          & "build/atlas2d/tools/engine/Godot_v${v}_win64_console.exe" --headless --path build/atlas2d/project --script res://test_atlas.gd -- "--server=$pwd/build/atlas2d/windows/asabiya-server.exe" --small "--expected=$pwd/build/atlas2d/test-fixture/state.json" 2>&1 | Tee-Object build/atlas2d/windows-tests.log
+          if ($LASTEXITCODE -ne 0) { throw 'Observer tests failed' }
+          if (!(Select-String -Path build/atlas2d/windows-tests.log -SimpleMatch 'ATLAS TESTS: 0 failures')) { throw 'Missing test success marker' }
+          & "build/atlas2d/tools/engine/Godot_v${v}_win64_console.exe" --headless --path build/atlas2d/project --script res://test_integrity.gd -- "--server=$pwd/build/atlas2d/windows/asabiya-server.exe" --small 2>&1 | Tee-Object build/atlas2d/windows-integrity.log
+          if ($LASTEXITCODE -ne 0 -or !(Select-String -Path build/atlas2d/windows-integrity.log -Pattern 'ATLAS INTEGRITY: \d+ checks, 0 failures')) { throw 'Integrity tests failed' }
+          $exe = (Resolve-Path build/atlas2d/windows/AsabiyaAtlas2D.exe).Path
+          $raw = "$pwd/build/atlas2d/export-smoke.json"
+          $p = Start-Process $exe -ArgumentList @('--headless','--','--small',"--smoke-out=$raw","--expected=$pwd/build/atlas2d/test-fixture/state.json") -PassThru
+          $null = $p.Handle
+          if (!$p.WaitForExit(60000)) { Stop-Process -Id $p.Id; throw 'Export smoke timed out' }
+          if ($p.ExitCode -ne 0) { throw 'Export smoke failed' }
+          Get-Content $raw
+          if (!(Get-Content -Raw $raw | ConvertFrom-Json).ok) { throw 'Export state invalid' }
+      - name: Verify complete package manifest
+        shell: powershell
+        run: |
+          $dir = (Resolve-Path build/atlas2d/windows).Path
+          $manifest = Get-Content -Raw "$dir/build-manifest.json" | ConvertFrom-Json
+          foreach ($f in $manifest.files.PSObject.Properties) {
+            if ((Get-FileHash (Join-Path $dir $f.Name) -Algorithm SHA256).Hash.ToLowerInvariant() -ne $f.Value) { throw "Package hash mismatch: $($f.Name)" }
+          }
+          $probe = Start-Process "$dir/PresentMon.exe" -WindowStyle Hidden -ArgumentList @('--process_id',[string]$PID,'--no_csv','--no_console_stats','--timed','1','--terminate_after_timed','--session_name',('AtlasCI-'+[guid]::NewGuid().ToString('N'))) -PassThru -RedirectStandardOutput "$pwd/build/atlas2d/presentmon-preflight.stdout.log" -RedirectStandardError "$pwd/build/atlas2d/presentmon-preflight.stderr.log"
+          $null = $probe.Handle
+          try {
+            if (!$probe.WaitForExit(15000)) { throw 'PresentMon ETW preflight timed out' }
+            if ($probe.ExitCode -ne 0) { throw "PresentMon ETW preflight exit $($probe.ExitCode)" }
+          } finally { if (!$probe.HasExited) { $probe.Kill() } }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: asabiya-atlas2d-measurement-windows-x64
+          path: build/atlas2d/windows/**
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: atlas2d-windows-contract-evidence
+          path: |
+            build/atlas2d/*.log
+            build/atlas2d/export-*.json*
+            build/atlas2d/benchmark-regression/**
+          retention-days: 14

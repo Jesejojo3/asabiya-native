@@ -1,0 +1,83 @@
+name: Client 3D (Godot)
+on:
+  pull_request:
+    paths:
+      - 'client/**'
+      - 'internal/sim/**'
+      - '.github/workflows/client.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  GOTOOLCHAIN: local
+jobs:
+  tests:
+    if: github.event_name != 'pull_request' || (github.head_ref != 'mission/performance-stability' && github.head_ref != 'ux/ck3-experience-overhaul')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: '.go-version'
+          check-latest: false
+      - name: Exporter tests (public sim API only)
+        run: |
+          go vet ./client/exporter
+          go test -count=1 ./client/exporter
+      - name: Pinned Godot (Linux, headless)
+        run: |
+          v=$(cat client/tools/godot-version.txt)
+          f="Godot_v${v}_linux.x86_64.zip"
+          curl -fsSL -o "$f" "https://github.com/godotengine/godot-builds/releases/download/$v/$f"
+          grep "$f" client/tools/godot-pins.txt | awk '{print $2"  "$1}' | sha256sum -c -
+          unzip -q "$f" && mv "Godot_v${v}_linux.x86_64" godot && chmod +x godot
+      - name: Snapshot and client test suite
+        run: |
+          go run ./client/exporter --out build/worlds/Asabiya.asw
+          ./godot --headless --path client/godot --import >/dev/null 2>&1 || true
+          ./godot --headless --path client/godot --script res://tests/run_tests.gd -- --snapshot "$PWD/build/worlds/Asabiya.asw"
+      - name: Atlas historical explorer regression contracts (headless)
+        timeout-minutes: 2
+        run: timeout --signal=TERM 40s ./godot --headless --path client/godot --script res://tests/atlas_ux_regressions.gd
+      - name: Fluid playback, annual frames and exact pause
+        timeout-minutes: 3
+        run: |
+          go build -o build/bin/asabiya-server ./cmd/asabiya-server
+          timeout --signal=TERM 60s ./godot --headless --path client/godot --script res://tests/deep_publication_regressions.gd
+          timeout --signal=TERM 60s ./godot --headless --path client/godot --script res://tests/fluid_playback_regressions.gd -- --server "$PWD/build/bin/asabiya-server"
+          timeout --signal=TERM 60s ./godot --headless --path client/godot --script res://tests/annual_throughput_regressions.gd -- --server "$PWD/build/bin/asabiya-server"
+      - name: Numeric contracts and concurrent algorithm workspaces
+        timeout-minutes: 2
+        run: go test -race -count=1 ./internal/sim -run '^(TestMinMaxFloat64Contract|TestExitFieldMatchesOriginalNeighborhoods|TestConcurrentAlgorithmWorkspaces)$'
+
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    needs: tests
+    steps:
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: '.go-version'
+          check-latest: false
+      - name: Build client, exporter and default world
+        shell: pwsh
+        run: ./client/tools/build-client.ps1
+      - name: Exported world matches the native regression golden
+        shell: pwsh
+        run: |
+          $g = Get-Content -Raw tests/native/world-v2.windows-go1.27.2.json | ConvertFrom-Json
+          $r = & build/client/asabiya-snapshot.exe --seed Asabiya --out build/check.asw | ConvertFrom-Json
+          if ($r.digest -ne $g.sha256) { throw "digest $($r.digest) != golden $($g.sha256)" }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: asabiya-client-windows-x64
+          path: build/client/**
+          if-no-files-found: error
+          retention-days: 14

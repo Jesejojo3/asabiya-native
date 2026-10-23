@@ -1,0 +1,15 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+{"address":"127.0.0.1:44369","protocol":"asabiya/local-v1","schema":"asabiya/local-endpoint-v1"}
+FLUID_SAMPLE {"elapsedMs":5968.706,"fluid":false,"fullSize":true,"sha":"d2a907dbeb1b8f9838ae939e98d44fc7c73a2bfb42075cd973ac4ad4207c79a3","years":53,"yearsPerSecond":8.87964661016978}
+{"address":"127.0.0.1:40405","protocol":"asabiya/local-v1","schema":"asabiya/local-endpoint-v1"}
+FLUID_SAMPLE {"elapsedMs":2836.177,"fluid":true,"fullSize":true,"sha":"d2a907dbeb1b8f9838ae939e98d44fc7c73a2bfb42075cd973ac4ad4207c79a3","years":53,"yearsPerSecond":18.6871270728167}
+{"address":"127.0.0.1:46785","protocol":"asabiya/local-v1","schema":"asabiya/local-endpoint-v1"}
+FLUID_SAMPLE {"elapsedMs":5886.024,"fluid":false,"fullSize":true,"sha":"d2a907dbeb1b8f9838ae939e98d44fc7c73a2bfb42075cd973ac4ad4207c79a3","years":53,"yearsPerSecond":9.00438054618873}
+{"address":"127.0.0.1:44897","protocol":"asabiya/local-v1","schema":"asabiya/local-endpoint-v1"}
+FLUID_SAMPLE {"elapsedMs":2836.137,"fluid":true,"fullSize":true,"sha":"d2a907dbeb1b8f9838ae939e98d44fc7c73a2bfb42075cd973ac4ad4207c79a3","years":53,"yearsPerSecond":18.6873906302834}
+{"address":"127.0.0.1:40219","protocol":"asabiya/local-v1","schema":"asabiya/local-endpoint-v1"}
+FLUID_SAMPLE {"elapsedMs":5782.527,"fluid":false,"fullSize":true,"sha":"d2a907dbeb1b8f9838ae939e98d44fc7c73a2bfb42075cd973ac4ad4207c79a3","years":53,"yearsPerSecond":9.16554302297248}
+{"address":"127.0.0.1:43501","protocol":"asabiya/local-v1","schema":"asabiya/local-endpoint-v1"}
+FLUID_SAMPLE {"elapsedMs":2746.525,"fluid":true,"fullSize":true,"sha":"d2a907dbeb1b8f9838ae939e98d44fc7c73a2bfb42075cd973ac4ad4207c79a3","years":53,"yearsPerSecond":19.2971118049171}
+Fluid playback: 379 checks, 0 failures

@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/Jesejojo3/asabiya-native/internal/app"
+	"github.com/Jesejojo3/asabiya-native/internal/mapsource"
 	view "github.com/Jesejojo3/asabiya-native/internal/presentation/ebiten"
 	"github.com/Jesejojo3/asabiya-native/internal/presentation/terrain"
 	"github.com/Jesejojo3/asabiya-native/internal/sim"
@@ -20,11 +21,11 @@ func run() error {
 	if o.Output != "" || o.Cell != "" {
 		return fmt.Errorf("--out and --cell are headless options; use asabiya-headless")
 	}
-	w, surface, err := sim.GenerateWorldWithSurface(o.World)
+	w, surface, err := mapsource.Generate(o.World, o.Source, true)
 	if err != nil {
 		return err
 	}
-	if _, err := sim.NewSimulation(w, o.HistorySeed); err != nil {
+	if _, err := sim.NewSimulationWithRules(w, o.HistorySeed, o.Rules); err != nil {
 		return err
 	}
 	if o.PNG != "" {

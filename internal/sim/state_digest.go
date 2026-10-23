@@ -1,0 +1,234 @@
+package sim
+
+import (
+	"crypto/sha256"
+	"encoding/binary"
+	"encoding/hex"
+	"hash"
+	"math"
+	"reflect"
+	"runtime"
+	"sort"
+)
+
+const StateDigestVersion = "native/history-state-v1"
+
+// StateDigest covers the entire owned causal history, including future RNG,
+// order-sensitive collection slots, rules and all entities/arrays. It preserves
+// signed zero and canonicalizes NaN payloads. It is neither JSON nor a save file.
+// The immutable world is identified by its own complete digest. Map archives and
+// visited-marker bookkeeping are excluded; bfsParent is deliberately INCLUDED:
+// poolPass reads its stale slots in v0.6, so that scratch array is causal state.
+func (s *Simulation) StateDigest() string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.stateDigestLocked()
+}
+func (s *Simulation) stateDigestLocked() string {
+	clock := startWork(s.workProfile)
+	defer clock.mark(10)
+	d := sha256.New()
+	e := canonicalState{hash: d}
+	// Encoding and SHA consume independent CPU resources. Only owned encoded
+	// bytes cross to the worker; history remains locked on this goroutine.
+	if s.world.Len() >= 10000 && runtime.GOMAXPROCS(0) > 1 {
+		e.pipeline, e.buffer = newPooledDigestPipeline(d)
+		defer e.pipeline.finish()
+	} else {
+		e.buffer = make([]byte, 0, 65536)
+	}
+	e.text(StateDigestVersion)
+	e.text(s.worldDigestLocked())
+	p := s.h.r.Position()
+	e.u64(uint64(p.Seed))
+	e.u64(p.Calls)
+	e.u64(s.commandSequence)
+	value := reflect.ValueOf(s.h).Elem()
+	e.history(value)
+	e.flush()
+	if e.pipeline != nil {
+		e.pipeline.finish()
+	}
+	return hex.EncodeToString(d.Sum(nil))
+}
+
+type canonicalState struct {
+	hash     hash.Hash
+	buffer   []byte
+	pipeline *digestPipeline
+}
+
+func (e *canonicalState) flush() {
+	if len(e.buffer) > 0 {
+		if e.pipeline != nil {
+			e.buffer = e.pipeline.submit(e.buffer)
+		} else {
+			e.hash.Write(e.buffer)
+			e.buffer = e.buffer[:0]
+		}
+	}
+}
+func (e *canonicalState) u64(n uint64) {
+	if len(e.buffer)+8 > cap(e.buffer) {
+		e.flush()
+	}
+	e.buffer = binary.LittleEndian.AppendUint64(e.buffer, n)
+}
+func (e *canonicalState) text(s string) {
+	e.u64(uint64(len(s)))
+	for len(s) > 0 {
+		space := cap(e.buffer) - len(e.buffer)
+		if space == 0 {
+			e.flush()
+			space = cap(e.buffer)
+		}
+		n := min(space, len(s))
+		e.buffer = append(e.buffer, s[:n]...)
+		s = s[n:]
+	}
+}
+func (e *canonicalState) history(v reflect.Value) {
+	typ := v.Type()
+	for k := 0; k < v.NumField(); k++ {
+		name := typ.Field(k).Name
+		if name == "earth" && v.Field(k).IsNil() {
+			continue
+		}
+		if name == "world" || name == "r" {
+			continue
+		}
+		e.text(name)
+		if name == "annualState" {
+			e.annual(v.Field(k))
+		} else {
+			e.value(v.Field(k))
+		}
+	}
+}
+func (e *canonicalState) annual(v reflect.Value) {
+	typ := v.Type()
+	for k := 0; k < v.NumField(); k++ {
+		name := typ.Field(k).Name
+		switch name {
+		case "snapshots", "withinMark", "withinStamp", "bfsMark", "bfsStamp":
+			continue
+		}
+		e.text(name)
+		e.value(v.Field(k))
+	}
+}
+func (e *canonicalState) value(v reflect.Value) {
+	e.u64(uint64(v.Kind()))
+	switch v.Kind() {
+	case reflect.Bool:
+		if v.Bool() {
+			e.u64(1)
+		} else {
+			e.u64(0)
+		}
+	case reflect.String:
+		e.text(v.String())
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		e.u64(uint64(v.Int()))
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		e.u64(v.Uint())
+	case reflect.Float32:
+		n := float32(v.Float())
+		bits := math.Float32bits(n)
+		if math.IsNaN(float64(n)) {
+			bits = 0x7fc00000
+		}
+		e.u64(uint64(bits))
+	case reflect.Float64:
+		n := v.Float()
+		bits := math.Float64bits(n)
+		if math.IsNaN(n) {
+			bits = 0x7ff8000000000000
+		}
+		e.u64(bits)
+	case reflect.Pointer:
+		if v.IsNil() {
+			e.u64(0)
+		} else {
+			e.u64(1)
+			e.value(v.Elem())
+		}
+	case reflect.Array, reflect.Slice:
+		e.u64(uint64(v.Len()))
+		if e.scalarSequence(v) {
+			return
+		}
+		for k := 0; k < v.Len(); k++ {
+			e.value(v.Index(k))
+		}
+	case reflect.Struct:
+		typ := v.Type()
+		e.u64(uint64(v.NumField()))
+		for k := 0; k < v.NumField(); k++ {
+			e.text(typ.Field(k).Name)
+			e.value(v.Field(k))
+		}
+	case reflect.Map:
+		keys := v.MapKeys()
+		sort.Slice(keys, func(i, j int) bool {
+			switch keys[i].Kind() {
+			case reflect.String:
+				return keys[i].String() < keys[j].String()
+			case reflect.Int, reflect.Int32, reflect.Int64:
+				return keys[i].Int() < keys[j].Int()
+			default:
+				panic("unsupported digest map key")
+			}
+		})
+		e.u64(uint64(len(keys)))
+		for _, k := range keys {
+			e.value(k)
+			e.value(v.MapIndex(k))
+		}
+	default:
+		panic("unsupported causal digest kind: " + v.Kind().String())
+	}
+}
+
+// scalarSequence preserves every kind tag and bit pattern of value(), but
+// batches primitive encoding instead of recursively dispatching per element.
+func (e *canonicalState) scalarSequence(v reflect.Value) bool {
+	kind := v.Type().Elem().Kind()
+	switch kind {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64:
+	default:
+		return false
+	}
+	if e.fastScalarSequence(v, kind) {
+		return true
+	}
+	for i := 0; i < v.Len(); i++ {
+		x := v.Index(i)
+		var bits uint64
+		switch kind {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			bits = uint64(x.Int())
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			bits = x.Uint()
+		case reflect.Float32:
+			b := math.Float32bits(float32(x.Float()))
+			if b&0x7f800000 == 0x7f800000 && b&0x007fffff != 0 {
+				b = 0x7fc00000
+			}
+			bits = uint64(b)
+		case reflect.Float64:
+			bits = math.Float64bits(x.Float())
+			if bits&0x7ff0000000000000 == 0x7ff0000000000000 && bits&0x000fffffffffffff != 0 {
+				bits = 0x7ff8000000000000
+			}
+		}
+		if cap(e.buffer)-len(e.buffer) < 16 {
+			e.flush()
+		}
+		offset := len(e.buffer)
+		e.buffer = e.buffer[:offset+16]
+		binary.LittleEndian.PutUint64(e.buffer[offset:], uint64(kind))
+		binary.LittleEndian.PutUint64(e.buffer[offset+8:], bits)
+	}
+	return true
+}

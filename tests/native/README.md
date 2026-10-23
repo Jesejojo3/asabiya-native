@@ -18,3 +18,12 @@ del HTML original: empates/intercalado del heap, n8, drenaje, ecología y enlace
 Go compara índices/orden/banderas exactamente y números con tolerancia pequeña,
 sin convertirlo en una promesa de equivalencia V8. El caso incluye mesetas,
 depresión, islas, borde polar y costura longitudinal.
+
+Bloque 3: `history-v1.windows-go1.27.2.json` es la proyección estable del
+newHistory nativo (Asabiya / historia 1) y su SHA-256. `language-contract.v06.json`
+(exacto) e `history-contract.v06.json` vienen del HTML original con Node fijado;
+`history-contract-input.v06.json` es el mundo nativo 128×64 que se le da a ese
+newHistory original. El test Go comprueba que la entrada siga coincidiendo con
+el generador antes de comparar resultados. Regenerar sólo con revisión:
+`ASABIYA_WRITE_HISTORY_INPUT=1 go test -run WriteHistoryInput ./internal/sim`
+y después `node tools/check-history-oracle.mjs --write`.

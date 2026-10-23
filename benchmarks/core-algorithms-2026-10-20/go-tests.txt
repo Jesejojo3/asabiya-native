@@ -1,0 +1,11 @@
+ok  	github.com/Jesejojo3/asabiya-native/client/exporter	0.104s
+ok  	github.com/Jesejojo3/asabiya-native/cmd/asabiya-headless	0.298s
+?   	github.com/Jesejojo3/asabiya-native/cmd/asabiya-profile	[no test files]
+?   	github.com/Jesejojo3/asabiya-native/cmd/asabiya-server	[no test files]
+?   	github.com/Jesejojo3/asabiya-native/internal/app	[no test files]
+ok  	github.com/Jesejojo3/asabiya-native/internal/interop	27.198s
+?   	github.com/Jesejojo3/asabiya-native/internal/mapsource	[no test files]
+?   	github.com/Jesejojo3/asabiya-native/internal/presentation/terrain	[no test files]
+ok  	github.com/Jesejojo3/asabiya-native/internal/rng	0.005s
+ok  	github.com/Jesejojo3/asabiya-native/internal/sim	8.825s
+?   	github.com/Jesejojo3/asabiya-native/internal/telemetry	[no test files]

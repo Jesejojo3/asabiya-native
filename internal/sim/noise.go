@@ -61,4 +61,4 @@ func fbm(n *valueNoise, x, y, z float64, octaves int) float64 {
 	return s / total
 }
 
-func clamp(v, lo, hi float64) float64 { return math.Max(lo, math.Min(hi, v)) }
+func clamp(v, lo, hi float64) float64 { return max64(lo, min64(hi, v)) }

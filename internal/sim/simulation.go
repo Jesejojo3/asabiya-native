@@ -2,42 +2,101 @@ package sim
 
 import (
 	"errors"
-	"github.com/Jesejojo3/asabiya-native/internal/rng"
+	"sync"
 	"unicode/utf8"
+
+	"github.com/Jesejojo3/asabiya-native/internal/rng"
 )
 
-const SimulationVersion = "native/initialization-v1"
+const SimulationVersion = "native/history-init-v1"
 
+// Simulation owns one history over an immutable World. It is initialized by
+// newHistory. The mutex serializes complete years, commands and read-only
+// copies. Rendering and transport never access mutable history directly.
 type Simulation struct {
-	world       *World
-	historySeed string
-	year        int
-	random      *rng.Mulberry32
+	// Reused scratch projection; never exposed or included in causal history.
+	mapBefore       []MapProvinceView
+	workProfile     *workAccumulator
+	commandSequence uint64
+	commandLog      []CommandResult
+	initialRules    Rules
+	mu              sync.RWMutex
+	initialHistory  HistorySummary
+	worldSHA256     string
+	world           *World
+	h               *history
 }
 
-// NewSimulation creates an explicitly unpopulated session. newHistory,
-// carrying capacity and annual systems have not yet been ported; there is no
-// AdvanceYear operation until they exist. A generation RNG is never reused as
-// the historical RNG.
+// NewSimulation initializes a history with the default v0.6 rules.
 func NewSimulation(world *World, historySeed string) (*Simulation, error) {
+	return NewSimulationWithRules(world, historySeed, DefaultRules())
+}
+
+func NewSimulationWithRules(world *World, historySeed string, rules Rules) (*Simulation, error) {
 	if world == nil {
 		return nil, errors.New("world is required")
 	}
 	if !utf8.ValidString(historySeed) || len(historySeed) > 1024 {
 		return nil, errors.New("history seed must be valid UTF-8, at most 1024 bytes")
 	}
-	return &Simulation{world: world, historySeed: historySeed, year: -9000, random: rng.New(rng.HistorySeed(historySeed, world.config.Seed))}, nil
+	if err := rules.Validate(); err != nil {
+		return nil, err
+	}
+	s := &Simulation{world: world, worldSHA256: world.Digest(), h: newHistory(world, historySeed, rules.clone())}
+	s.initialHistory = s.summaryLocked()
+	s.initialRules = rules.clone()
+	s.h.prepareAnnualState()
+	s.h.snapshot()
+	return s, nil
 }
 
 type SimulationStatus struct {
-	Version     string       `json:"version"`
-	HistorySeed string       `json:"historySeed"`
-	Year        int          `json:"year"`
-	Stage       string       `json:"stage"`
-	HistoryRNG  rng.Position `json:"historyRNG"`
+	Version      string       `json:"version"`
+	RulesVersion string       `json:"rulesVersion"`
+	HistorySeed  string       `json:"historySeed"`
+	StartYear    int          `json:"startYear"`
+	Year         int          `json:"year"`
+	Stage        string       `json:"stage"`
+	HistoryRNG   rng.Position `json:"historyRNG"`
 }
 
 func (s *Simulation) World() *World { return s.world }
+func (s *Simulation) Rules() Rules  { s.mu.RLock(); defer s.mu.RUnlock(); return s.h.rules.clone() }
 func (s *Simulation) Status() SimulationStatus {
-	return SimulationStatus{Version: SimulationVersion, HistorySeed: s.historySeed, Year: s.year, Stage: "unpopulated-world", HistoryRNG: s.random.Position()}
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.statusLocked()
+}
+func (s *Simulation) statusLocked() SimulationStatus {
+	version, stage := SimulationVersion, "founded"
+	if s.h.advanced {
+		version = EngineVersion
+		stage = "running"
+	}
+	return SimulationStatus{Version: version, RulesVersion: s.h.rules.Version, HistorySeed: s.h.seed, StartYear: s.h.start, Year: s.h.year, Stage: stage, HistoryRNG: s.h.r.Position()}
+}
+
+const EngineVersion = "native/v06-core-v1"
+
+// AdvanceYear executes the entire original calendar synchronously. No partial
+// year, UI scheduling yield or background writer escapes this operation.
+func (s *Simulation) AdvanceYear() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.applyCommandLocked(s.nextCommandLocked("advance_year"))
+}
+func (s *Simulation) InitialSummary() HistorySummary {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return cloneHistorySummary(s.initialHistory)
+}
+
+// worldDigestLocked reuses the fingerprint of the immutable world. Read-only
+// callers never write a lazy cache, so concurrent publication remains race-free.
+// The fallback also supports internally constructed simulations in tests.
+func (s *Simulation) worldDigestLocked() string {
+	if s.worldSHA256 != "" {
+		return s.worldSHA256
+	}
+	return s.world.Digest()
 }

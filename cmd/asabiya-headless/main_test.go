@@ -22,7 +22,8 @@ func TestGenerateQueryAndExport(t *testing.T) {
 	if err := json.Unmarshal(out.Bytes(), &r); err != nil {
 		t.Fatal(err)
 	}
-	if r.Cell == nil || r.Cell.ID != 0 || r.World.Cells != 1152 || r.Simulation.Stage != "unpopulated-world" {
+	if r.Cell == nil || r.Cell.ID != 0 || r.World.Cells != 1152 || r.Simulation.Stage != "founded" || r.CellHistory == nil ||
+		r.History.SHA256 == "" || r.History.Year != -9000 || len(r.History.Hearths) < 5 {
 		t.Fatalf("incorrect report: %+v", r)
 	}
 	data, err := os.ReadFile(outPath)
@@ -47,6 +48,26 @@ func TestGenerateQueryAndExport(t *testing.T) {
 	}
 	if !bytes.Equal(out.Bytes(), second.Bytes()) {
 		t.Fatal("report not reproducible")
+	}
+}
+
+func TestPeoplesAndRules(t *testing.T) {
+	var out bytes.Buffer
+	args := []string{"--width", "96", "--height", "48", "--peoples", "--bands", "5", "--start-year", "-7000"}
+	if err := run(args, &out, &bytes.Buffer{}); err != nil {
+		t.Fatal(err)
+	}
+	var r report
+	if err := json.Unmarshal(out.Bytes(), &r); err != nil {
+		t.Fatal(err)
+	}
+	if r.Simulation.StartYear != -7000 || len(r.Peoples) != r.History.Peoples || r.History.FoundingStocks > 5 {
+		t.Fatalf("rules or peoples not reported: %+v", r.History)
+	}
+	for _, p := range r.Peoples {
+		if p.Name == "" || p.Style == "" || p.Root == "" {
+			t.Fatalf("incomplete people view %+v", p)
+		}
 	}
 }
 

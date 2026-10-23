@@ -1,0 +1,136 @@
+name: Atlas UX technical checks and Windows package
+on:
+  push:
+    branches: ['ux/ck3-experience-overhaul']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: atlas-ux-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 35
+    env:
+      GOTOOLCHAIN: local
+      GOOS: windows
+      GOARCH: amd64
+      GOAMD64: v1
+      CGO_ENABLED: '0'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version-file: '.go-version'
+          check-latest: false
+      - name: Verify immutable HTML reference
+        run: node tools/verify-reference.mjs
+      - name: Targeted JSON protocol regressions
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts/atlas-ux | Out-Null
+          go test -count=1 -v ./internal/interop -run '^TestProtocol(ExactIntegers|NumberAdaptationPreservesOtherJSON|IntegerFieldRejections|GodotSerializationFixture|GodotIntegersOnConnection|RefusesNonLoopbackWithoutAccepting|SessionBoundariesAndNoHiddenBatch)$' 2>&1 | Tee-Object artifacts/atlas-ux/protocol.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Protocol regressions failed' }
+      - name: Compile and export the Windows package
+        run: |
+          ./tools/package-windows.ps1 -OutputDirectory build/client -SourceRevision "${{ github.sha }}" -ValidationSummary 'atlas UI headless contracts, performance and bridge regressions recorded by workflow; graphical runtime not executed'
+          Compress-Archive -Path build/client/* -DestinationPath build/AsabiyaNative-Windows-x64-atlas.zip
+          Get-FileHash -Algorithm SHA256 build/AsabiyaNative-Windows-x64-atlas.zip | Format-List | Out-File artifacts/atlas-ux/package-sha256.txt
+      - name: Focused Godot geometry and worker regressions
+        run: |
+          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
+          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
+          & $editor --headless --path client/godot --script res://tests/performance_regressions.gd 2>&1 | Tee-Object artifacts/atlas-ux/godot.txt
+          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/atlas-ux/godot.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Godot technical regressions failed' }
+      - name: Bridge recovery and session lifecycle without graphics
+        timeout-minutes: 3
+        run: |
+          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
+          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
+          $server=Join-Path $PWD 'build/bin/asabiya-server.exe'
+          & $editor --headless --path client/godot --script res://tests/bridge_stability_regressions.gd -- --server $server 2>&1 | Tee-Object artifacts/atlas-ux/bridge-stability.txt
+          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/atlas-ux/bridge-stability.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Bridge stability regressions failed' }
+      - name: Focused headless atlas interface contracts
+        timeout-minutes: 3
+        run: |
+          $version=(Get-Content -Raw client/tools/godot-version.txt).Trim()
+          $editor=Join-Path $PWD "build/godot/$version/editor/Godot_v${version}_win64_console.exe"
+          & $editor --headless --path client/godot --script res://tests/atlas_ux_regressions.gd 2>&1 | Tee-Object artifacts/atlas-ux/ui.txt
+          if ($LASTEXITCODE -ne 0 -or (Select-String -LiteralPath artifacts/atlas-ux/ui.txt -Pattern 'SCRIPT ERROR|Parse Error' -Quiet)) { throw 'Atlas UI regressions failed' }
+      - name: Publish Windows package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: AsabiyaNative-Windows-x64-atlas
+          path: build/AsabiyaNative-Windows-x64-atlas.zip
+          if-no-files-found: error
+          retention-days: 14
+      - name: Show compilation errors
+        if: failure()
+        run: |
+          foreach ($file in @('build/godot-import.log','build/godot-export.log')) {
+            if (Test-Path -LiteralPath $file) {
+              Select-String -LiteralPath $file -Pattern 'SCRIPT ERROR|Parse Error|Compilation failed|ERROR:' -Context 0,2
+            }
+          }
+      - name: Publish validation and compilation evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: atlas-ux-evidence
+          path: |
+            artifacts/atlas-ux/**
+            build/godot-import.log
+            build/godot-export.log
+          if-no-files-found: warn
+          retention-days: 14
+
+  software-preview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      GOTOOLCHAIN: local
+      CGO_ENABLED: '0'
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      GALLIUM_DRIVER: llvmpipe
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version-file: '.go-version'
+          check-latest: false
+      - name: Pinned Godot and software display
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y xvfb libgl1-mesa-dri mesa-vulkan-drivers
+          v=$(cat client/tools/godot-version.txt)
+          f="Godot_v${v}_linux.x86_64.zip"
+          curl -fsSL -o "$f" "https://github.com/godotengine/godot-builds/releases/download/$v/$f"
+          grep "$f" client/tools/godot-pins.txt | awk '{print $2"  "$1}' | sha256sum -c -
+          unzip -q "$f"
+          mv "Godot_v${v}_linux.x86_64" godot
+          chmod +x godot
+          mkdir -p build/bin
+          go build -trimpath -buildvcs=false -o build/bin/asabiya-server ./cmd/asabiya-server
+      - name: Remote software rendering and real startup only
+        run: |
+          mkdir -p build/atlas-preview
+          ./godot --headless --path client/godot --import > build/atlas-preview/import.txt 2>&1
+          timeout 180 xvfb-run -a -s '-screen 0 1600x900x24' ./godot --path client/godot --rendering-method gl_compatibility --audio-driver Dummy --script res://tests/atlas_visual_smoke.gd -- --server "$PWD/build/bin/asabiya-server" --ui-scale 1 > build/atlas-preview/runtime.txt 2>&1
+          cat build/atlas-preview/runtime.txt
+          if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' build/atlas-preview/runtime.txt; then exit 1; fi
+      - name: Publish software-render captures and logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: atlas-software-preview
+          path: build/atlas-preview/**
+          if-no-files-found: error
+          retention-days: 14

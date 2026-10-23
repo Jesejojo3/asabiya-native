@@ -1,0 +1,83 @@
+[
+	{
+		"id": "world",
+		"op": "create_world",
+		"payload": {
+			"world": {
+				"detail": 4.0,
+				"height": 200.0,
+				"landFraction": 0.33,
+				"seed": "Asabiya",
+				"width": 400.0
+			}
+		},
+		"schema": "asabiya/local-v1",
+		"session": 0.0
+	},
+	{
+		"id": "command",
+		"op": "apply_command",
+		"payload": {
+			"cell": 12.0,
+			"kind": "change_rules",
+			"profile": "native",
+			"schema": "asabiya/command-v1",
+			"sequence": 1.0,
+			"targetYear": -9000.0,
+			"values": {
+				"volcano": 0.125
+			}
+		},
+		"schema": "asabiya/local-v1",
+		"session": 2.0
+	},
+	{
+		"id": "province",
+		"op": "get_province",
+		"payload": {
+			"id": 12.0
+		},
+		"schema": "asabiya/local-v1",
+		"session": 2.0
+	},
+	{
+		"id": "layer",
+		"op": "get_historical_layer",
+		"payload": {
+			"year": -9000.0
+		},
+		"schema": "asabiya/local-v1",
+		"session": 2.0
+	},
+	{
+		"id": "entity",
+		"op": "get_entity",
+		"payload": {
+			"id": 12.0,
+			"kind": "polity"
+		},
+		"schema": "asabiya/local-v1",
+		"session": 2.0
+	},
+	{
+		"id": "source",
+		"op": "create_world",
+		"payload": {
+			"source": {
+				"assets": [
+					{
+						"bytes": 1553001.0,
+						"path": "resources/legacy-v0.6.html",
+						"role": "earth-html"
+					}
+				],
+				"climate": {
+					"dry": 0.038
+				},
+				"kind": "earth"
+			}
+		},
+		"schema": "asabiya/local-v1",
+		"session": 0.0
+	}
+]

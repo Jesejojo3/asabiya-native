@@ -150,11 +150,11 @@ func TestSimulationInitialization(t *testing.T) {
 	}
 	b, _ := NewSimulation(w, "1")
 	other, _ := NewSimulation(w, "2")
-	if a.Status() != b.Status() || a.Status() == other.Status() {
+	if a.Status() != b.Status() || a.Digest() != b.Digest() || a.Digest() == other.Digest() {
 		t.Fatal("history seed not reproduced")
 	}
-	if a.Status().Year != -9000 || a.Status().HistoryRNG.Calls != 0 || a.World() != w {
-		t.Fatal("unexpected initialization")
+	if a.Status().Year != -9000 || a.Status().HistoryRNG.Calls == 0 || a.World() != w || a.Status().Stage != "founded" {
+		t.Fatalf("unexpected initialization: %+v", a.Status())
 	}
 	if _, err := NewSimulation(nil, "1"); err == nil {
 		t.Fatal("accepted absent world")

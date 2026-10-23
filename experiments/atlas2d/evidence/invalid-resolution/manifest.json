@@ -1,0 +1,62 @@
+{
+  "1280x720-zoom4-activeFalse.jsonl": {
+    "rawSHA256": "5e2764abdee3e135fc0e36885add15f2ab107911147a9cb49ecd22e4fb2edbd1",
+    "uncompressedBytes": 87203
+  },
+  "1920x1080-zoom4-activeTrue.jsonl": {
+    "rawSHA256": "3555a2151dbc7c4bfba5a49bb06ab6ef4b158301d0ef360ae4503a262207b55f",
+    "uncompressedBytes": 68808
+  },
+  "1920x1080-zoom4-activeFalse.memory.jsonl": {
+    "rawSHA256": "f34bfec74db1b8e59172d3c54927e8c262e067a8e69cdb142392e48166930017",
+    "uncompressedBytes": 50118
+  },
+  "1920x1080-zoom4-activeFalse.jsonl": {
+    "rawSHA256": "cda5dd1d22d5b1afab3a3538bf37a7796d33d1e3aea5d867b1a98946361c1ed3",
+    "uncompressedBytes": 84159
+  },
+  "1280x720-zoom4-activeFalse.memory.jsonl": {
+    "rawSHA256": "c9459d6eea0a4603b0866799af71ef6c69027904b3c175d4fe4137b900a6aafe",
+    "uncompressedBytes": 50008
+  },
+  "1280x720-zoom4-activeTrue.jsonl": {
+    "rawSHA256": "70b1589304f66f6ebaaa40a15ab313b00251a04be228757433fe35380e246628",
+    "uncompressedBytes": 68996
+  },
+  "1920x1080-zoom4-activeTrue.memory.jsonl": {
+    "rawSHA256": "b1f667dfe2d828b946aa93adf0457796f1431c6e068173f3b6f7d7c201470ddf",
+    "uncompressedBytes": 47812
+  },
+  "1280x720-zoom4-activeTrue.memory.jsonl": {
+    "rawSHA256": "18971e5d530ec95b7f06631e0d001483c5673d565ccc0d88d3bbdde72209f45a",
+    "uncompressedBytes": 52780
+  },
+  "1920x1080-zoom4-activeTrue.png": {
+    "sha256": "47d0556eca5c7323ccfdaba8f1536b665ebd4013e75cf20fe9ad15e28dbdadbe",
+    "framebuffer": [
+      1280,
+      720
+    ]
+  },
+  "1280x720-zoom4-activeTrue.png": {
+    "sha256": "e4bb42f130ee2c470d77bdd40a8b7b02bf9ebe479a61265fd36d084d249a0b5e",
+    "framebuffer": [
+      1280,
+      720
+    ]
+  },
+  "1920x1080-zoom4-activeFalse.png": {
+    "sha256": "6d61659b3333a11efd1f8a1fd88502ff1b5e9946d4f757317395c4f9ab4a148d",
+    "framebuffer": [
+      1280,
+      720
+    ]
+  },
+  "1280x720-zoom4-activeFalse.png": {
+    "sha256": "ff44a71c8f06a2810a108c64959eb169847165454afd6e3e812965fb5a627178",
+    "framebuffer": [
+      1280,
+      720
+    ]
+  }
+}

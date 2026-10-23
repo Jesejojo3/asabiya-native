@@ -48,6 +48,14 @@ func (c WorldConfig) validate() error {
 // mutate the map through a view. Cell IDs are row-major indices, stable within
 // this world/version. Resizing or changing seeds creates a different world.
 type World struct {
+	source                                                                      WorldSource
+	extended                                                                    bool
+	koppen                                                                      []uint8
+	rawTemperature, rawPrecipitation, rawAmplitude                              []float32
+	climateGrade                                                                *ClimateGrade
+	fitChanged                                                                  int
+	regions                                                                     []WorldRegion
+	medCells, chinaCells                                                        []CellID
 	config                                                                      WorldConfig
 	position                                                                    rng.Position
 	elevation, temperature, precipitation, amplitude, roughness, latitude, area []float32
@@ -72,6 +80,7 @@ type World struct {
 	forest, heavySoil, malaria, oncho, circumscription                          []float32
 	nicheTemperature, nicheMoisture, nicheLifestyle, nicheDisease               []float32
 	ecoReady                                                                    bool
+	landList, coastList                                                         []CellID
 }
 
 type Cell struct {
@@ -112,7 +121,7 @@ func (w *World) Cell(id CellID) (Cell, bool) {
 }
 
 // GenerateWorld builds the procedural geography and prepEco without retaining
-// fine visual layers. Earth/imported maps and climate fitting remain out of scope.
+// fine visual layers. Use GenerateWorldWithInputs for Earth/imported rasters.
 func GenerateWorld(c WorldConfig) (*World, error) {
 	w, _, err := generateWorld(c, false)
 	return w, err
@@ -125,18 +134,54 @@ func GenerateWorldWithSurface(c WorldConfig) (*World, *Surface, error) {
 }
 
 func generateWorld(c WorldConfig, retainSurface bool) (*World, *Surface, error) {
+	return GenerateWorldWithInputs(c, DefaultWorldSource(), WorldInputs{}, retainSurface)
+}
+
+func GenerateWorldWithInputs(c WorldConfig, source WorldSource, inputs WorldInputs, retainSurface bool) (*World, *Surface, error) {
 	if err := c.validate(); err != nil {
 		return nil, nil, err
 	}
+	if source.Kind == "earth" && (c.Width != 400 || c.Height != 200 || c.Detail != 4) {
+		return nil, nil, errors.New("legacy Earth requires 400x200, detail 4")
+	}
 	r := rng.New(rng.WorldSeed(c.Seed))
 	hw, hh := c.Width*c.Detail, c.Height*c.Detail
-	e, err := generateElevation(hw, hh, c.LandFraction, r)
-	if err != nil {
+	if err := validateWorldInputs(source, inputs, hw*hh); err != nil {
 		return nil, nil, err
 	}
-	t, p, a := generateClimate(e, hw, hh)
+	var e []float32
+	if inputs.Height != nil {
+		e = append([]float32(nil), inputs.Height...)
+	} else {
+		var err error
+		e, err = generateElevation(hw, hh, c.LandFraction, r)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	t, p, a := generateClimateForSource(e, hw, hh, source.Climate)
+	rawT, rawP, rawA := aggregateFine(t, c), aggregateFine(p, c), aggregateFine(a, c)
+	if inputs.Temperature != nil {
+		copy(t, inputs.Temperature)
+	}
+	if inputs.Precipitation != nil {
+		copy(p, inputs.Precipitation)
+	}
+	fitChanged := 0
+	if inputs.Koppen != nil && source.FitClimate {
+		fitChanged = fitClimate(t, p, a, e, inputs.Koppen)
+	}
 	n := c.Width * c.Height
 	w := &World{config: c, position: r.Position(), elevation: make([]float32, n), temperature: make([]float32, n), precipitation: make([]float32, n), amplitude: make([]float32, n), roughness: make([]float32, n), latitude: make([]float32, n), area: make([]float32, n), land: make([]bool, n), coast: make([]bool, n), neighbors: make([][4]CellID, n), landmass: make([]int32, n)}
+	w.source = cloneWorldSource(source)
+	w.extended = source.Kind != "procedural" || source.Climate != DefaultClimate() || inputs.Temperature != nil || inputs.Precipitation != nil || inputs.Koppen != nil
+	w.rawTemperature = rawT
+	w.rawPrecipitation = rawP
+	w.rawAmplitude = rawA
+	w.fitChanged = fitChanged
+	if inputs.Koppen != nil {
+		w.koppen = aggregateKoppen(inputs.Koppen, c)
+	}
 	for cy := 0; cy < c.Height; cy++ {
 		for cx := 0; cx < c.Width; cx++ {
 			i := cy*c.Width + cx
@@ -180,6 +225,9 @@ func generateWorld(c WorldConfig, retainSurface bool) (*World, *Surface, error) 
 		}
 	}
 	w.indexLand()
+	if w.landCells == 0 {
+		return nil, nil, errors.New("world has no logical land cells")
+	}
 	w.prepareGeometry()
 	w.prepareDrainage()
 	w.prepareSuitability()
@@ -187,6 +235,10 @@ func generateWorld(c WorldConfig, retainSurface bool) (*World, *Surface, error) 
 	w.prepareWeatherGrid()
 	w.prepareSeaLinks()
 	w.prepareEcology()
+	w.climateGrade = w.gradeClimate()
+	if source.Kind == "earth" {
+		w.prepareEarthRegions()
+	}
 	var surface *Surface
 	if retainSurface {
 		surface = &Surface{width: hw, height: hh, elevation: e, temperature: t, precipitation: p, amplitude: a}
@@ -275,4 +327,20 @@ func (w *World) indexLand() {
 		}
 		w.landmassSizes = append(w.landmassSizes, len(q))
 	}
+	// landIdx/coastIdx of v0.6: row-major lists. Historical systems iterate
+	// them and sample them with RNG, so their order is part of the contract.
+	w.landList = make([]CellID, 0, w.landCells)
+	w.coastList = make([]CellID, 0, w.coastCells)
+	for i := range w.land {
+		if w.land[i] {
+			w.landList = append(w.landList, CellID(i))
+			if w.coast[i] {
+				w.coastList = append(w.coastList, CellID(i))
+			}
+		}
+	}
 }
+
+// LandCells and CoastCells return copies of the row-major land/coast lists.
+func (w *World) LandCells() []CellID  { return append([]CellID(nil), w.landList...) }
+func (w *World) CoastCells() []CellID { return append([]CellID(nil), w.coastList...) }

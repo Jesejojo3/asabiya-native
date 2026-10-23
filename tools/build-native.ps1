@@ -14,8 +14,8 @@ $env:GOARCH = 'amd64'
 $env:GOAMD64 = 'v1'
 $env:CGO_ENABLED = '0'
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
-foreach ($name in @('asabiya-headless', 'asabiya')) {
+foreach ($name in @('asabiya-headless', 'asabiya-server', 'asabiya')) {
     & go -C $repository build -trimpath -buildvcs=false -o (Join-Path $OutputDirectory "$name.exe") "./cmd/$name"
     if ($LASTEXITCODE -ne 0) { throw "Build failed: $name" }
 }
-Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $OutputDirectory 'asabiya-headless.exe'), (Join-Path $OutputDirectory 'asabiya.exe')
+Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $OutputDirectory 'asabiya-headless.exe'), (Join-Path $OutputDirectory 'asabiya-server.exe'), (Join-Path $OutputDirectory 'asabiya.exe')

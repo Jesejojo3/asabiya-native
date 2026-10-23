@@ -1,0 +1,3041 @@
+{
+ "schema": "asabiya/v06-history-catalog-v1",
+ "referenceSha256": "988ce360e70d2d034a3898f60b9a4c38d40b0ab56dd7a147329740f15fa8e9e9",
+ "source": "reference/v0.6 core: PDEF 319-358, STYLES/MACROS/LEX/RULES 659-693, TECH/ERAS 762-800, EPOCH_KINDS 919-923",
+ "styles": [
+  {
+   "name": "romance",
+   "cons": [
+    "t",
+    "t",
+    "r",
+    "r",
+    "n",
+    "n",
+    "l",
+    "l",
+    "s",
+    "s",
+    "c",
+    "c",
+    "m",
+    "v",
+    "p",
+    "d",
+    "g",
+    "b",
+    "f"
+   ],
+   "cl": [
+    "tr",
+    "pr",
+    "br",
+    "cr",
+    "fl",
+    "gr"
+   ],
+   "vow": [
+    "a",
+    "a",
+    "e",
+    "e",
+    "i",
+    "o",
+    "o",
+    "u"
+   ],
+   "pat": [
+    "CV",
+    "CV",
+    "CV",
+    "CVC",
+    "KV",
+    "V"
+   ],
+   "coda": [
+    "n",
+    "r",
+    "s",
+    "l"
+   ],
+   "place": [
+    "ia",
+    "ia",
+    "a",
+    "ona",
+    "aria",
+    "ica"
+   ],
+   "ppl": [
+    "ians",
+    "ans",
+    "ese",
+    "ini"
+   ],
+   "pers": [
+    "us",
+    "o",
+    "a",
+    "io",
+    "ius",
+    "ian"
+   ],
+   "city": [
+    "a",
+    "um",
+    "ona",
+    "ia",
+    "ento"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "king",
+    "e": "emperor",
+    "c": "chief",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "germanic",
+   "cons": [
+    "t",
+    "r",
+    "n",
+    "s",
+    "d",
+    "l",
+    "g",
+    "k",
+    "h",
+    "w",
+    "b",
+    "f",
+    "m",
+    "th"
+   ],
+   "cl": [
+    "st",
+    "sk",
+    "br",
+    "dr",
+    "fr",
+    "gr",
+    "hr",
+    "kn"
+   ],
+   "vow": [
+    "a",
+    "e",
+    "i",
+    "o",
+    "u",
+    "a",
+    "e",
+    "ae"
+   ],
+   "pat": [
+    "CV",
+    "CVC",
+    "CVC",
+    "KVC",
+    "VC"
+   ],
+   "coda": [
+    "n",
+    "r",
+    "d",
+    "l",
+    "s",
+    "rd",
+    "ld",
+    "nd",
+    "st",
+    "lf"
+   ],
+   "place": [
+    "land",
+    "heim",
+    "mark",
+    "ia",
+    "burg"
+   ],
+   "ppl": [
+    "s",
+    "ings",
+    "ar",
+    "ians"
+   ],
+   "pers": [
+    "ric",
+    "mund",
+    "bert",
+    "wulf",
+    "hild",
+    "ald"
+   ],
+   "city": [
+    "burg",
+    "ford",
+    "wick",
+    "stead",
+    "ham"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "king",
+    "e": "emperor",
+    "c": "chief",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "slavic",
+   "cons": [
+    "v",
+    "r",
+    "n",
+    "s",
+    "l",
+    "k",
+    "m",
+    "d",
+    "b",
+    "p",
+    "t",
+    "z",
+    "ch",
+    "sh",
+    "y",
+    "g"
+   ],
+   "cl": [
+    "pr",
+    "br",
+    "st",
+    "sl",
+    "kr",
+    "zv"
+   ],
+   "vow": [
+    "a",
+    "o",
+    "e",
+    "i",
+    "u",
+    "y",
+    "a",
+    "o"
+   ],
+   "pat": [
+    "CV",
+    "CV",
+    "CVC",
+    "KV"
+   ],
+   "coda": [
+    "v",
+    "n",
+    "k",
+    "r",
+    "l",
+    "sk"
+   ],
+   "place": [
+    "ia",
+    "ov",
+    "grad",
+    "ava",
+    "inia"
+   ],
+   "ppl": [
+    "ians",
+    "ichi",
+    "ani",
+    "s"
+   ],
+   "pers": [
+    "slav",
+    "mir",
+    "ko",
+    "av",
+    "ana"
+   ],
+   "city": [
+    "grad",
+    "ov",
+    "ets",
+    "ava"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "king",
+    "e": "emperor",
+    "c": "chief",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "celtic",
+   "cons": [
+    "b",
+    "r",
+    "d",
+    "n",
+    "l",
+    "c",
+    "m",
+    "g",
+    "t",
+    "s",
+    "v"
+   ],
+   "cl": [
+    "br",
+    "dr",
+    "gl"
+   ],
+   "vow": [
+    "a",
+    "e",
+    "i",
+    "o",
+    "u",
+    "ai"
+   ],
+   "pat": [
+    "CV",
+    "CVC",
+    "CV"
+   ],
+   "coda": [
+    "n",
+    "r",
+    "d",
+    "g",
+    "ch"
+   ],
+   "place": [
+    "ia",
+    "an",
+    "ach",
+    "dun",
+    "or"
+   ],
+   "ppl": [
+    "ii",
+    "ans",
+    "ach"
+   ],
+   "pers": [
+    "ach",
+    "an",
+    "ig",
+    "rix"
+   ],
+   "city": [
+    "dun",
+    "ach",
+    "on"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "king",
+    "e": "emperor",
+    "c": "chief",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "greek",
+   "cons": [
+    "t",
+    "k",
+    "p",
+    "r",
+    "s",
+    "l",
+    "n",
+    "m",
+    "th",
+    "ph",
+    "ch",
+    "d"
+   ],
+   "cl": [
+    "kr",
+    "tr",
+    "pl",
+    "th"
+   ],
+   "vow": [
+    "a",
+    "e",
+    "i",
+    "o",
+    "y",
+    "a",
+    "o",
+    "e"
+   ],
+   "pat": [
+    "CV",
+    "CV",
+    "CVC",
+    "V"
+   ],
+   "coda": [
+    "s",
+    "n",
+    "r"
+   ],
+   "place": [
+    "ia",
+    "os",
+    "is",
+    "ene",
+    "eia"
+   ],
+   "ppl": [
+    "ians",
+    "ioi",
+    "ites"
+   ],
+   "pers": [
+    "os",
+    "as",
+    "es",
+    "ion",
+    "ikos"
+   ],
+   "city": [
+    "polis",
+    "ia",
+    "os",
+    "on"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "king",
+    "e": "emperor",
+    "c": "chief",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "semitic",
+   "cons": [
+    "m",
+    "l",
+    "k",
+    "b",
+    "r",
+    "d",
+    "sh",
+    "t",
+    "n",
+    "h",
+    "s",
+    "q",
+    "y",
+    "z",
+    "kh"
+   ],
+   "cl": [],
+   "vow": [
+    "a",
+    "a",
+    "i",
+    "u",
+    "a",
+    "i",
+    "u"
+   ],
+   "pat": [
+    "CV",
+    "CVC",
+    "CV",
+    "CVC"
+   ],
+   "coda": [
+    "m",
+    "n",
+    "r",
+    "l",
+    "b",
+    "d",
+    "k"
+   ],
+   "place": [
+    "a",
+    "at",
+    "ar",
+    "ad",
+    "iya"
+   ],
+   "ppl": [
+    "ites",
+    "i",
+    "ans"
+   ],
+   "pers": [
+    "el",
+    "at",
+    "ar",
+    "on",
+    "ah"
+   ],
+   "city": [
+    "at",
+    "a",
+    "it",
+    "un"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "malik",
+    "e": "great malik",
+    "c": "sheikh",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "kemetic",
+   "cons": [
+    "t",
+    "m",
+    "n",
+    "k",
+    "h",
+    "s",
+    "r",
+    "w",
+    "b",
+    "dj",
+    "p"
+   ],
+   "cl": [],
+   "vow": [
+    "e",
+    "a",
+    "i",
+    "o",
+    "u"
+   ],
+   "pat": [
+    "CV",
+    "CVC"
+   ],
+   "coda": [
+    "t",
+    "n",
+    "s",
+    "r",
+    "f"
+   ],
+   "place": [
+    "et",
+    "ti",
+    "ut",
+    "an"
+   ],
+   "ppl": [
+    "ites",
+    "i"
+   ],
+   "pers": [
+    "et",
+    "is",
+    "u",
+    "ef"
+   ],
+   "city": [
+    "et",
+    "u",
+    "is"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "king",
+    "e": "emperor",
+    "c": "chief",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "berber",
+   "cons": [
+    "t",
+    "m",
+    "z",
+    "gh",
+    "r",
+    "n",
+    "l",
+    "s",
+    "k",
+    "d",
+    "y",
+    "w"
+   ],
+   "cl": [],
+   "vow": [
+    "a",
+    "i",
+    "u",
+    "a"
+   ],
+   "pat": [
+    "CV",
+    "CVC",
+    "VC"
+   ],
+   "coda": [
+    "t",
+    "n",
+    "r",
+    "z"
+   ],
+   "place": [
+    "a",
+    "ast",
+    "at"
+   ],
+   "ppl": [
+    "en",
+    "ans"
+   ],
+   "pers": [
+    "en",
+    "as",
+    "an"
+   ],
+   "city": [
+    "at",
+    "ast"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "king",
+    "e": "emperor",
+    "c": "chief",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "persian",
+   "cons": [
+    "d",
+    "r",
+    "s",
+    "sh",
+    "k",
+    "b",
+    "m",
+    "n",
+    "p",
+    "f",
+    "z",
+    "kh",
+    "v",
+    "g",
+    "j"
+   ],
+   "cl": [],
+   "vow": [
+    "a",
+    "a",
+    "e",
+    "i",
+    "o",
+    "u"
+   ],
+   "pat": [
+    "CV",
+    "CVC",
+    "CV"
+   ],
+   "coda": [
+    "r",
+    "n",
+    "d",
+    "sh",
+    "z",
+    "s"
+   ],
+   "place": [
+    "an",
+    "stan",
+    "ia",
+    "ar"
+   ],
+   "ppl": [
+    "ians",
+    "i",
+    "ans"
+   ],
+   "pers": [
+    "ush",
+    "es",
+    "an",
+    "dad",
+    "zad"
+   ],
+   "city": [
+    "abad",
+    "gird",
+    "shahr"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "shah",
+    "e": "shahanshah",
+    "c": "khan",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "indic",
+   "cons": [
+    "r",
+    "m",
+    "n",
+    "d",
+    "s",
+    "v",
+    "t",
+    "k",
+    "j",
+    "h",
+    "b",
+    "p",
+    "g",
+    "dh",
+    "bh",
+    "ch"
+   ],
+   "cl": [],
+   "vow": [
+    "a",
+    "a",
+    "i",
+    "u",
+    "e",
+    "o",
+    "aa"
+   ],
+   "pat": [
+    "CV",
+    "CV",
+    "CVC"
+   ],
+   "coda": [
+    "n",
+    "r",
+    "t",
+    "m",
+    "sh"
+   ],
+   "place": [
+    "pur",
+    "desh",
+    "ra",
+    "va",
+    "ana"
+   ],
+   "ppl": [
+    "is",
+    "as",
+    "ans"
+   ],
+   "pers": [
+    "ra",
+    "deva",
+    "an",
+    "ita",
+    "esh"
+   ],
+   "city": [
+    "pur",
+    "nagar",
+    "abad"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "raja",
+    "e": "maharaja",
+    "c": "thakur",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "dravidian",
+   "cons": [
+    "k",
+    "t",
+    "n",
+    "r",
+    "l",
+    "m",
+    "v",
+    "p",
+    "ch",
+    "y",
+    "d"
+   ],
+   "cl": [],
+   "vow": [
+    "a",
+    "i",
+    "u",
+    "e",
+    "o",
+    "a"
+   ],
+   "pat": [
+    "CV",
+    "CV",
+    "CVC"
+   ],
+   "coda": [
+    "n",
+    "l",
+    "r",
+    "m"
+   ],
+   "place": [
+    "am",
+    "ai",
+    "ur",
+    "an"
+   ],
+   "ppl": [
+    "ar",
+    "ans"
+   ],
+   "pers": [
+    "an",
+    "appan",
+    "ai"
+   ],
+   "city": [
+    "ur",
+    "ai",
+    "am"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "king",
+    "e": "emperor",
+    "c": "chief",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "sinitic",
+   "cons": [
+    "zh",
+    "ch",
+    "sh",
+    "j",
+    "q",
+    "x",
+    "h",
+    "l",
+    "m",
+    "n",
+    "d",
+    "t",
+    "g",
+    "k",
+    "b",
+    "p",
+    "w",
+    "y",
+    "s",
+    "c",
+    "z"
+   ],
+   "cl": [],
+   "vow": [
+    "a",
+    "ai",
+    "ao",
+    "an",
+    "ang",
+    "e",
+    "ei",
+    "en",
+    "eng",
+    "i",
+    "ia",
+    "iao",
+    "ian",
+    "iang",
+    "in",
+    "ing",
+    "o",
+    "ong",
+    "ou",
+    "u",
+    "uan",
+    "uang",
+    "ui",
+    "un",
+    "uo"
+   ],
+   "pat": [
+    "CV"
+   ],
+   "coda": [],
+   "place": [],
+   "ppl": [],
+   "pers": [],
+   "city": [
+    "an",
+    "yang",
+    "du",
+    "zhou",
+    "ling"
+   ],
+   "mono": true,
+   "pre": null,
+   "titles": {
+    "k": "wang",
+    "e": "huangdi",
+    "c": "chief",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "japonic",
+   "cons": [
+    "k",
+    "s",
+    "t",
+    "n",
+    "h",
+    "m",
+    "y",
+    "r",
+    "w",
+    "g",
+    "z",
+    "d",
+    "b"
+   ],
+   "cl": [],
+   "vow": [
+    "a",
+    "i",
+    "u",
+    "e",
+    "o"
+   ],
+   "pat": [
+    "CV",
+    "CV",
+    "CV"
+   ],
+   "coda": [],
+   "place": [
+    "ma",
+    "shima",
+    "no"
+   ],
+   "ppl": [],
+   "pers": [
+    "ro",
+    "ko",
+    "mi",
+    "ra"
+   ],
+   "city": [
+    "yama",
+    "kawa",
+    "ta"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "king",
+    "e": "emperor",
+    "c": "chief",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "tibetan",
+   "cons": [
+    "g",
+    "d",
+    "b",
+    "k",
+    "t",
+    "p",
+    "ts",
+    "dz",
+    "zh",
+    "sh",
+    "s",
+    "l",
+    "r",
+    "m",
+    "n",
+    "ng",
+    "y",
+    "w"
+   ],
+   "cl": [],
+   "vow": [
+    "a",
+    "e",
+    "i",
+    "o",
+    "u"
+   ],
+   "pat": [
+    "CV",
+    "CVC"
+   ],
+   "coda": [
+    "g",
+    "d",
+    "b",
+    "m",
+    "n",
+    "ng",
+    "r",
+    "l",
+    "s"
+   ],
+   "place": [],
+   "ppl": [
+    "pa"
+   ],
+   "pers": [
+    "pa",
+    "ma"
+   ],
+   "city": [
+    "kar",
+    "ling"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "king",
+    "e": "emperor",
+    "c": "chief",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "turkic",
+   "cons": [
+    "t",
+    "k",
+    "q",
+    "b",
+    "s",
+    "r",
+    "l",
+    "m",
+    "n",
+    "y",
+    "ch",
+    "sh",
+    "g",
+    "d"
+   ],
+   "cl": [],
+   "vow": [
+    "a",
+    "a",
+    "i",
+    "u",
+    "o",
+    "e",
+    "y"
+   ],
+   "pat": [
+    "CV",
+    "CVC",
+    "CVC",
+    "V"
+   ],
+   "coda": [
+    "r",
+    "n",
+    "k",
+    "l",
+    "g",
+    "sh",
+    "z",
+    "q"
+   ],
+   "place": [
+    "ia",
+    "an",
+    "li"
+   ],
+   "ppl": [
+    "s",
+    "lar"
+   ],
+   "pers": [
+    "tay",
+    "gul",
+    "ar",
+    "bek"
+   ],
+   "city": [
+    "kent",
+    "balik"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "khan",
+    "e": "khagan",
+    "c": "bey",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "mongolic",
+   "cons": [
+    "b",
+    "t",
+    "g",
+    "kh",
+    "m",
+    "n",
+    "ch",
+    "s",
+    "d",
+    "r",
+    "l",
+    "y"
+   ],
+   "cl": [],
+   "vow": [
+    "a",
+    "o",
+    "u",
+    "e",
+    "i"
+   ],
+   "pat": [
+    "CV",
+    "CVC"
+   ],
+   "coda": [
+    "n",
+    "r",
+    "l",
+    "g",
+    "d"
+   ],
+   "place": [
+    "ia",
+    "ai"
+   ],
+   "ppl": [
+    "s",
+    "ut",
+    "id"
+   ],
+   "pers": [
+    "tai",
+    "atu",
+    "gun",
+    "ei"
+   ],
+   "city": [
+    "balgas",
+    "khot"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "khan",
+    "e": "khagan",
+    "c": "noyan",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "uralic",
+   "cons": [
+    "k",
+    "t",
+    "s",
+    "m",
+    "n",
+    "l",
+    "v",
+    "p",
+    "h",
+    "r",
+    "j"
+   ],
+   "cl": [],
+   "vow": [
+    "a",
+    "e",
+    "i",
+    "o",
+    "u",
+    "a"
+   ],
+   "pat": [
+    "CV",
+    "CVC",
+    "CV"
+   ],
+   "coda": [
+    "n",
+    "s",
+    "t",
+    "k",
+    "l"
+   ],
+   "place": [
+    "maa",
+    "la",
+    "ia"
+   ],
+   "ppl": [
+    "s",
+    "ians"
+   ],
+   "pers": [
+    "ko",
+    "nen",
+    "o"
+   ],
+   "city": [
+    "la",
+    "va"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "king",
+    "e": "emperor",
+    "c": "chief",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "bantu",
+   "cons": [
+    "k",
+    "m",
+    "t",
+    "l",
+    "s",
+    "b",
+    "w",
+    "ny",
+    "z",
+    "g"
+   ],
+   "cl": [
+    "mb",
+    "nd",
+    "ng",
+    "nk",
+    "nz"
+   ],
+   "vow": [
+    "a",
+    "a",
+    "i",
+    "u",
+    "e",
+    "o"
+   ],
+   "pat": [
+    "CV",
+    "CV",
+    "KV",
+    "CV"
+   ],
+   "coda": [],
+   "place": [],
+   "ppl": [],
+   "pers": [],
+   "city": [],
+   "mono": false,
+   "pre": {
+    "ppl": [
+     "Ba",
+     "Wa",
+     "A"
+    ],
+    "place": [
+     "U",
+     "Bu",
+     "Ki"
+    ]
+   },
+   "titles": {
+    "k": "mwene",
+    "e": "great mwene",
+    "c": "chief",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "mande",
+   "cons": [
+    "k",
+    "m",
+    "s",
+    "d",
+    "n",
+    "b",
+    "t",
+    "g",
+    "f",
+    "l",
+    "j"
+   ],
+   "cl": [],
+   "vow": [
+    "a",
+    "i",
+    "u",
+    "o",
+    "e"
+   ],
+   "pat": [
+    "CV",
+    "CVC"
+   ],
+   "coda": [
+    "n"
+   ],
+   "place": [
+    "ba",
+    "ka",
+    "dugu"
+   ],
+   "ppl": [
+    "nke",
+    "s"
+   ],
+   "pers": [
+    "ba",
+    "ta",
+    "ri"
+   ],
+   "city": [
+    "dugu",
+    "ba"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "mansa",
+    "e": "great mansa",
+    "c": "farin",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "austronesian",
+   "cons": [
+    "k",
+    "t",
+    "m",
+    "n",
+    "l",
+    "p",
+    "h",
+    "w",
+    "s",
+    "r",
+    "g",
+    "ng"
+   ],
+   "cl": [],
+   "vow": [
+    "a",
+    "a",
+    "i",
+    "u",
+    "e",
+    "o"
+   ],
+   "pat": [
+    "CV",
+    "CV",
+    "V",
+    "CVC"
+   ],
+   "coda": [
+    "n",
+    "ng"
+   ],
+   "place": [
+    "a",
+    "ia",
+    "u"
+   ],
+   "ppl": [
+    "ns"
+   ],
+   "pers": [
+    "a",
+    "i",
+    "ana"
+   ],
+   "city": [
+    "a",
+    "ang"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "raja",
+    "e": "maharaja",
+    "c": "datu",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "thai",
+   "cons": [
+    "k",
+    "kh",
+    "t",
+    "th",
+    "p",
+    "ph",
+    "ch",
+    "s",
+    "n",
+    "m",
+    "ng",
+    "l",
+    "w",
+    "y"
+   ],
+   "cl": [],
+   "vow": [
+    "a",
+    "ai",
+    "ao",
+    "e",
+    "i",
+    "o",
+    "u",
+    "ua"
+   ],
+   "pat": [
+    "CV",
+    "CVC"
+   ],
+   "coda": [
+    "n",
+    "ng",
+    "m",
+    "k",
+    "t",
+    "p"
+   ],
+   "place": [],
+   "ppl": [],
+   "pers": [],
+   "city": [
+    "buri",
+    "thani"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "king",
+    "e": "emperor",
+    "c": "chief",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "pama",
+   "cons": [
+    "w",
+    "y",
+    "ng",
+    "b",
+    "d",
+    "g",
+    "m",
+    "n",
+    "l",
+    "r",
+    "rr"
+   ],
+   "cl": [],
+   "vow": [
+    "a",
+    "i",
+    "u"
+   ],
+   "pat": [
+    "CV",
+    "CVC"
+   ],
+   "coda": [
+    "n",
+    "l",
+    "r"
+   ],
+   "place": [],
+   "ppl": [],
+   "pers": [],
+   "city": [],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "king",
+    "e": "emperor",
+    "c": "chief",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "nahuatl",
+   "cons": [
+    "t",
+    "tl",
+    "tz",
+    "ch",
+    "m",
+    "n",
+    "x",
+    "k",
+    "p",
+    "y",
+    "w",
+    "l"
+   ],
+   "cl": [],
+   "vow": [
+    "a",
+    "e",
+    "i",
+    "o"
+   ],
+   "pat": [
+    "CV",
+    "CVC",
+    "CV"
+   ],
+   "coda": [
+    "tl",
+    "n",
+    "c"
+   ],
+   "place": [
+    "tlan",
+    "pan",
+    "co",
+    "can"
+   ],
+   "ppl": [
+    "ca",
+    "eca"
+   ],
+   "pers": [
+    "tl",
+    "otl",
+    "atzin"
+   ],
+   "city": [
+    "tlan",
+    "pan",
+    "co"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "tlatoani",
+    "e": "huey tlatoani",
+    "c": "chief",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "maya",
+   "cons": [
+    "k",
+    "b",
+    "ch",
+    "t",
+    "p",
+    "m",
+    "n",
+    "l",
+    "y",
+    "w",
+    "h",
+    "x"
+   ],
+   "cl": [],
+   "vow": [
+    "a",
+    "a",
+    "e",
+    "i",
+    "o",
+    "u"
+   ],
+   "pat": [
+    "CV",
+    "CVC"
+   ],
+   "coda": [
+    "k",
+    "l",
+    "n",
+    "m",
+    "b"
+   ],
+   "place": [
+    "il",
+    "al"
+   ],
+   "ppl": [
+    "ob"
+   ],
+   "pers": [
+    "ab",
+    "il"
+   ],
+   "city": [
+    "il",
+    "tun"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "king",
+    "e": "emperor",
+    "c": "chief",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "algonquian",
+   "cons": [
+    "k",
+    "w",
+    "n",
+    "m",
+    "s",
+    "t",
+    "p",
+    "ch"
+   ],
+   "cl": [],
+   "vow": [
+    "a",
+    "e",
+    "i",
+    "o"
+   ],
+   "pat": [
+    "CV",
+    "CVC"
+   ],
+   "coda": [
+    "k",
+    "n",
+    "t"
+   ],
+   "place": [
+    "ak",
+    "ig"
+   ],
+   "ppl": [
+    "s"
+   ],
+   "pers": [
+    "ak",
+    "in"
+   ],
+   "city": [
+    "ak"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "king",
+    "e": "emperor",
+    "c": "chief",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "quechua",
+   "cons": [
+    "k",
+    "q",
+    "t",
+    "p",
+    "ch",
+    "m",
+    "n",
+    "ll",
+    "y",
+    "w",
+    "r",
+    "s",
+    "h"
+   ],
+   "cl": [],
+   "vow": [
+    "a",
+    "i",
+    "u"
+   ],
+   "pat": [
+    "CV",
+    "CVC"
+   ],
+   "coda": [
+    "q",
+    "y",
+    "n",
+    "r",
+    "s"
+   ],
+   "place": [
+    "marka",
+    "suyu"
+   ],
+   "ppl": [
+    "kuna"
+   ],
+   "pers": [
+    "pa",
+    "ki",
+    "yu"
+   ],
+   "city": [
+    "marka",
+    "pampa"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "king",
+    "e": "emperor",
+    "c": "chief",
+    "h": "khan"
+   }
+  },
+  {
+   "name": "tupi",
+   "cons": [
+    "t",
+    "p",
+    "m",
+    "n",
+    "r",
+    "k",
+    "g",
+    "y",
+    "w",
+    "b"
+   ],
+   "cl": [],
+   "vow": [
+    "a",
+    "i",
+    "u",
+    "e",
+    "o",
+    "y"
+   ],
+   "pat": [
+    "CV",
+    "CV",
+    "V"
+   ],
+   "coda": [],
+   "place": [
+    "ba",
+    "ra",
+    "ma"
+   ],
+   "ppl": [
+    "s"
+   ],
+   "pers": [
+    "a",
+    "i"
+   ],
+   "city": [
+    "ba",
+    "tuba"
+   ],
+   "mono": false,
+   "pre": null,
+   "titles": {
+    "k": "king",
+    "e": "emperor",
+    "c": "chief",
+    "h": "khan"
+   }
+  }
+ ],
+ "macros": [
+  {
+   "key": "ie",
+   "styles": [
+    "romance",
+    "germanic",
+    "slavic",
+    "celtic",
+    "greek"
+   ]
+  },
+  {
+   "key": "afro",
+   "styles": [
+    "semitic",
+    "kemetic",
+    "berber"
+   ]
+  },
+  {
+   "key": "indo",
+   "styles": [
+    "indic",
+    "dravidian",
+    "persian"
+   ]
+  },
+  {
+   "key": "sino",
+   "styles": [
+    "sinitic",
+    "japonic",
+    "tibetan"
+   ]
+  },
+  {
+   "key": "alt",
+   "styles": [
+    "turkic",
+    "mongolic",
+    "uralic"
+   ]
+  },
+  {
+   "key": "afr",
+   "styles": [
+    "bantu",
+    "mande"
+   ]
+  },
+  {
+   "key": "aus",
+   "styles": [
+    "austronesian",
+    "thai"
+   ]
+  },
+  {
+   "key": "pama",
+   "styles": [
+    "pama"
+   ]
+  },
+  {
+   "key": "nam",
+   "styles": [
+    "nahuatl",
+    "maya",
+    "algonquian"
+   ]
+  },
+  {
+   "key": "sam",
+   "styles": [
+    "quechua",
+    "tupi"
+   ]
+  }
+ ],
+ "lex": [
+  "root",
+  "river",
+  "god",
+  "sun",
+  "sea",
+  "mountain",
+  "mother",
+  "grain"
+ ],
+ "soundRules": [
+  {
+   "from": "p",
+   "to": "f"
+  },
+  {
+   "from": "k",
+   "to": "h"
+  },
+  {
+   "from": "t",
+   "to": "s"
+  },
+  {
+   "from": "b",
+   "to": "v"
+  },
+  {
+   "from": "d",
+   "to": "z"
+  },
+  {
+   "from": "g",
+   "to": "y"
+  },
+  {
+   "from": "s",
+   "to": "h"
+  },
+  {
+   "from": "a",
+   "to": "e"
+  },
+  {
+   "from": "o",
+   "to": "u"
+  },
+  {
+   "from": "e",
+   "to": "i"
+  },
+  {
+   "from": "u",
+   "to": "o"
+  },
+  {
+   "from": "ai",
+   "to": "e"
+  },
+  {
+   "from": "kh",
+   "to": "h"
+  },
+  {
+   "from": "ch",
+   "to": "sh"
+  },
+  {
+   "from": "l",
+   "to": "r"
+  },
+  {
+   "from": "r",
+   "to": "l"
+  },
+  {
+   "from": "th",
+   "to": "t"
+  },
+  {
+   "from": "sh",
+   "to": "s"
+  },
+  {
+   "from": "ei",
+   "to": "i"
+  },
+  {
+   "from": "c",
+   "to": "g"
+  },
+  {
+   "from": "ct",
+   "to": "t"
+  },
+  {
+   "kind": "drop"
+  },
+  {
+   "kind": "voice"
+  },
+  {
+   "kind": "palatal"
+  },
+  {
+   "kind": "nasal"
+  },
+  {
+   "kind": "prothesis"
+  },
+  {
+   "kind": "geminate"
+  }
+ ],
+ "tech": [
+  {
+   "key": "farm",
+   "name": "Farming",
+   "era": 1,
+   "pre": [],
+   "emergence": null,
+   "pos": [
+    0.6,
+    -0.6
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "herd",
+   "name": "Herding",
+   "era": 1,
+   "pre": [],
+   "emergence": null,
+   "pos": [
+    0.2,
+    -0.5
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "irrig",
+   "name": "Irrigation",
+   "era": 1,
+   "pre": [
+    0
+   ],
+   "emergence": null,
+   "pos": [
+    0.7,
+    0.2
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "copper",
+   "name": "Bronze",
+   "era": 2,
+   "pre": [
+    0
+   ],
+   "emergence": null,
+   "pos": [
+    0.1,
+    0.5
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "horse",
+   "name": "Horse riding",
+   "era": 2,
+   "pre": [
+    1
+   ],
+   "emergence": null,
+   "pos": [
+    -0.2,
+    0.4
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "sail",
+   "name": "Seafaring",
+   "era": 1,
+   "pre": [],
+   "emergence": null,
+   "pos": [
+    0.3,
+    0.1
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "writing",
+   "name": "Writing",
+   "era": 2,
+   "pre": [
+    0,
+    3
+   ],
+   "emergence": {
+    "b": 0.0002,
+    "pop": 1500000,
+    "cells": 4
+   },
+   "pos": [
+    -0.4,
+    0
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "wheel",
+   "name": "Wheel and chariot",
+   "era": 2,
+   "pre": [
+    3
+   ],
+   "emergence": {
+    "b": 0.0002,
+    "pop": 1000000
+   },
+   "pos": [
+    0,
+    0.5
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "iron",
+   "name": "Ironworking",
+   "era": 3,
+   "pre": [
+    3,
+    7,
+    6
+   ],
+   "emergence": {
+    "b": 0.00008333333333333333,
+    "pop": 3000000
+   },
+   "pos": [
+    0.3,
+    0.7
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "coin",
+   "name": "Coinage",
+   "era": 4,
+   "pre": [
+    6,
+    8
+   ],
+   "emergence": {
+    "b": 0.0002777777777777778,
+    "pop": 4000000
+   },
+   "pos": [
+    -0.6,
+    0.2
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "law",
+   "name": "Law codes",
+   "era": 4,
+   "pre": [
+    6
+   ],
+   "emergence": {
+    "b": 0.0003125,
+    "pop": 3000000,
+    "cells": 15
+   },
+   "pos": [
+    -0.5,
+    -0.1
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "roads",
+   "name": "Roads",
+   "era": 4,
+   "pre": [
+    10,
+    8,
+    9
+   ],
+   "emergence": {
+    "b": 0.0003125,
+    "pop": 4000000,
+    "cells": 25
+   },
+   "pos": [
+    -0.4,
+    0.5
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "nav",
+   "name": "Navigation",
+   "era": 4,
+   "pre": [
+    5,
+    6,
+    8
+   ],
+   "emergence": {
+    "b": 0.0002777777777777778,
+    "pop": 2000000,
+    "coast": 1
+   },
+   "pos": [
+    0,
+    0.4
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "caval",
+   "name": "Heavy cavalry",
+   "era": 5,
+   "pre": [
+    4,
+    8,
+    10,
+    9
+   ],
+   "emergence": {
+    "b": 0.00017857142857142857,
+    "pop": 3000000,
+    "horse": 1
+   },
+   "pos": [
+    0.2,
+    0.8
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "paper",
+   "name": "Paper",
+   "era": 5,
+   "pre": [
+    9,
+    10,
+    11
+   ],
+   "emergence": {
+    "b": 0.00017857142857142857,
+    "pop": 6000000
+   },
+   "pos": [
+    -0.6,
+    -0.1
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "crops",
+   "name": "Crop rotation",
+   "era": 5,
+   "pre": [
+    8,
+    10,
+    11
+   ],
+   "emergence": {
+    "b": 0.00015625,
+    "pop": 4000000
+   },
+   "pos": [
+    0.7,
+    0.1
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "gun",
+   "name": "Gunpowder",
+   "era": 6,
+   "pre": [
+    14,
+    13
+   ],
+   "emergence": {
+    "b": 0.000125,
+    "pop": 12000000
+   },
+   "pos": [
+    0.2,
+    0.9
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "ocean",
+   "name": "Ocean navigation",
+   "era": 7,
+   "pre": [
+    12,
+    14,
+    15
+   ],
+   "emergence": {
+    "b": 0.00014285714285714287,
+    "pop": 5000000,
+    "coast": 1
+   },
+   "pos": [
+    -0.2,
+    0.8
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "camel",
+   "name": "Camels",
+   "era": 2,
+   "pre": [
+    1
+   ],
+   "emergence": null,
+   "pos": [
+    0.3,
+    -0.3
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "grain",
+   "name": "Grain crops",
+   "era": 1,
+   "pre": [
+    0
+   ],
+   "emergence": null,
+   "pos": [
+    0.5,
+    -0.5
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "ard",
+   "name": "Scratch plough",
+   "era": 2,
+   "pre": [
+    0,
+    1
+   ],
+   "emergence": null,
+   "pos": [
+    0.5,
+    0.3
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "plough",
+   "name": "Heavy plough",
+   "era": 5,
+   "pre": [
+    20,
+    8
+   ],
+   "emergence": {
+    "b": 0.0001923076923076923,
+    "pop": 1500000,
+    "press": 1,
+    "heavy": 1
+   },
+   "pos": [
+    0.6,
+    0.6
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "manure",
+   "name": "Intensive manuring",
+   "era": 3,
+   "pre": [
+    0,
+    1
+   ],
+   "emergence": {
+    "b": 0.0003333333333333333,
+    "pop": 500000,
+    "press": 1
+   },
+   "pos": [
+    0.8,
+    -0.2
+   ],
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "xcrops",
+   "name": "Crops from across the ocean",
+   "era": 7,
+   "pre": [
+    0
+   ],
+   "emergence": null,
+   "pos": null,
+   "synthetic": false,
+   "description": ""
+  },
+  {
+   "key": "kitesig",
+   "name": "Kite signalling",
+   "era": 4,
+   "pre": [
+    6,
+    5
+   ],
+   "emergence": {
+    "b": 0.0000625,
+    "pop": 2000000
+   },
+   "pos": [
+    0.5,
+    -0.3
+   ],
+   "synthetic": true,
+   "description": "Signal kites relay orders along frontiers: administrative reach +15%."
+  },
+  {
+   "key": "windcart",
+   "name": "Wind wagons",
+   "era": 5,
+   "pre": [
+    7,
+    12
+   ],
+   "emergence": {
+    "b": 0.0000625,
+    "pop": 2000000
+   },
+   "pos": [
+    -0.3,
+    0.9
+   ],
+   "synthetic": true,
+   "description": "Sail-driven carts cross flat deserts and steppe: they open caravan routes like camels do."
+  },
+  {
+   "key": "fungal",
+   "name": "Forest fungal gardens",
+   "era": 3,
+   "pre": [
+    0,
+    22
+   ],
+   "emergence": {
+    "b": 0.00007142857142857143,
+    "pop": 300000,
+    "press": 1
+   },
+   "pos": [
+    0.9,
+    -0.8
+   ],
+   "synthetic": true,
+   "description": "Cultivated fungi on forest litter: +40% food in forest and leached soils."
+  },
+  {
+   "key": "ledger",
+   "name": "Clockwork ledgers",
+   "era": 5,
+   "pre": [
+    14,
+    9
+   ],
+   "emergence": {
+    "b": 0.0000625,
+    "pop": 4000000
+   },
+   "pos": [
+    -0.7,
+    0.6
+   ],
+   "synthetic": true,
+   "description": "Geared tallying engines for the treasury: +10% tax, slower-growing upkeep."
+  },
+  {
+   "key": "tidemill",
+   "name": "Tide mills",
+   "era": 4,
+   "pre": [
+    8,
+    12
+   ],
+   "emergence": {
+    "b": 0.00007142857142857143,
+    "pop": 1500000,
+    "coast": 1
+   },
+   "pos": [
+    0,
+    0.95
+   ],
+   "synthetic": true,
+   "description": "Tidal water power for milling and forges: +15% food on coasts."
+  },
+  {
+   "key": "feverbark",
+   "name": "Fever-bark medicine",
+   "era": 4,
+   "pre": [
+    6,
+    15
+   ],
+   "emergence": {
+    "b": 0.00007142857142857143,
+    "pop": 2000000
+   },
+   "pos": [
+    0.6,
+    -0.4
+   ],
+   "synthetic": true,
+   "description": "A bark remedy for marsh fevers: halves the malaria burden, plague deaths -20%."
+  },
+  {
+   "key": "saltflush",
+   "name": "Salt-flushing canals",
+   "era": 4,
+   "pre": [
+    2,
+    10
+   ],
+   "emergence": {
+    "b": 0.00008333333333333333,
+    "pop": 1000000,
+    "press": 1
+   },
+   "pos": [
+    0.7,
+    0.3
+   ],
+   "synthetic": true,
+   "description": "Drainage that rinses salt from irrigated fields: reverses salinization."
+  },
+  {
+   "key": "pigeon",
+   "name": "Courier birds",
+   "era": 3,
+   "pre": [
+    6,
+    1
+   ],
+   "emergence": {
+    "b": 0.00007142857142857143,
+    "pop": 800000
+   },
+   "pos": [
+    -0.2,
+    -0.6
+   ],
+   "synthetic": true,
+   "description": "Trained birds carry messages: reach +10% and faster spread of ideas."
+  }
+ ],
+ "eras": [
+  "Foraging",
+  "Neolithic",
+  "Bronze Age",
+  "Iron Age",
+  "Classical",
+  "Medieval",
+  "Gunpowder age",
+  "Age of Sail"
+ ],
+ "epochKinds": [
+  {
+   "kind": "cold",
+   "weight": 0.5,
+   "amp": [
+    -1.3,
+    -0.7
+   ],
+   "duration": [
+    150,
+    380
+   ],
+   "start": "A long cold epoch sets in: growing seasons shorten and the northern edge of farming retreats.",
+   "end": "The long cold epoch eases."
+  },
+  {
+   "kind": "warm",
+   "weight": 0.3,
+   "amp": [
+    0.5,
+    0.9
+   ],
+   "duration": [
+    150,
+    320
+   ],
+   "start": "A warm epoch begins: harvests improve in the north and farming creeps toward the poles.",
+   "end": "The warm epoch fades."
+  },
+  {
+   "kind": "dry",
+   "weight": 0.2,
+   "amp": [
+    -1.6,
+    -1
+   ],
+   "duration": [
+    80,
+    250
+   ],
+   "start": "A great drought settles over the",
+   "end": "Rain returns to the"
+  }
+ ],
+ "parameters": [
+  {
+   "group": "World",
+   "key": "landFrac",
+   "label": "Land share",
+   "min": 0.2,
+   "max": 0.5,
+   "step": 0.01,
+   "default": 0.33,
+   "newWorld": true
+  },
+  {
+   "group": "World",
+   "key": "bands",
+   "label": "Founding peoples",
+   "min": 3,
+   "max": 24,
+   "step": 1,
+   "default": 10,
+   "newWorld": true
+  },
+  {
+   "group": "World",
+   "key": "hearths",
+   "label": "Farming hearths",
+   "min": 1,
+   "max": 8,
+   "step": 1,
+   "default": 4,
+   "newWorld": true
+  },
+  {
+   "group": "World",
+   "key": "startYear",
+   "label": "Start year",
+   "min": -12000,
+   "max": -4000,
+   "step": 500,
+   "default": -9000,
+   "newWorld": true
+  },
+  {
+   "group": "Climate",
+   "key": "climVar",
+   "label": "Weather variability",
+   "min": 0,
+   "max": 2,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "Climate",
+   "key": "climPersist",
+   "label": "Wet and dry runs",
+   "min": 0,
+   "max": 0.95,
+   "step": 0.01,
+   "default": 0.8,
+   "newWorld": false
+  },
+  {
+   "group": "Climate",
+   "key": "volcano",
+   "label": "Volcanic winters",
+   "min": 0,
+   "max": 3,
+   "step": 0.1,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "People",
+   "key": "growth",
+   "label": "Growth rate",
+   "min": 0.004,
+   "max": 0.03,
+   "step": 0.001,
+   "default": 0.012,
+   "newWorld": false
+  },
+  {
+   "group": "People",
+   "key": "migration",
+   "label": "Migration",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "People",
+   "key": "seafaring",
+   "label": "Seafaring",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "People",
+   "key": "splitDist",
+   "label": "Split radius",
+   "min": 4,
+   "max": 24,
+   "step": 1,
+   "default": 10,
+   "newWorld": false
+  },
+  {
+   "group": "People",
+   "key": "assim",
+   "label": "Assimilation",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "People",
+   "key": "mixing",
+   "label": "Mixing into new peoples",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "People",
+   "key": "wander",
+   "label": "Great migrations",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "States",
+   "key": "formRate",
+   "label": "State formation",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "States",
+   "key": "warRate",
+   "label": "War frequency",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "States",
+   "key": "asabR",
+   "label": "Frontier cohesion",
+   "min": 0.01,
+   "max": 0.3,
+   "step": 0.005,
+   "default": 0.1,
+   "newWorld": false
+  },
+  {
+   "group": "States",
+   "key": "asabD",
+   "label": "Interior decay",
+   "min": 0.001,
+   "max": 0.05,
+   "step": 0.001,
+   "default": 0.006,
+   "newWorld": false
+  },
+  {
+   "group": "States",
+   "key": "reach",
+   "label": "Administrative reach",
+   "min": 2,
+   "max": 20,
+   "step": 0.5,
+   "default": 6,
+   "newWorld": false
+  },
+  {
+   "group": "States",
+   "key": "crisis",
+   "label": "Instability sensitivity",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "States",
+   "key": "allyRate",
+   "label": "Alliances",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "States",
+   "key": "terrain",
+   "label": "Terrain friction",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "States",
+   "key": "floor",
+   "label": "Population floor",
+   "min": 0.2,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "States",
+   "key": "circ",
+   "label": "Circumscription",
+   "min": 0,
+   "max": 2,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "States",
+   "key": "eco",
+   "label": "Ecological reach",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "States",
+   "key": "scaleExp",
+   "label": "Returns to scale",
+   "min": 0.6,
+   "max": 1,
+   "step": 0.01,
+   "default": 0.8,
+   "newWorld": false
+  },
+  {
+   "group": "States",
+   "key": "fortify",
+   "label": "Fortification",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "Nomads",
+   "key": "nomad",
+   "label": "Nomad confederations",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "Nomads",
+   "key": "raid",
+   "label": "Raiding",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "Leaders",
+   "key": "leaderInfl",
+   "label": "Leader influence",
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "default": 0.6,
+   "newWorld": false
+  },
+  {
+   "group": "Leaders",
+   "key": "leaderFlair",
+   "label": "Exceptional rulers",
+   "min": 0,
+   "max": 0.15,
+   "step": 0.005,
+   "default": 0.03,
+   "newWorld": false
+  },
+  {
+   "group": "Ideas & faith",
+   "key": "invent",
+   "label": "Invention",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "Ideas & faith",
+   "key": "techDiff",
+   "label": "Idea diffusion",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "Ideas & faith",
+   "key": "techLoss",
+   "label": "Skill loss in isolation",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "Ideas & faith",
+   "key": "faith",
+   "label": "Prophets and schisms",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "Ideas & faith",
+   "key": "zeal",
+   "label": "Holy wars",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "Climate",
+   "key": "epochs",
+   "label": "Climate epochs",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "Ideas & faith",
+   "key": "disease",
+   "label": "Epidemics",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "Ideas & faith",
+   "key": "degrade",
+   "label": "Soil exhaustion",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  },
+  {
+   "group": "Cataclysms",
+   "key": "cataclysms",
+   "label": "Cataclysms",
+   "min": 0,
+   "max": 3,
+   "step": 0.05,
+   "default": 1,
+   "newWorld": false
+  }
+ ],
+ "additionalDefaults": {
+  "hearthMode": "historical",
+  "fitClimate": true,
+  "shuffleNames": false,
+  "sandbox": false
+ }
+}

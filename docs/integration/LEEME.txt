@@ -1,0 +1,51 @@
+ASABIYA NATIVE — WINDOWS x64
+
+Abre AsabiyaNative.exe. El cliente inicia el motor Go, obtiene el puerto local
+y genera el mundo y las sociedades automáticamente. No necesitas iniciar
+dos programas ni configurar puertos.
+
+La simulación comienza con pueblos fundadores: no hay Estados ni ciudades
+preinventados. Usa Continuar para iniciar el avance continuo y Pausar para
+detenerlo. Arranca en Máxima con Fluido activado. También puedes elegir
+1, 2, 5, 10, 25 o 50 años/s. El ritmo real depende del equipo.
+
+Fluido muestra cada año y verifica el estado cada 25 años y al pausar.
+Los años intermedios no tienen una comprobación individual del historial;
+se identifican así en la línea del tiempo. Desactiva Fluido si necesitas
+verificar cada año, con menor velocidad. El botón 1 año siempre verifica
+el estado resultante. Pausar termina el año en curso y su comprobación
+antes de permitir otro avance.
+El botón 1 año hace un único paso en pausa. No hay ráfagas para recuperar
+retrasos. Cada año sigue siendo completo y atómico en Go.
+Usa Mundo > Ayuda para los controles originales de cámara y selección.
+
+Selecciona una provincia para ver geografía, sociedad y datos históricos.
+Mundo > Estadísticas permite consultar entidades, conflictos y censos.
+Mapa abre los modos de visualización; Buscar permite localizar una provincia,
+pueblo, Estado o ciudad. Los paneles se abren cuando se necesitan.
+La rueda y los botones +/− acercan o alejan; Inicio recupera la vista mundial.
+La crónica ofrece acontecimientos del motor. Los edificios decorativos y
+las representaciones de fortificación no añaden mecánicas nuevas.
+
+Crear otro mundo reinicia la sesión explícitamente. Cerrar la ventana solicita
+el cierre de Go; el cliente termina su proceso si éste no responde a tiempo.
+Si se pierde la conexión no se repite ningún avance incierto: reinicia la
+sesión desde Mundo > Generar mundo.
+
+Por defecto se genera Asabiya. Para Tierra, copia asabiya-earth.json sobre
+asabiya.json antes de abrir. El HTML de resources/ se conserva íntegro.
+También se puede iniciar con -- --world-source RUTA.json (documentación del repo).
+
+Esta entrega conserva el protocolo de enteros JSON exactos y los cambios
+de interfaz e intervenciones. Se han ejecutado pruebas Go y Godot headless
+de años consecutivos, pausa, huellas y replay. No se ha probado la GPU
+ni la ejecución Windows en tu equipo.
+
+Incluye optimizaciones del motor: datos de vecindad calculados una sola vez,
+recorridos de tecnologías conocidas y operaciones numéricas más eficientes.
+Se conservan las reglas y los resultados. Ver CAMBIOS-ALGORITMOS.md.
+
+Descomprime todo el ZIP Fluido en una carpeta nueva y abre AsabiyaNative.exe.
+No necesitas instalar Go, Godot ni herramientas de desarrollo.
+Evita mezclar sus archivos con los de entregas anteriores.
+No se ha integrado nada en main.
