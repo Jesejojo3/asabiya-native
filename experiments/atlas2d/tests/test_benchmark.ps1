@@ -44,6 +44,10 @@ function Invoke-Benchmark([string[]]$ExtraArguments, [bool]$ExpectSuccess) {
         if (!$process.HasExited) { $process.Kill() }
         $process.Dispose()
     }
+    if (($code -eq 0) -ne $ExpectSuccess) {
+        Get-Content -LiteralPath $log | Write-Host
+        Get-Content -LiteralPath ($log + '.stderr') | Write-Host
+    }
     Assert (($code -eq 0) -eq $ExpectSuccess) "Unexpected benchmark exit $code; see $log"
     $created = @(Get-ChildItem -LiteralPath $testPackage -Directory -Filter 'mediciones-*' | Where-Object { $_.Name -notin $before })
     Assert ($created.Count -eq 1) 'Expected one capture directory'
