@@ -30,6 +30,7 @@ var received_us := {}
 var options := {}
 var metrics := AtlasMetrics.new()
 var benchmark := false
+var bench_request_us := 0
 var bench_ready := false
 var preparing := false
 var initial_prepared := false
@@ -58,12 +59,13 @@ func _ready() -> void:
 		return
 	RenderingServer.frame_post_draw.connect(_post_draw)
 	if benchmark:
+		metrics.detailed=str(options.get("instrumentation","detailed"))=="detailed"
 		metrics.open(str(options["bench-out"]),float(options.get("seconds","30")),{
-			"schema":"asabiya/atlas2d-measure-v1","godot":Engine.get_version_info(),
+			"schema":"asabiya/atlas2d-measure-v2","godot":Engine.get_version_info(),
 			"os":OS.get_name(),"cpu":OS.get_processor_name(),"gpu":RenderingServer.get_video_adapter_name(),
-			"renderer":RenderingServer.get_current_rendering_method(),"pid":OS.get_process_id(),
+			"active":options.has("active"),"camera_pan":not options.has("no-pan"),"automated_selection":not options.has("no-selection"),"renderer":RenderingServer.get_current_rendering_method(),"pid":OS.get_process_id(),
 			"size":str(DisplayServer.window_get_size()),"vsync_requested":"disabled","scene":"procedural",
-			"target_hardware_verified":false,"headless":DisplayServer.get_name()=="headless",
+			"gpu_vendor":RenderingServer.get_video_adapter_vendor(),"instrumentation":str(options.get("instrumentation","detailed")),"headless":DisplayServer.get_name()=="headless",
 			"build":JSON.parse_string(FileAccess.get_file_as_string("res://build-manifest.json"))})
 	call_deferred("_initialize")
 
@@ -185,8 +187,13 @@ func _initialize() -> void:
 		if message!="": status.text=message)
 	source.request_failed.connect(func(op: String,code: String,message: String): _fail(op+" · "+code+" · "+message))
 	if not source.start(): _fail(source.last_error)
+	elif benchmark:
+		metrics.record("processes",{"godot_pid":OS.get_process_id(),"go_pid":source._pid,"go_executable":executable,"endpoint_file":source._endpoint,"session_directory":source._directory})
 
 func _receive_frame() -> void:
+	if benchmark and bench_ready and bench_request_us>0:
+		metrics.record("year_request_to_receive",{"ms":(Time.get_ticks_usec()-bench_request_us)/1000.0,"definition":"Go + transport + decoder + main-thread polling; not isolated Go compute"})
+		bench_request_us=0
 	if not source.is_fast_forward(): source.stop_live() # Backpressure: publish this year before requesting the next.
 	var years := source.years()
 	if years.is_empty(): return
@@ -206,7 +213,10 @@ func _receive_frame() -> void:
 
 func _process(_delta: float) -> void:
 	if source==null or _closing: return
+	var poll_start := Time.get_ticks_usec() if benchmark else 0
 	source.poll()
+	if benchmark and metrics.sampling and Time.get_ticks_usec()-poll_start>10000:
+		metrics.record("slow_poll",{"ms":(Time.get_ticks_usec()-poll_start)/1000.0})
 	if source.last_error!="" and not _failure:
 		_fail(source.last_error)
 		return
@@ -242,21 +252,22 @@ func _process(_delta: float) -> void:
 			_fail("Resolución inválida: framebuffer %s, ventana %s, solicitada %s" % [actual,get_window().size,requested])
 			return
 		bench_ready=true
-		playing=options.has("active")
+		playing=false
 		metrics.record("ready",{"year":current.year,"go_pid":source._pid,"world_sha256":current.world_digest,"state_sha256":current.state_digest,"digest_mode":current.digest_mode,"layer":shown_layer,"window_size":[DisplayServer.window_get_size().x,DisplayServer.window_get_size().y],"framebuffer_size":[get_viewport().get_texture().get_size().x,get_viewport().get_texture().get_size().y],"map_pixels":[map.size.x,map.size.y],"zoom_multiplier":float(options.get("zoom","1")),"world_config":source.world_config,"history_seed":source.history_seed})
-		metrics.begin(current.year,playing)
+		metrics.begin(current.year,options.has("active"))
 	if playing and not preparing and worker==null and queue.is_empty() and source.can_advance() and Time.get_ticks_usec()>=next_year_us:
 		review_year=-2147483648
 		var rates := [1,5,20,0]
 		var rate: int=rates[speed.selected]
 		if benchmark: rate=0
 		next_year_us=Time.get_ticks_usec()+(int(1000000.0/rate) if rate>0 else 0)
+		if benchmark: bench_request_us=Time.get_ticks_usec()
 		source.start_live(0)
 	if bench_ready and metrics.started_us>0:
-		var elapsed := (Time.get_ticks_usec()-metrics.started_us)/1000000.0
+		var elapsed := maxf(0.0,(Time.get_ticks_usec()-metrics.started_us)/1000000.0-metrics.warmup)
 		if not options.has("no-pan"):
 			map.target_center=Vector2(world.width*(0.5+sin(elapsed*0.2)*0.15),world.height*(0.5+sin(elapsed*0.12)*0.08))
-		if elapsed>_next_selection:
+		if metrics.sampling and not options.has("no-selection") and elapsed>_next_selection:
 			_next_selection=elapsed+1.0
 			map.select_at(map.size*0.5)
 	if current!=null and not preparing and not _failure and Time.get_ticks_msec()>=_status_due_ms:
@@ -356,11 +367,14 @@ func _update_legend(value: Dictionary) -> void:
 
 func _post_draw() -> void:
 	if current==null or not bench_ready: return
+	var was_sampling := metrics.sampling
 	if metrics.draw(current.year):
 		# Pause verifies exact current Go state; benchmark interval already ended.
 		playing=false
 		source.pause()
 		_finish_benchmark.call_deferred()
+	elif not was_sampling and metrics.sampling:
+		playing=options.has("active")
 
 func _finish_benchmark() -> void:
 	var deadline := Time.get_ticks_msec()+15000
@@ -370,6 +384,7 @@ func _finish_benchmark() -> void:
 	if not years.is_empty():
 		var value := source.frame(years[-1])
 		metrics.record("verified_pause",{"year":value.year,"state_sha256":value.state_digest,"digest_mode":value.digest_mode,"exact":value.state_digest!=""})
+	metrics.record("profiler_flush",{"write_us":metrics.write_us,"buffer_estimated_bytes":metrics.buffered_bytes,"buffer_overflow":metrics.overflow})
 	metrics.file.flush()
 	if options.has("screenshot"):
 		await RenderingServer.frame_post_draw
