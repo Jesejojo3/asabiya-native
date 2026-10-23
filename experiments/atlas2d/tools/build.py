@@ -22,6 +22,8 @@ def build(godot, go, template, destination):
         raise RuntimeError("Pinned official Godot 4.7.2 required")
     project = stage(ROOT / "build/atlas2d/project")
     destination = Path(destination).resolve()
+    if destination.exists() and any(destination.iterdir()):
+        raise RuntimeError("Use an empty package destination to avoid stale files")
     destination.mkdir(parents=True, exist_ok=True)
     preset = (ROOT / "client/godot/export_presets.cfg").read_text(encoding="utf-8")
     preset = preset.replace('custom_template/release=""', 'custom_template/release=' + json.dumps(str(Path(template).resolve()).replace('\\', '/')))

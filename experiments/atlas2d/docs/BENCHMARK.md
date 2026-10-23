@@ -16,7 +16,8 @@ no requiere instalación. Consulta el diagnóstico original en
 2. Cierra otras instancias del Atlas. Abre **Medir rendimiento.cmd**. Si ETW
    requiere permisos, abre una consola **como administrador** y ejecuta el
    mismo CMD. No hay elevación automática. Un error de PresentMon conserva logs
-   y detiene la suite; no se fabrica un resultado de FPS.
+   y detiene la suite; no se fabrica un resultado de FPS. Un preflight ETW de
+   1 s comprueba permisos antes de preparar la historia.
 3. Deja trabajar la suite sin interacción: **36 ejecuciones** = 1080p/720p ×
    pausado/activo × tres modos × **tres repeticiones**. Cada ejecución inicia
    Go de nuevo, prepara 10.000 años causales, espera 3 s pausado y mide **30 s**.
@@ -81,7 +82,8 @@ python .\summarize.py $files.FullName --out .\resumen.json
   delta, Godot/Go/recolector/PresentMon, RAM disponible, foco/minimización.
   100% de CPU one-core equivale a un núcleo; CPU machine se divide por lógicos.
   Primer delta o proceso ausente: null y estado explícito. Suma RAM sólo si
-  ambos son válidos. Son métricas de proceso/OS, no asignaciones de heap Go.
+  ambos son válidos; su suma puede contar memoria compartida más de una vez.
+  Son métricas de proceso/OS, no asignaciones de heap Go.
 - **Hardware**: `targetHardwareVerified` se deriva de CPU i5-1340P, Iris Xe activa
   declarada por Godot y GPU Iris Xe en CIM. Inventario solo no basta. Modelo,
   driver, batería, plan de energía, resolución/refresco y versión de PowerShell
@@ -105,6 +107,8 @@ resumen agrupa sólo escenarios comparables y presenta medianas/rangos entre
 repeticiones, variación de callbacks baseline→minimal (coste conjunto de ETW) y
 minimal→detailed (coste de detalle). Revisar también CPU/RAM del profiler y años/s;
 los deltas no prueban causalidad si hay calentamiento, energía u otras cargas.
+Las dimensiones `map_pixels` quedan registradas: cambiar resolución también puede
+cambiar el área visible, por lo que no aísla exclusivamente fill rate.
 No restar un porcentaje supuesto de los resultados ni elegir la mejor repetición.
 
 El lector JSONL mantiene offset y conserva líneas/UTF-8 parciales: no relee el
@@ -119,3 +123,18 @@ Para interpretar una interrupción, correlaciona callback, display, tiempos de
 etapa, CPU, foco y lag del muestreo. Para demostrar una causa específica de
 scheduler, driver o disco puede hacer falta una traza adicional; este paquete
 no atribuye las pausas originales a una causa todavía no observada.
+
+## Construir el mismo paquete
+
+Con Go 1.27.2, Godot oficial 4.7.2 y plantilla Windows release x64, verificados
+contra `client/tools/godot-pins.txt`, descargar también:
+
+- `https://github.com/GameTechDev/PresentMon/releases/download/v2.3.0/PresentMon-2.3.0-x64.exe`
+- Guardar como `build/atlas2d/tools/PresentMon.exe`.
+- SHA256: `690533cf5c2591ef571a3037aa4c205c8e75860ef3f56927bf3a98acf7198485`.
+
+Ejecutar `tools/build.py` como indica README, con destino vacío (se rechazan
+archivos previos para evitar mezclas). La licencia PresentMon se distribuye con
+el paquete. El manifiesto incluye commit, hashes de fuentes/adaptadores y de
+todos los archivos entregados. CI aplica la misma receta y prueba el ejecutable
+exportado frente al SHA Go directo; no regenera golden ni referencia.

@@ -35,7 +35,7 @@ try {
     Assert ($parseErrors.Count -eq 0) 'Benchmark PowerShell parse failed'
     if ($env:OS -eq 'Windows_NT') {
         Assert ([AtlasNative]::AvailableMemory() -gt 0) 'Windows available memory unavailable'
-        Assert ((Get-AtlasWindow $PID).status -eq 'ok') 'Windows window telemetry failed' 
+        Assert ((Get-AtlasWindow $PID).status -eq 'ok') 'Windows window telemetry failed'
         $bound=Get-AtlasIdentity $PID $self.Path
         Assert ($bound.id -eq $PID) 'Identity did not bind to PID'
         $failed=$false

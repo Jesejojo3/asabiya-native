@@ -31,6 +31,16 @@ foreach ($property in $manifest.files.PSObject.Properties) {
 $out = Join-Path $Directory ('mediciones-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [guid]::NewGuid().ToString('N').Substring(0,6))
 New-Item -ItemType Directory -Path $out | Out-Null
 Copy-Item $manifestPath $out
+# Check ETW permission before spending minutes on historical preparation.
+if (@($Modes | Where-Object {$_ -ne 'baseline'}).Count -gt 0) {
+    $preflight=Start-Process $presentmon -ArgumentList @('--process_id',[string]$PID,'--no_csv','--no_console_stats','--timed','1','--terminate_after_timed','--session_name',('AtlasPreflight-'+[guid]::NewGuid().ToString('N'))) -PassThru -RedirectStandardOutput (Join-Path $out 'presentmon-preflight.stdout.log') -RedirectStandardError (Join-Path $out 'presentmon-preflight.stderr.log')
+    $null=$preflight.Handle
+    try {
+        if (!$preflight.WaitForExit(15000)) {throw 'PresentMon preflight agotado; revisa los logs ETW.'}
+        if ($preflight.ExitCode -ne 0) {throw "PresentMon preflight exit $($preflight.ExitCode). Consulta BENCHMARK.md para permisos ETW."}
+    } finally {if (!$preflight.HasExited) {$preflight.Kill()}}
+}
+
 $logicalCpus=[Environment]::ProcessorCount
 $equipment=@{
     system = @(Get-CimInstance Win32_OperatingSystem | Select-Object Caption,Version,BuildNumber)
@@ -137,6 +147,9 @@ foreach ($repeat in 1..$Repeats) {
                 throw
             } finally {
                 Stop-AtlasOwned $pmIdentity;Stop-AtlasOwned $goIdentity;Stop-AtlasOwned $gd
+                # A launch handle remains bound to its original process even if identity lookup failed.
+                if ($null -ne $pm -and $null -eq $pmIdentity -and !$pm.HasExited) {$pm.Kill()}
+                if ($null -ne $process -and $null -eq $gd -and !$process.HasExited) {$process.Kill()}
                 if ($null -ne $endpoint) {
                     foreach ($leaf in @('engine.log','endpoint.json')) {
                         $source=Join-Path (Split-Path $endpoint) $leaf
