@@ -115,7 +115,8 @@ No restar un porcentaje supuesto de los resultados ni elegir la mejor repetició
 El lector JSONL mantiene offset y conserva líneas/UTF-8 parciales: no relee el
 pasado. Escritores de telemetría persistentes. Dentro de la muestra Godot retiene
 las filas en RAM (hasta 200.000 filas o 64 MiB estimados conservadoramente);
-serialización medida, sin flush por frame. Vuelca después de fijar el final.
+serialización medida, sin flush por frame. El marcador sample_begin también
+queda en ese buffer; la preparación se vacía antes de iniciar el reloj. Vuelca después de fijar el final.
 Desbordamiento invalida la captura. CPU, RAM, costo del sondeo y contador de bytes
 leídos permiten evaluar el propio arnés. Un cierre abrupto puede perder ese
 buffer: se preserva y marca como incompleto, nunca como rendimiento válido.

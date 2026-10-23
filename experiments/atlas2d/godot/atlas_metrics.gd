@@ -72,12 +72,15 @@ func draw(year: int) -> bool:
 	var now := Time.get_ticks_usec()
 	var elapsed := (now-started_us)/1000000.0
 	if elapsed>=warmup and not sampling:
-		record("sample_begin",{"year":year,"utc_unix_ms":Time.get_unix_time_from_system()*1000.0})
-		sampling=true
-		sample_started_us=now
+		# Flush preparation before starting the clock. The sample boundary itself is
+		# buffered too, so no lifecycle flush is hidden inside the measured window.
+		flush_buffer()
 		serialize_us=0
 		write_us=0
-		last_draw_us=now
+		sampling=true
+		sample_started_us=Time.get_ticks_usec()
+		last_draw_us=sample_started_us
+		record("sample_begin",{"year":year})
 		return false
 	if elapsed>=warmup and last_draw_us>0:
 		var interval := (now-last_draw_us)/1000.0
