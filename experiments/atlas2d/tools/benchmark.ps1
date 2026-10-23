@@ -12,25 +12,25 @@
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'telemetry.ps1')
-$Directory = (Resolve-Path $Directory).Path
+$Directory = (Resolve-Path -LiteralPath $Directory).Path
 $exe = Join-Path $Directory 'AsabiyaAtlas2D.exe'
 $server = Join-Path $Directory 'asabiya-server.exe'
 $presentmon = Join-Path $Directory 'PresentMon.exe'
-foreach ($file in @($exe,$server)) { if (!(Test-Path $file)) { throw "Extrae todo el paquete: falta $file" } }
+foreach ($file in @($exe,$server)) { if (!(Test-Path -LiteralPath $file)) { throw "Extrae todo el paquete: falta $file" } }
 if (@($Modes | Where-Object {$_ -ne 'baseline'}).Count -gt 0) {
-    if (!(Test-Path $presentmon)) { throw 'Falta PresentMon.exe; extrae el paquete completo.' }
-    if ((Get-FileHash $presentmon -Algorithm SHA256).Hash.ToLowerInvariant() -ne '690533cf5c2591ef571a3037aa4c205c8e75860ef3f56927bf3a98acf7198485') { throw 'PresentMon SHA256 incorrecto' }
+    if (!(Test-Path -LiteralPath $presentmon)) { throw 'Falta PresentMon.exe; extrae el paquete completo.' }
+    if ((Get-FileHash -LiteralPath $presentmon -Algorithm SHA256).Hash.ToLowerInvariant() -ne '690533cf5c2591ef571a3037aa4c205c8e75860ef3f56927bf3a98acf7198485') { throw 'PresentMon SHA256 incorrecto' }
 }
 # Refuse changed package files; the manifest itself is retained with every result.
 $manifestPath=Join-Path $Directory 'build-manifest.json'
-$manifest=Get-Content -Raw $manifestPath | ConvertFrom-Json
+$manifest=Get-Content -Raw -LiteralPath $manifestPath | ConvertFrom-Json
 foreach ($property in $manifest.files.PSObject.Properties) {
     $path=Join-Path $Directory $property.Name
-    if ((Get-FileHash $path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $property.Value) { throw "Paquete modificado: $($property.Name)" }
+    if ((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $property.Value) { throw "Paquete modificado: $($property.Name)" }
 }
 $out = Join-Path $Directory ('mediciones-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [guid]::NewGuid().ToString('N').Substring(0,6))
 New-Item -ItemType Directory -Path $out | Out-Null
-Copy-Item $manifestPath $out
+Copy-Item -LiteralPath $manifestPath -Destination $out
 # Check ETW permission before spending minutes on historical preparation.
 if (@($Modes | Where-Object {$_ -ne 'baseline'}).Count -gt 0) {
     $preflight=Start-Process $presentmon -WindowStyle Hidden -ArgumentList @('--process_id',[string]$PID,'--no_csv','--no_console_stats','--timed','1','--terminate_after_timed','--session_name',('AtlasPreflight-'+[guid]::NewGuid().ToString('N'))) -PassThru -RedirectStandardOutput (Join-Path $out 'presentmon-preflight.stdout.log') -RedirectStandardError (Join-Path $out 'presentmon-preflight.stderr.log')
@@ -53,7 +53,7 @@ $equipment=@{
     targetHardwareVerified = $null; verificationStatus='pending renderer evidence'
     parameters=@{seconds=$Seconds;preparationYears=$PreparationYears;repeats=$Repeats;modes=$Modes;pollMilliseconds=$PollMilliseconds;full=[bool]$Full;small=[bool]$Small;staticCamera=[bool]$StaticCamera;noSelection=[bool]$NoSelection}
 }
-$equipment | ConvertTo-Json -Depth 12 | Set-Content (Join-Path $out 'equipo.json') -Encoding UTF8
+$equipment | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $out 'equipo.json') -Encoding UTF8
 $files = @(); $zooms = if ($Full) { @(1,4,24) } else { @(24) }
 $suite=[IO.StreamWriter]::new((Join-Path $out 'suite.jsonl'),$false,[Text.UTF8Encoding]::new($false)); $suite.AutoFlush=$true
 try {
@@ -72,6 +72,10 @@ foreach ($repeat in 1..$Repeats) {
             $name="$($case.width)x$($case.height)-zoom$($case.zoom)-active$($case.active)-$mode-r$repeat"
             Write-Host "Midiendo $name. Mantén la ventana visible y el equipo conectado a corriente."
             $raw=Join-Path $out ($name+'.jsonl'); $prefix=Join-Path $out $name
+            # Keep each path independent: comma binds before + in Windows PowerShell 5.1.
+            $stdoutLog = Join-Path $out ($name + '.stdout.log')
+            $stderrLog = Join-Path $out ($name + '.stderr.log')
+            $runtimeLogs = @($stdoutLog, $stderrLog)
             $arguments=@('--',"--bench-out=$raw","--seconds=$Seconds","--year=$PreparationYears","--width=$($case.width)","--height=$($case.height)","--zoom=$($case.zoom)","--instrumentation=$mode")
             if ($StaticCamera) {$arguments+='--no-pan'};if ($NoSelection) {$arguments+='--no-selection'}
             if ($case.active) {$arguments+='--active'}; if ($Small) {$arguments+='--small'}
@@ -83,14 +87,14 @@ foreach ($repeat in 1..$Repeats) {
             $watch=[Diagnostics.Stopwatch]::StartNew();$harness=Get-Process -Id $PID
             $collector= [pscustomobject]@{process=$harness;id=$PID;start=$harness.StartTime.ToUniversalTime().Ticks;lastCpu=$null;lastTime=$null}
             try {
-                $process=Start-Process -FilePath $exe -ArgumentList $quoted -PassThru -WorkingDirectory $Directory -RedirectStandardError ($prefix+'.stderr.log') -RedirectStandardOutput ($prefix+'.stdout.log')
+                $process=Start-Process -FilePath $exe -ArgumentList $quoted -PassThru -WorkingDirectory $Directory -RedirectStandardError $stderrLog -RedirectStandardOutput $stdoutLog
                 $null=$process.Handle
                 $gd=Get-AtlasIdentity $process.Id $exe
                 Write-AtlasJson $writer @{kind='identity';role='godot';pid=$gd.id;start_utc_ticks=$gd.start;path=$gd.path;parent=$gd.parent;command=$gd.command}
                 while ($true) {
                     $pollStart=$watch.Elapsed.TotalSeconds
                     if ($pollStart -gt 1200) {throw "Tiempo agotado: $name"}
-                    if ($null -eq $tail -and (Test-Path $raw)) {$tail=[AtlasTail]::new($raw)}
+                    if ($null -eq $tail -and (Test-Path -LiteralPath $raw)) {$tail=[AtlasTail]::new($raw)}
                     if ($null -ne $tail) {
                         foreach ($line in $tail.ReadLines()) {
                             if (!$line.Trim()) {continue}
@@ -102,7 +106,7 @@ foreach ($repeat in 1..$Repeats) {
                                 $cpuMatch=([string]$row.cpu -match 'i5-1340P')
                                 $equipment.targetHardwareVerified=($renderMatch -and $inventoryMatch -and $cpuMatch)
                                 $equipment.verificationStatus='Godot active adapter + Windows inventory + CPU; does not certify performance'
-                                $equipment | ConvertTo-Json -Depth 12 | Set-Content (Join-Path $out 'equipo.json') -Encoding UTF8
+                                $equipment | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $out 'equipo.json') -Encoding UTF8
                             }
                             if ($row.kind -eq 'processes' -and $null -eq $goIdentity) {
                                 if ($row.godot_pid -ne $gd.id) {throw 'Owner mismatch'}
@@ -140,7 +144,7 @@ foreach ($repeat in 1..$Repeats) {
                     if (!$pm.WaitForExit(10000)) {throw 'PresentMon no terminó; se conserva la captura incompleta'}
                     if ($pm.ExitCode -ne 0) {throw "PresentMon exit $($pm.ExitCode)"}
                 }
-                foreach ($log in @($prefix+'.stdout.log',$prefix+'.stderr.log')) {if (Select-String -Path $log -Pattern 'SCRIPT ERROR|SHADER ERROR|Parse Error') {throw "Error de ejecución en $log"}}
+                foreach ($log in $runtimeLogs) {if (Select-String -LiteralPath $log -Pattern 'SCRIPT ERROR|SHADER ERROR|Parse Error') {throw "Error de ejecución en $log"}}
                 $files+=$raw
                 Write-AtlasJson $suite @{kind='case_end';name=$name;status='captured';utc=[DateTime]::UtcNow.ToString('o')}
             } catch {
@@ -154,7 +158,7 @@ foreach ($repeat in 1..$Repeats) {
                 if ($null -ne $endpoint) {
                     foreach ($leaf in @('engine.log','endpoint.json')) {
                         $source=Join-Path (Split-Path $endpoint) $leaf
-                        if (Test-Path $source) {Copy-Item $source ($prefix+'.go-'+$leaf) -ErrorAction SilentlyContinue}
+                        if (Test-Path -LiteralPath $source) {Copy-Item -LiteralPath $source -Destination ($prefix+'.go-'+$leaf) -ErrorAction SilentlyContinue}
                     }
                 }
                 if ($null -ne $tail) {$tail.Dispose()};$writer.Dispose()

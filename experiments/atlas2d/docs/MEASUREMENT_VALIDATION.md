@@ -34,3 +34,42 @@ pausas originales.
 Alcance: diff de producción limitado al arnés dentro de experiments/atlas2d y su
 workflow. Sin cambios de Go, RNG, contratos, golden, referencia o cliente 3D.
 Base independiente sobre #27, sin merge ni cambios de main.
+
+## Regresión del cierre de escenarios en Windows PowerShell 5.1
+
+El fallo posterior a `1920x1080-zoom24-activeFalse-baseline-r1` procedía de
+`@($prefix+'.stdout.log',$prefix+'.stderr.log')`: la coma se agrupa antes que
+la suma y termina formando una sola ruta. El arnés ahora construye `stdoutLog`
+y `stderrLog` por separado con `Join-Path`; reutiliza esas rutas tanto al
+redirigir el proceso como al inspeccionar sus logs después de esperar su salida.
+
+Auditoría del resto de `benchmark.ps1` y `telemetry.ps1`: no hay otra lista con
+esa combinación de suma y coma sin paréntesis, ni operadores o parámetros
+exclusivos de PowerShell 7. Las otras expresiones de suma en listas ya estaban
+entre paréntesis. Los accesos al paquete, manifiesto, JSONL y logs usan ahora
+`-LiteralPath` para admitir carpetas con corchetes, además de espacios. Se
+conservan los handles originales de lanzamiento y las comprobaciones de salida,
+identidad, pausa, integridad y errores de ejecución.
+
+El workflow ejecuta `tests/test_benchmark.ps1` mediante **powershell.exe 5.1**
+después de construir el paquete. La prueba copia el paquete a una carpeta con
+espacios y corchetes, sustituye únicamente los dos ejecutables productores en
+esa copia por procesos nativos C# y regenera su manifiesto de prueba. Usa el
+script empaquetado completo, PresentMon 2.3.0 real con su hash fijado, preflight
+ETW, identidad por PID/ruta/padre, telemetría, cierre, inspección de ambos logs,
+limpieza y resumen Python real. No se simula `Select-String` ni se omite el
+flujo de producción.
+
+- Cuatro escenarios × tres modos, una repetición: 12 capturas completas.
+- Cuatro escenarios baseline × dos repeticiones: ocho capturas completas;
+  comprueba un único modo y el orden invertido de la segunda repetición.
+- Inyección de `SCRIPT ERROR`, `SHADER ERROR` y `Parse Error` en cada stream:
+  seis rechazos que identifican el log correcto y conservan el diagnóstico.
+- Restauración temporal de la expresión defectuosa sólo en la copia de prueba:
+  debe fallar en el primer escenario y mencionar ambas rutas concatenadas.
+
+La evidencia de cada invocación incluye `suite.jsonl`, crudos, telemetría, logs
+y resúmenes, dentro de `atlas2d-windows-contract-evidence`. Las capturas de los
+productores C# son sintéticas y no prueban FPS, historia Go ni rendimiento de
+Iris Xe. El paquete distribuido conserva los ejecutables reales y su manifiesto
+se verifica de nuevo después de estas pruebas.

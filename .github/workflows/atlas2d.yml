@@ -107,6 +107,11 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Package build failed' }
           go build -trimpath -o build/atlas2d/ebiten-probe.exe ./experiments/atlas2d/probes/ebiten
           go run ./experiments/atlas2d/probes/fixture --small --years 3 --out build/atlas2d/test-fixture
+      - name: Complete benchmark flow regression (Windows PowerShell 5.1)
+        shell: powershell
+        run: |
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File experiments/atlas2d/tests/test_benchmark.ps1 -PackageDirectory build/atlas2d/windows -EvidenceDirectory build/atlas2d/benchmark-regression
+          if ($LASTEXITCODE -ne 0) { throw 'Benchmark flow regression failed' }
       - name: Windows observer contracts and exported executable smoke (headless, not GPU benchmark)
         shell: pwsh
         run: |
@@ -149,4 +154,5 @@ jobs:
           path: |
             build/atlas2d/*.log
             build/atlas2d/export-*.json*
+            build/atlas2d/benchmark-regression/**
           retention-days: 14
