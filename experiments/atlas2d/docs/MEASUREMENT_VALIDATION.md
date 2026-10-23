@@ -68,6 +68,14 @@ ETW, identidad por PID/ruta/padre, telemetría, cierre, inspección de ambos log
 limpieza y resumen Python real. No se simula `Select-String` ni se omite el
 flujo de producción.
 
+El lanzador de pruebas añade sólo a la captura PresentMon de los productores
+sintéticos `--timed 4 --terminate_after_timed`: esos procesos de consola viven
+3,3 s y no generan swap chains, por lo que PresentMon no los registra para
+terminar por salida de un proceso que presenta. El preflight no se modifica.
+La captura ETW sigue siendo real; no se falsean hashes, identidades, resultados
+de cmdlets ni logs. El arnés y el paquete distribuido conservan
+`--terminate_on_proc_exit` y sus comprobaciones de salida.
+
 - Cuatro escenarios × tres modos, una repetición: 12 capturas completas.
 - Cuatro escenarios baseline × dos repeticiones: ocho capturas completas;
   comprueba un único modo y el orden invertido de la segunda repetición.

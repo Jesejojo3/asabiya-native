@@ -26,12 +26,13 @@ foreach ($property in $manifest.files.PSObject.Properties) {
 $manifest | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath $manifestPath -Encoding UTF8
 $powershell = Join-Path $PSHOME 'powershell.exe'
 $benchmark = Join-Path $testPackage 'benchmark.ps1'
+$driver = Join-Path $PSScriptRoot 'run_benchmark_fixture.ps1'
 $script:invocation = 0
 function Invoke-Benchmark([string[]]$ExtraArguments, [bool]$ExpectSuccess) {
     $script:invocation++
     $before = @(Get-ChildItem -LiteralPath $testPackage -Directory -Filter 'mediciones-*' | ForEach-Object Name)
     $log = Join-Path $EvidenceDirectory ("invocation-$script:invocation.log")
-    $arguments = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $benchmark, '-Directory', $testPackage,
+    $arguments = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $driver, '-Benchmark', $benchmark, '-Directory', $testPackage,
         '-Small', '-PreparationYears', '0', '-Seconds', '3', '-PollMilliseconds', '100') + $ExtraArguments
     $quoted = ($arguments | ForEach-Object { '"' + $_.Replace('"', '\"') + '"' }) -join ' '
     $process = Start-Process $powershell -ArgumentList $quoted -PassThru -RedirectStandardOutput $log -RedirectStandardError ($log + '.stderr')
