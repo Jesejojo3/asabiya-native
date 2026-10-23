@@ -108,7 +108,7 @@ func _button(row: Container, text: String, action: Callable) -> Button:
 	row.add_child(button)
 	return button
 
-func _atlas_style(bg: Color, border: Color, corners := 8) -> StyleBoxFlat:
+func _atlas_style(bg: Color, border: Color, corners: int = 8) -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
 	box.bg_color=bg
 	box.border_color=border
