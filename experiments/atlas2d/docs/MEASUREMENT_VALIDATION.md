@@ -47,13 +47,21 @@ Auditoría del resto de `benchmark.ps1` y `telemetry.ps1`: no hay otra lista con
 esa combinación de suma y coma sin paréntesis, ni operadores o parámetros
 exclusivos de PowerShell 7. Las otras expresiones de suma en listas ya estaban
 entre paréntesis. Los accesos al paquete, manifiesto, JSONL y logs usan ahora
-`-LiteralPath` para admitir carpetas con corchetes, además de espacios. Se
+`-LiteralPath` para evitar interpretación de patrones en esos cmdlets. Se
 conservan los handles originales de lanzamiento y las comprobaciones de salida,
 identidad, pausa, integridad y errores de ejecución.
 
+La auditoría por ejecución detectó además una limitación de `Start-Process`:
+interpreta sus redirecciones como patrones y no ofrece `-LiteralPath`. Con
+corchetes en la ruta del paquete falla antes del preflight; la resolución se
+repite internamente y escapar la ruta tampoco basta. La regresión usa una
+carpeta con espacios, sin corchetes. Extraer el paquete en una ruta sin `[` ni
+`]`. Esta limitación del cmdlet no se confunde con el fallo corregido de la lista
+concatenada, que la prueba reproduce expresamente al final.
+
 El workflow ejecuta `tests/test_benchmark.ps1` mediante **powershell.exe 5.1**
 después de construir el paquete. La prueba copia el paquete a una carpeta con
-espacios y corchetes, sustituye únicamente los dos ejecutables productores en
+espacios, sustituye únicamente los dos ejecutables productores en
 esa copia por procesos nativos C# y regenera su manifiesto de prueba. Usa el
 script empaquetado completo, PresentMon 2.3.0 real con su hash fijado, preflight
 ETW, identidad por PID/ruta/padre, telemetría, cierre, inspección de ambos logs,

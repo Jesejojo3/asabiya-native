@@ -8,7 +8,7 @@ Assert ($PSVersionTable.PSVersion.Major -eq 5 -and $PSVersionTable.PSVersion.Min
 $PackageDirectory = (Resolve-Path -LiteralPath $PackageDirectory).Path
 $null = New-Item -ItemType Directory -Force -Path $EvidenceDirectory
 $EvidenceDirectory = (Resolve-Path -LiteralPath $EvidenceDirectory).Path
-$testPackage = Join-Path $EvidenceDirectory 'package with spaces [ps51]'
+$testPackage = Join-Path $EvidenceDirectory 'package with spaces'
 $null = New-Item -ItemType Directory -Path $testPackage
 Get-ChildItem -LiteralPath $PackageDirectory | Copy-Item -Destination $testPackage -Recurse
 # Keep the actual packaged harness, profiler, Python summarizer and integrity checks.
