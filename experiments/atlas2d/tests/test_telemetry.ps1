@@ -30,7 +30,12 @@ try {
     $identity.start+=1
     $sample=Get-AtlasSample $identity 2 1
     Assert ($sample.status -eq 'unavailable' -and $null -eq $sample.working_set_bytes) 'PID reuse was accepted'
+    $parseErrors=$null;$tokens=$null
+    $null=[System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PSScriptRoot '../tools/benchmark.ps1'),[ref]$tokens,[ref]$parseErrors)
+    Assert ($parseErrors.Count -eq 0) 'Benchmark PowerShell parse failed'
     if ($env:OS -eq 'Windows_NT') {
+        Assert ([AtlasNative]::AvailableMemory() -gt 0) 'Windows available memory unavailable'
+        Assert ((Get-AtlasWindow $PID).status -eq 'ok') 'Windows window telemetry failed' 
         $bound=Get-AtlasIdentity $PID $self.Path
         Assert ($bound.id -eq $PID) 'Identity did not bind to PID'
         $failed=$false

@@ -6,9 +6,14 @@ import unittest
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
 from summarize import summary, percentile, hardware, comparison
+from diagnose_original import diagnose
 from presentation import presentation
 
 class MeasurementTests(unittest.TestCase):
+    def test_original_archive_audit_reproduces_committed_diagnosis(self):
+        evidence=Path(__file__).resolve().parents[1]/'evidence/iris-xe-original'
+        self.assertEqual(diagnose(evidence/'mediciones-20261022-202503.zip'),json.loads((evidence/'diagnosis.json').read_text()))
+
     def test_adapter_verification_uses_active_renderer(self):
         env={'cpu':'Intel i5-1340P','gpu':'Intel(R) Iris(R) Xe Graphics','headless':False}
         inventory={'gpu':[{'Name':env['gpu']}]}

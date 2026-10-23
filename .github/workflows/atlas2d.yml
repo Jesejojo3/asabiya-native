@@ -97,7 +97,7 @@ jobs:
         run: |
           Invoke-WebRequest -UseBasicParsing "https://github.com/GameTechDev/PresentMon/releases/download/v2.3.0/PresentMon-2.3.0-x64.exe" -OutFile build/atlas2d/tools/PresentMon.exe
           if ((Get-FileHash build/atlas2d/tools/PresentMon.exe -Algorithm SHA256).Hash.ToLowerInvariant() -ne '690533cf5c2591ef571a3037aa4c205c8e75860ef3f56927bf3a98acf7198485') { throw 'PresentMon hash mismatch' }
-          & experiments/atlas2d/tests/test_telemetry.ps1
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File experiments/atlas2d/tests/test_telemetry.ps1
           if ($LASTEXITCODE -ne 0) { throw 'Harness tests failed' }
       - name: Build Windows package and probe
         shell: pwsh
