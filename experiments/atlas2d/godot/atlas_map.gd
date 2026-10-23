@@ -59,6 +59,16 @@ func publish(packet: Dictionary) -> float:
 	_dirty=true
 	return (Time.get_ticks_usec()-started)/1000.0
 
+func _clamp_vertical_camera() -> void:
+	if world==null or size.y<=0: return
+	# The planet wraps horizontally, not vertically. Constrain the camera
+	# so polar edges cannot leave a large empty strip in the map viewport.
+	var half_visible := size.y*0.5/maxf(target_zoom,0.001)
+	if half_visible*2.0>=world.height:
+		target_center.y=world.height*0.5
+	else:
+		target_center.y=clampf(target_center.y,half_visible,world.height-half_visible)
+
 func zoom_to(multiplier: float) -> void:
 	if world == null: return
 	if multiplier==1:
@@ -66,6 +76,7 @@ func zoom_to(multiplier: float) -> void:
 	elif selected>=0:
 		target_center=Vector2(selected%world.width,floori(float(selected)/world.width))+Vector2(0.5,0.5)
 	target_zoom=zoom_base()*multiplier
+	_clamp_vertical_camera()
 
 func zoom_base() -> float:
 	return maxf(0.1,minf(size.x/world.width,size.y/world.height)) if world!=null else 1.0
@@ -75,6 +86,7 @@ func screen_to_world(point: Vector2) -> Vector2:
 
 func _process(delta: float) -> void:
 	if world == null: return
+	_clamp_vertical_camera()
 	var shift := target_center-center
 	shift.x=wrapf(shift.x,-world.width*0.5,world.width*0.5)
 	# Redraw only while the camera moves or after a published change. The
@@ -101,6 +113,7 @@ func _gui_input(event: InputEvent) -> void:
 			var at: Vector2 = target_center+(event.position-size*0.5)/target_zoom
 			target_zoom=clampf(target_zoom*(1.2 if event.button_index==MOUSE_BUTTON_WHEEL_UP else 1.0/1.2),0.3,160.0)
 			target_center=at-(event.position-size*0.5)/target_zoom
+			_clamp_vertical_camera()
 			accept_event()
 		elif event.button_index==MOUSE_BUTTON_LEFT:
 			dragging=event.pressed
@@ -128,6 +141,8 @@ func _notification(what: int) -> void:
 
 func _draw() -> void:
 	if world==null: return
+	# Bathymetric fallback when the complete world fits with letterboxing.
+	draw_rect(Rect2(Vector2.ZERO,size),Color("#0d3146"))
 	# Only copies intersecting the viewport; no per-province nodes or meshes.
 	var span := Vector2(world.width,world.height)*zoom
 	var origin := size*0.5-center*zoom
