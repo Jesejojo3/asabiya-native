@@ -32,13 +32,15 @@ No se dibujan edificios ni ruinas inventados.
 
 ## Medir
 
-Conecta el portátil a corriente, cierra otras cargas y haz doble clic en
-`Medir rendimiento.cmd`. Conserva la carpeta `mediciones-*` completa. El conjunto
-por defecto recorre 1080p/720p, zoom provincial y pausa/activo (4 capturas de
-30 s, más preparación). `Medir completo.cmd` recorre tres zooms y tres
-repeticiones (36 capturas); puede tardar bastante por la preparación causal. El resumen automático requiere Python,
-pero la captura y la aplicación no lo requieren. Véase `BENCHMARK.md`.
-No hay una medición confirmada de la Iris Xe ni garantía de 30 FPS todavía.
+El nuevo arnés y el diagnóstico de la captura real Iris Xe están en
+`docs/BENCHMARK.md` y `docs/WINDOWS_MEASUREMENT_DIAGNOSIS.md`. Descarga el paquete
+**asabiya-atlas2d-measurement-windows-x64** de esta PR, extrae todo y ejecuta
+`Medir rendimiento.cmd`: cuatro escenarios, tres modos de instrumentación y
+**tres repeticiones**, 36 ejecuciones con preparación nueva de 10.000 años y
+30 s de medida cada una. `Medir completo.cmd` añade tres zooms, 108 ejecuciones.
+La captura incluye PresentMon, CPU/RAM e identidad de procesos; el resumen requiere
+Python, la captura no. La Iris Xe original está identificada; su rendimiento
+presentado y las causas de las pausas siguen pendientes de remedición.
 
 ## Desarrollar
 

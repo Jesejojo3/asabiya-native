@@ -1,3 +1,9 @@
+> Actualización del arnés: la captura real Iris Xe y sus límites se documentan en
+> [WINDOWS_MEASUREMENT_DIAGNOSIS.md](WINDOWS_MEASUREMENT_DIAGNOSIS.md).
+> Los campos FPS históricos de este documento derivan de callbacks Godot,
+> no de eventos de presentación. Se conservan como evidencia histórica.
+> El arnés v2 separa callbacks, presentación ETW y años/s; no afirma aún 30 FPS.
+
 # Resultados medidos y límites de la conclusión
 
 **No hay una captura del i5-1340P/Iris Xe. No se acredita todavía el objetivo de

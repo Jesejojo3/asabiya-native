@@ -59,4 +59,4 @@ if __name__ == "__main__":
             if size != (width,height): raise RuntimeError("Screenshot framebuffer mismatch")
             results.append(summary(raw))
             (dest/"summary.json").write_text(json.dumps(results,indent=2)+"\n")
-            print({key:results[-1][key] for key in ("file","fps_p50","frame_ms_p95","frame_ms_p99","years_per_second")},flush=True)
+            print({key:results[-1][key] for key in ("file","post_draw","presentation","years_per_second")},flush=True)

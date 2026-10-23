@@ -1,4 +1,4 @@
-name: Atlas 2D experiment
+name: Atlas 2D measurement harness
 on:
   pull_request:
     paths:
@@ -99,6 +99,13 @@ jobs:
           Add-Type -AssemblyName System.IO.Compression.FileSystem
           $zip = [IO.Compression.ZipFile]::OpenRead((Resolve-Path "build/atlas2d/tools/Godot_v${v}_export_templates.tpz"))
           try { [IO.Compression.ZipFileExtensions]::ExtractToFile($zip.GetEntry('templates/windows_release_x86_64.exe'), "$pwd/build/atlas2d/tools/windows_release_x86_64.exe", $true) } finally { $zip.Dispose() }
+      - name: Pinned presentation profiler and harness tests
+        shell: powershell
+        run: |
+          Invoke-WebRequest -UseBasicParsing "https://github.com/GameTechDev/PresentMon/releases/download/v2.3.0/PresentMon-2.3.0-x64.exe" -OutFile build/atlas2d/tools/PresentMon.exe
+          if ((Get-FileHash build/atlas2d/tools/PresentMon.exe -Algorithm SHA256).Hash.ToLowerInvariant() -ne '690533cf5c2591ef571a3037aa4c205c8e75860ef3f56927bf3a98acf7198485') { throw 'PresentMon hash mismatch' }
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File experiments/atlas2d/tests/test_telemetry.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Harness tests failed' }
       - name: Build Windows package and probe
         shell: pwsh
         run: |
@@ -107,6 +114,11 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Package build failed' }
           go build -trimpath -o build/atlas2d/ebiten-probe.exe ./experiments/atlas2d/probes/ebiten
           go run ./experiments/atlas2d/probes/fixture --small --years 3 --out build/atlas2d/test-fixture
+      - name: Complete benchmark flow regression (Windows PowerShell 5.1)
+        shell: powershell
+        run: |
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File experiments/atlas2d/tests/test_benchmark.ps1 -PackageDirectory build/atlas2d/windows -EvidenceDirectory build/atlas2d/benchmark-regression
+          if ($LASTEXITCODE -ne 0) { throw 'Benchmark flow regression failed' }
       - name: Windows observer contracts and exported executable smoke (headless, not GPU benchmark)
         shell: pwsh
         run: |
@@ -124,9 +136,23 @@ jobs:
           if ($p.ExitCode -ne 0) { throw 'Export smoke failed' }
           Get-Content $raw
           if (!(Get-Content -Raw $raw | ConvertFrom-Json).ok) { throw 'Export state invalid' }
+      - name: Verify complete package manifest
+        shell: powershell
+        run: |
+          $dir = (Resolve-Path build/atlas2d/windows).Path
+          $manifest = Get-Content -Raw "$dir/build-manifest.json" | ConvertFrom-Json
+          foreach ($f in $manifest.files.PSObject.Properties) {
+            if ((Get-FileHash (Join-Path $dir $f.Name) -Algorithm SHA256).Hash.ToLowerInvariant() -ne $f.Value) { throw "Package hash mismatch: $($f.Name)" }
+          }
+          $probe = Start-Process "$dir/PresentMon.exe" -WindowStyle Hidden -ArgumentList @('--process_id',[string]$PID,'--no_csv','--no_console_stats','--timed','1','--terminate_after_timed','--session_name',('AtlasCI-'+[guid]::NewGuid().ToString('N'))) -PassThru -RedirectStandardOutput "$pwd/build/atlas2d/presentmon-preflight.stdout.log" -RedirectStandardError "$pwd/build/atlas2d/presentmon-preflight.stderr.log"
+          $null = $probe.Handle
+          try {
+            if (!$probe.WaitForExit(15000)) { throw 'PresentMon ETW preflight timed out' }
+            if ($probe.ExitCode -ne 0) { throw "PresentMon ETW preflight exit $($probe.ExitCode)" }
+          } finally { if (!$probe.HasExited) { $probe.Kill() } }
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: asabiya-atlas2d-windows-x64
+          name: asabiya-atlas2d-measurement-windows-x64
           path: build/atlas2d/windows/**
           if-no-files-found: error
           retention-days: 14
@@ -137,4 +163,5 @@ jobs:
           path: |
             build/atlas2d/*.log
             build/atlas2d/export-*.json*
+            build/atlas2d/benchmark-regression/**
           retention-days: 14
