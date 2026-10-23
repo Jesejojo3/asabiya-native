@@ -21,6 +21,12 @@ var _empty: ImageTexture
 func _ready() -> void:
 	clip_contents = true
 	mouse_default_cursor_shape = Control.CURSOR_DRAG
+	var ocean := ColorRect.new()
+	ocean.color=Color("#0d3146")
+	ocean.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	ocean.show_behind_parent=true
+	ocean.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(ocean)
 	shader.shader = load("res://terrain.gdshader")
 	material = shader
 	texture.size = Vector2(1,1)
@@ -141,8 +147,6 @@ func _notification(what: int) -> void:
 
 func _draw() -> void:
 	if world==null: return
-	# Bathymetric fallback when the complete world fits with letterboxing.
-	draw_rect(Rect2(Vector2.ZERO,size),Color("#0d3146"))
 	# Only copies intersecting the viewport; no per-province nodes or meshes.
 	var span := Vector2(world.width,world.height)*zoom
 	var origin := size*0.5-center*zoom
