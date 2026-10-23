@@ -346,6 +346,7 @@ func _rich(title: String, parent: Control = null) -> RichTextLabel:
 	var label := RichTextLabel.new()
 	label.bbcode_enabled=true
 	label.selection_enabled=true
+	label.add_theme_constant_override("line_separation",5)
 	label.size_flags_vertical=Control.SIZE_EXPAND_FILL
 	label.meta_clicked.connect(_open_link)
 	if parent==null:
@@ -612,21 +613,24 @@ func _update_panel() -> void:
 	var religion_id: int=current.religion[id]
 	var people: Dictionary=current.peoples.get(people_id,{})
 	var lines := PackedStringArray()
-	lines.append("[b]Provincia Go #%d[/b] · %s" % [id,AtlasEntities.fmt_year(current.year)])
-	lines.append("%s · coordenadas lógicas (%d, %d)" % ["Tierra" if world.is_land(id) else "Océano",id%world.width,id/world.width])
-	lines.append("Población provincial: %.2f" % current.population[id])
+	lines.append("[font_size=20][b]Provincia #%d[/b][/font_size]\n[color=#a6afa9]%s[/color]" % [id,AtlasEntities.fmt_year(current.year)])
+	lines.append("\n[color=#b3b68a][b]TERRITORIO[/b][/color]")
+	lines.append("%s · coordenadas (%d, %d)" % ["Tierra" if world.is_land(id) else "Océano",id%world.width,id/world.width])
+	lines.append("Bioma: %s" % WorldData.BIOME_NAMES_ES[clampi(world.biome[id],0,9)])
+	lines.append("Altitud: %.0f m" % world.elevation[id])
+	lines.append("\n[color=#b3b68a][b]SOCIEDAD Y GOBIERNO[/b][/color]")
 	lines.append("Propietario: %s" % (AtlasEntities.link("polity",owner,AtlasEntities.label(current,"polity",owner)) if owner>0 else "Sin estado [ID 0]"))
 	lines.append("Pueblo: %s" % (AtlasEntities.link("people",people_id,AtlasEntities.label(current,"people",people_id)) if people_id>=0 else "Sin pueblo [ID −1]"))
 	var culture: Variant=people.get("culture")
-	lines.append("Cultura, 6 componentes: %s" % (AtlasEntities.escape(str(culture)) if culture is Array else "No disponible"))
+	lines.append("Cultura (6 componentes): %s" % (AtlasEntities.escape(str(culture)) if culture is Array else "No disponible"))
 	lines.append("Religión: %s" % (AtlasEntities.link("religion",religion_id,AtlasEntities.label(current,"religion",religion_id)) if religion_id>=0 else "Sin religión [ID −1]"))
 	for city: Dictionary in current.settlements:
 		if int(city.cell)==id: lines.append("Ciudad: %s" % AtlasEntities.link("city",int(city.id),str(city.get("name","Ciudad #%d" % int(city.id)))))
+	lines.append("\n[color=#b3b68a][b]DEMOGRAFÍA Y RECURSOS[/b][/color]")
+	lines.append("Población provincial: %.2f" % current.population[id])
 	lines.append("Capacidad: %.2f" % current.carrying[id])
 	lines.append("Tecnología (0–1): %.2f" % current.technology[id] if not current.technology.is_empty() else "Tecnología: No disponible")
-	lines.append("Altitud lógica: %.0f m" % world.elevation[id])
-	lines.append("Bioma: %s" % WorldData.BIOME_NAMES_ES[clampi(world.biome[id],0,9)])
-	lines.append("\nLas cifras y entidades pertenecen al año mostrado. Cultura RGB usa 3 de los 6 componentes reales.")
+	lines.append("\n[color=#a6afa9]Datos del año mostrado. Los colores RGB representan 3 de los 6 componentes culturales reales.[/color]")
 	var key := "%d/%d/%s" % [id,current.year,current.state_digest]
 	# Pause-only Go answers stay attached to their province/year/SHA key.
 	var extra: Dictionary=province_extra.get(key,{})
