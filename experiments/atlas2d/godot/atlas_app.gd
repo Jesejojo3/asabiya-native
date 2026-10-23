@@ -79,7 +79,7 @@ func _ready() -> void:
 	OS.low_processor_usage_mode=not benchmark
 	_build_ui()
 	if benchmark and DisplayServer.get_name()=="headless":
-		_fail("La captura de FPS necesita una ventana real. Usa --smoke-out para una comprobaciÃ³n headless.")
+		_fail("La captura de FPS necesita una ventana real. Usa --smoke-out para una comprobación headless.")
 		return
 	RenderingServer.frame_post_draw.connect(_post_draw)
 	if benchmark:
@@ -102,85 +102,183 @@ func _ready() -> void:
 
 func _button(row: Container, text: String, action: Callable) -> Button:
 	var button := Button.new()
+	button.custom_minimum_size.y=34
 	button.text=text
 	button.pressed.connect(action)
 	row.add_child(button)
 	return button
 
+func _atlas_style(bg: Color, border: Color, corners := 8) -> StyleBoxFlat:
+	var box := StyleBoxFlat.new()
+	box.bg_color=bg
+	box.border_color=border
+	box.set_border_width_all(1)
+	box.set_corner_radius_all(corners)
+	box.set_content_margin_all(9.0)
+	return box
+
+func _atlas_theme() -> Theme:
+	var visual := Theme.new()
+	var ink := Color("#e7e7dc")
+	var secondary := Color("#a6afa9")
+	var background := Color("#141d23")
+	var outline := Color("#35434a")
+	for control_type: String in ["Label","Button","OptionButton","LineEdit","RichTextLabel","TabContainer","ItemList"]:
+		visual.set_color("font_color",control_type,ink)
+		visual.set_font_size("font_size",control_type,15)
+	visual.set_color("font_color","Label",ink)
+	visual.set_color("font_placeholder_color","LineEdit",secondary)
+	visual.set_color("font_hover_color","Button",Color.WHITE)
+	visual.set_color("font_pressed_color","Button",Color.WHITE)
+	visual.set_color("font_disabled_color","Button",secondary.darkened(0.25))
+	visual.set_color("default_color","RichTextLabel",ink)
+	visual.set_font_size("normal_font_size","RichTextLabel",15)
+	visual.set_font_size("bold_font_size","RichTextLabel",15)
+	visual.set_stylebox("panel","PanelContainer",_atlas_style(background,outline))
+	visual.set_stylebox("panel","TabContainer",_atlas_style(Color("#121a20"),outline,6))
+	visual.set_stylebox("normal","Button",_atlas_style(Color("#27343b"),outline,6))
+	visual.set_stylebox("hover","Button",_atlas_style(Color("#354850"),Color("#72968c"),6))
+	visual.set_stylebox("pressed","Button",_atlas_style(Color("#263e42"),Color("#b3b68a"),6))
+	visual.set_stylebox("disabled","Button",_atlas_style(Color("#1d272c"),Color("#2d373d"),6))
+	visual.set_stylebox("normal","OptionButton",_atlas_style(Color("#27343b"),outline,6))
+	visual.set_stylebox("hover","OptionButton",_atlas_style(Color("#354850"),Color("#72968c"),6))
+	visual.set_stylebox("pressed","OptionButton",_atlas_style(Color("#263e42"),Color("#b3b68a"),6))
+	visual.set_stylebox("normal","LineEdit",_atlas_style(Color("#0d171d"),outline,6))
+	visual.set_stylebox("focus","LineEdit",_atlas_style(Color("#0d171d"),Color("#a6bfa8"),6))
+	visual.set_stylebox("tab_selected","TabContainer",_atlas_style(Color("#2f4545"),Color("#9fae88"),6))
+	visual.set_stylebox("tab_unselected","TabContainer",_atlas_style(Color("#19262d"),outline,6))
+	visual.set_stylebox("tab_hovered","TabContainer",_atlas_style(Color("#34454b"),outline,6))
+	return visual
+
 func _build_ui() -> void:
+	theme=_atlas_theme()
+	var backdrop := ColorRect.new()
+	backdrop.color=Color("#0a141a")
+	backdrop.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(backdrop)
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side: String in ["left","right","top","bottom"]: margin.add_theme_constant_override("margin_"+side,12)
+	for side: String in ["left","right","top","bottom"]:
+		margin.add_theme_constant_override("margin_"+side,9)
 	add_child(margin)
 	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation",8)
 	margin.add_child(column)
+
+	var header := PanelContainer.new()
+	column.add_child(header)
+	var heading := VBoxContainer.new()
+	heading.add_theme_constant_override("separation",2)
+	header.add_child(heading)
 	title=Label.new()
-	title.text="ASABIYA ATLAS 2D  Â·  Mundo procedural de prueba  Â·  La Tierra real estÃ¡ pendiente"
-	title.add_theme_font_size_override("font_size",20)
-	column.add_child(title)
-	var toolbar := HFlowContainer.new()
-	column.add_child(toolbar)
+	title.text="ASABIYA  /  ATLAS HISTÓRICO"
+	title.add_theme_font_size_override("font_size",21)
+	title.add_theme_color_override("font_color",Color("#d9d8b2"))
+	heading.add_child(title)
+	var subtitle := Label.new()
+	subtitle.text="Observatorio de civilizaciones  ·  Mundo procedural de prueba; Tierra real pendiente"
+	subtitle.add_theme_font_size_override("font_size",12)
+	subtitle.add_theme_color_override("font_color",Color("#a6afa9"))
+	heading.add_child(subtitle)
+
+	var main_bar := HFlowContainer.new()
+	main_bar.add_theme_constant_override("h_separation",7)
+	main_bar.add_theme_constant_override("v_separation",5)
+	column.add_child(main_bar)
 	seed_input=LineEdit.new()
 	seed_input.text=str(options.get("seed","Asabiya"))
-	seed_input.custom_minimum_size.x=145
-	seed_input.tooltip_text="Semilla de geografÃ­a Go; iniciar crea una sesiÃ³n nueva. No guarda la anterior."
-	toolbar.add_child(seed_input)
-	init_button=_button(toolbar,"Nueva sesiÃ³n",_initialize)
-	step_button=_button(toolbar,"+1 aÃ±o",_step)
-	play_button=_button(toolbar,"â–¶ Reproducir",func():
+	seed_input.custom_minimum_size=Vector2(128,34)
+	seed_input.tooltip_text="Semilla geográfica Go; crea una sesión nueva."
+	main_bar.add_child(seed_input)
+	init_button=_button(main_bar,"Nueva sesión",_initialize)
+	step_button=_button(main_bar,"+1 año",_step)
+	play_button=_button(main_bar,"▶ Reproducir",func():
 		playing=true
 		review_year=-2147483648
 		if not historical.is_empty(): _exit_historical())
-	pause_button=_button(toolbar,"â…¡ Pausar y verificar",_pause)
+	pause_button=_button(main_bar,"Ⅱ Pausar y verificar",_pause)
 	speed=OptionButton.new()
-	for item: String in ["1 aÃ±o/s","5 aÃ±os/s","20 aÃ±os/s","MÃ¡ximo"]: speed.add_item(item)
+	speed.custom_minimum_size=Vector2(125,34)
+	speed.tooltip_text="Cadencia de reproducción; Máximo no omite años causales."
+	for item: String in ["1 año/s","5 años/s","20 años/s","Máximo"]:
+		speed.add_item(item)
 	speed.selected=1
-	toolbar.add_child(speed)
+	main_bar.add_child(speed)
+
+	var context_bar := HFlowContainer.new()
+	context_bar.add_theme_constant_override("h_separation",7)
+	context_bar.add_theme_constant_override("v_separation",5)
+	column.add_child(context_bar)
+	var layer_caption := Label.new()
+	layer_caption.text="CAPA"
+	layer_caption.add_theme_color_override("font_color",Color("#b3b68a"))
+	context_bar.add_child(layer_caption)
 	layer_choice=OptionButton.new()
+	layer_choice.custom_minimum_size=Vector2(195,34)
 	for definition: Dictionary in MapLayers.DEFS:
 		layer_ids.append(str(definition.id))
-		layer_names.append("%s Â· %s" % [definition.group, definition.name])
+		layer_names.append("%s · %s" % [definition.group,definition.name])
 		layer_choice.add_item(layer_names[-1])
 	layer_choice.selected=layer_ids.find(desired_layer)
 	layer_choice.item_selected.connect(func(index: int):
 		desired_layer=layer_ids[index]
 		historical.clear()
 		if current!=null and worker==null and queue.is_empty(): queue.append(current))
-	toolbar.add_child(layer_choice)
-	_button(toolbar,"Mundo",func(): map.zoom_to(1))
-	_button(toolbar,"RegiÃ³n",func(): map.zoom_to(4))
-	_button(toolbar,"Provincia",func(): map.zoom_to(24))
+	context_bar.add_child(layer_choice)
+	_button(context_bar,"Mundo",func(): map.zoom_to(1))
+	_button(context_bar,"Región",func(): map.zoom_to(4))
+	_button(context_bar,"Provincia",func(): map.zoom_to(24))
+	var review_caption := Label.new()
+	review_caption.text="HISTORIAL"
+	review_caption.add_theme_color_override("font_color",Color("#b3b68a"))
+	context_bar.add_child(review_caption)
 	review=OptionButton.new()
-	review.tooltip_text="Revisar hasta 24 publicaciones retenidas. No rebobina el motor."
+	review.custom_minimum_size=Vector2(144,34)
+	review.tooltip_text="Examinar publicaciones retenidas. No rebobina el motor Go."
 	review.item_selected.connect(_review)
-	toolbar.add_child(review)
+	context_bar.add_child(review)
+
 	var split := HSplitContainer.new()
 	split.size_flags_vertical=Control.SIZE_EXPAND_FILL
+	split.custom_minimum_size.y=280
+	split.split_offset=230
 	column.add_child(split)
 	map=AtlasMap.new()
-	map.custom_minimum_size=Vector2(320,240)
+	map.custom_minimum_size=Vector2(300,240)
+	map.size_flags_vertical=Control.SIZE_EXPAND_FILL
 	map.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	map.tooltip_text="Arrastra para desplazarte; rueda para hacer zoom; clic para inspeccionar provincias."
 	map.province_selected.connect(_selected)
 	split.add_child(map)
+
+	var sidebar := PanelContainer.new()
+	sidebar.custom_minimum_size.x=360
+	sidebar.size_flags_vertical=Control.SIZE_EXPAND_FILL
+	split.add_child(sidebar)
 	var panel := VBoxContainer.new()
-	panel.custom_minimum_size.x=470
-	panel.size_flags_horizontal=Control.SIZE_FILL
-	split.add_child(panel)
+	panel.add_theme_constant_override("separation",8)
+	sidebar.add_child(panel)
+	var panel_title := Label.new()
+	panel_title.text="EXPLORADOR HISTÓRICO"
+	panel_title.add_theme_color_override("font_color",Color("#b3b68a"))
+	panel_title.add_theme_font_size_override("font_size",13)
+	panel.add_child(panel_title)
 	tabs=TabContainer.new()
 	tabs.size_flags_vertical=Control.SIZE_EXPAND_FILL
 	tabs.tab_changed.connect(func(_index: int): _refresh_tab())
 	panel.add_child(tabs)
 	inspector=_rich("Provincia")
-	inspector.text="Arrastra para desplazar. Rueda para acercar.\nSelecciona una provincia.\n\nGo calcula la historia; este cliente la observa."
+	inspector.text="Selecciona una provincia en el mapa para consultar sus datos históricos."
 	var entity_box := VBoxContainer.new()
 	entity_box.name="Entidad"
 	tabs.add_child(entity_box)
-	entity_back=_button(entity_box,"â—€ Anterior",_entity_previous)
+	entity_back=_button(entity_box,"◀ Anterior",_entity_previous)
 	entity_back.disabled=true
 	entity_view=_rich("",entity_box)
-	entity_view.text="Abre un Estado, pueblo, religiÃ³n, ciudad u otra entidad desde una provincia, la crÃ³nica o la bÃºsqueda."
+	entity_view.text="Abre un Estado, pueblo, religión, ciudad u otra entidad desde una provincia, la crónica o la búsqueda."
 	var chronicle_box := VBoxContainer.new()
-	chronicle_box.name="CrÃ³nica"
+	chronicle_box.name="Crónica"
 	tabs.add_child(chronicle_box)
 	var chronicle_bar := HBoxContainer.new()
 	chronicle_box.add_child(chronicle_bar)
@@ -188,7 +286,7 @@ func _build_ui() -> void:
 	chronicle_kind.item_selected.connect(func(_index: int): _refresh_chronicle(true))
 	chronicle_bar.add_child(chronicle_kind)
 	chronicle_filter=LineEdit.new()
-	chronicle_filter.placeholder_text="Filtrar texto"
+	chronicle_filter.placeholder_text="Filtrar acontecimientos"
 	chronicle_filter.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	chronicle_filter.text_changed.connect(func(_text: String): _refresh_chronicle(true))
 	chronicle_bar.add_child(chronicle_filter)
@@ -205,13 +303,14 @@ func _build_ui() -> void:
 	search_bar.add_child(search_input)
 	search_kind=OptionButton.new()
 	search_kind.add_item("Todo")
-	for kind: String in AtlasEntities.SEARCH_KINDS: search_kind.add_item(AtlasEntities.NAMES[kind])
+	for kind: String in AtlasEntities.SEARCH_KINDS:
+		search_kind.add_item(AtlasEntities.NAMES[kind])
 	search_kind.item_selected.connect(func(_index: int): _refresh_search())
 	search_bar.add_child(search_kind)
 	search_results=ItemList.new()
 	search_results.size_flags_vertical=Control.SIZE_EXPAND_FILL
 	search_results.item_activated.connect(_search_open)
-	search_results.item_clicked.connect(func(index: int, _at: Vector2, _button: int): _search_open(index))
+	search_results.item_clicked.connect(func(index: int,_at: Vector2,_button: int): _search_open(index))
 	search_box.add_child(search_results)
 	var world_box := VBoxContainer.new()
 	world_box.name="Mundo"
@@ -223,19 +322,25 @@ func _build_ui() -> void:
 	history_year.rounded=true
 	history_year.allow_greater=false
 	history_year.allow_lesser=false
-	history_year.tooltip_text="AÃ±o a consultar. Go devuelve la capa conservada mÃ¡s cercana anterior o igual."
+	history_year.tooltip_text="Año a consultar: Go devuelve la capa histórica conservada más cercana."
 	history_bar.add_child(history_year)
 	history_mode=OptionButton.new()
-	for item: String in ["Pueblos","Religiones","Densidad","Era tecnolÃ³gica","CohesiÃ³n"]: history_mode.add_item(item)
+	for item: String in ["Pueblos","Religiones","Densidad","Era tecnológica","Cohesión"]:
+		history_mode.add_item(item)
 	history_bar.add_child(history_mode)
-	history_button=_button(history_bar,"Ver capa histÃ³rica Go",_request_historical)
-	history_exit=_button(history_bar,"Volver al aÃ±o publicado",_exit_historical)
+	history_button=_button(history_bar,"Consultar historia",_request_historical)
+	history_exit=_button(history_bar,"Regresar al presente",_exit_historical)
 	legend=Label.new()
 	legend.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
+	legend.add_theme_font_size_override("font_size",12)
+	legend.add_theme_color_override("font_color",Color("#a6afa9"))
 	panel.add_child(legend)
+	var footer := PanelContainer.new()
+	column.add_child(footer)
 	status=Label.new()
 	status.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
-	column.add_child(status)
+	status.add_theme_font_size_override("font_size",12)
+	footer.add_child(status)
 
 func _rich(title: String, parent: Control = null) -> RichTextLabel:
 	var label := RichTextLabel.new()
@@ -301,10 +406,10 @@ func _initialize() -> void:
 	source.frames_changed.connect(_receive_frame)
 	source.progress_changed.connect(func(calculated: int, visualized: int, remaining: int):
 		if preparing:
-			status.text="PreparaciÃ³n histÃ³rica explÃ­cita Â· Go calcula todos los aÃ±os Â· muestra cada 100\nCalculado: %d Â· mostrado: %d Â· quedan: %d. Pausar detiene al terminar el aÃ±o en curso." % [calculated,visualized,remaining])
+			status.text="Preparación histórica explícita · Go calcula todos los años · muestra cada 100\nCalculado: %d · mostrado: %d · quedan: %d. Pausar detiene al terminar el año en curso." % [calculated,visualized,remaining])
 	source.status_changed.connect(func(message: String):
 		if message!="": status.text=message)
-	source.request_failed.connect(func(op: String,code: String,message: String): _fail(op+" Â· "+code+" Â· "+message))
+	source.request_failed.connect(func(op: String,code: String,message: String): _fail(op+" · "+code+" · "+message))
 	if not source.start(): _fail(source.last_error)
 	elif benchmark:
 		metrics.record("processes",{"godot_pid":OS.get_process_id(),"go_pid":source._pid,"go_executable":executable,"endpoint_file":source._endpoint,"session_directory":source._directory})
@@ -330,7 +435,7 @@ func _receive_body() -> void:
 			preparing=true
 			source.start_fast_forward(count,100)
 	if preparing:
-		status.text="PreparaciÃ³n explÃ­cita del benchmark: %d Â· no se presentan todos los aÃ±os intermedios" % source.calculated_year
+		status.text="Preparación explícita del benchmark: %d · no se presentan todos los años intermedios" % source.calculated_year
 		queue.clear()
 		if not source.is_fast_forward(): preparing=false
 	queue.append(value)
@@ -418,7 +523,7 @@ func _tick() -> void:
 		var actual := Vector2i(get_viewport().get_texture().get_size())
 		var requested := Vector2i(int(options.get("width",str(actual.x))),int(options.get("height",str(actual.y))))
 		if actual!=requested or get_window().size!=requested:
-			_fail("ResoluciÃ³n invÃ¡lida: framebuffer %s, ventana %s, solicitada %s" % [actual,get_window().size,requested])
+			_fail("Resolución inválida: framebuffer %s, ventana %s, solicitada %s" % [actual,get_window().size,requested])
 			return
 		bench_ready=true
 		playing=false
@@ -470,7 +575,7 @@ func _review(index: int) -> void:
 func _refresh_review() -> void:
 	review.clear()
 	for year in source.years():
-		review.add_item("AÃ±o %d" % year)
+		review.add_item("Año %d" % year)
 		review.set_item_metadata(review.item_count-1,year)
 		if year==current.year: review.select(review.item_count-1)
 
@@ -487,13 +592,13 @@ func _selected(id: int, started_us := 0) -> void:
 
 func _layer_label() -> String:
 	if not historical.is_empty():
-		return "Capa histÃ³rica Go %s Â· %s" % [AtlasEntities.fmt_year(historical.year),history_mode.get_item_text(["peoples","religions","population","technology","cohesion"].find(historical.mode))]
+		return "Capa histórica Go %s · %s" % [AtlasEntities.fmt_year(historical.year),history_mode.get_item_text(["peoples","religions","population","technology","cohesion"].find(historical.mode))]
 	var index := layer_ids.find(shown_layer)
 	return layer_names[index] if index>=0 else shown_layer
 
 func _update_status() -> void:
-	var fingerprint := "SHA diferido explÃ­cito; pausa para verificar" if current.state_digest=="" else current.state_digest
-	status.text="AÃ±o %s Â· %s Â· %.0f habitantes Â· %s Â· %s\n%s" % [AtlasEntities.fmt_year(current.year),_layer_label(),current.world_population,("%.1f FPS" % Engine.get_frames_per_second()) if not OS.low_processor_usage_mode else "%.0f fotogramas/s, render bajo demanda" % Engine.get_frames_per_second(),"PreparaciÃ³n Go Â· muestra cada 100 aÃ±os" if preparing else ("Reproduciendo" if playing else "Pausa / revisiÃ³n"),fingerprint]
+	var fingerprint := "SHA diferido explícito; pausa para verificar" if current.state_digest=="" else current.state_digest
+	status.text="Año %s · %s · %.0f habitantes · %s · %s\n%s" % [AtlasEntities.fmt_year(current.year),_layer_label(),current.world_population,("%.1f FPS" % Engine.get_frames_per_second()) if not OS.low_processor_usage_mode else "%.0f fotogramas/s, render bajo demanda" % Engine.get_frames_per_second(),"Preparación Go · muestra cada 100 años" if preparing else ("Reproduciendo" if playing else "Pausa / revisión"),fingerprint]
 
 func _update_panel() -> void:
 	if current==null or world==null: return
@@ -507,21 +612,21 @@ func _update_panel() -> void:
 	var religion_id: int=current.religion[id]
 	var people: Dictionary=current.peoples.get(people_id,{})
 	var lines := PackedStringArray()
-	lines.append("[b]Provincia Go #%d[/b] Â· %s" % [id,AtlasEntities.fmt_year(current.year)])
-	lines.append("%s Â· coordenadas lÃ³gicas (%d, %d)" % ["Tierra" if world.is_land(id) else "OcÃ©ano",id%world.width,id/world.width])
-	lines.append("PoblaciÃ³n provincial: %.2f" % current.population[id])
+	lines.append("[b]Provincia Go #%d[/b] · %s" % [id,AtlasEntities.fmt_year(current.year)])
+	lines.append("%s · coordenadas lógicas (%d, %d)" % ["Tierra" if world.is_land(id) else "Océano",id%world.width,id/world.width])
+	lines.append("Población provincial: %.2f" % current.population[id])
 	lines.append("Propietario: %s" % (AtlasEntities.link("polity",owner,AtlasEntities.label(current,"polity",owner)) if owner>0 else "Sin estado [ID 0]"))
-	lines.append("Pueblo: %s" % (AtlasEntities.link("people",people_id,AtlasEntities.label(current,"people",people_id)) if people_id>=0 else "Sin pueblo [ID âˆ’1]"))
+	lines.append("Pueblo: %s" % (AtlasEntities.link("people",people_id,AtlasEntities.label(current,"people",people_id)) if people_id>=0 else "Sin pueblo [ID −1]"))
 	var culture: Variant=people.get("culture")
 	lines.append("Cultura, 6 componentes: %s" % (AtlasEntities.escape(str(culture)) if culture is Array else "No disponible"))
-	lines.append("ReligiÃ³n: %s" % (AtlasEntities.link("religion",religion_id,AtlasEntities.label(current,"religion",religion_id)) if religion_id>=0 else "Sin religiÃ³n [ID âˆ’1]"))
+	lines.append("Religión: %s" % (AtlasEntities.link("religion",religion_id,AtlasEntities.label(current,"religion",religion_id)) if religion_id>=0 else "Sin religión [ID −1]"))
 	for city: Dictionary in current.settlements:
 		if int(city.cell)==id: lines.append("Ciudad: %s" % AtlasEntities.link("city",int(city.id),str(city.get("name","Ciudad #%d" % int(city.id)))))
 	lines.append("Capacidad: %.2f" % current.carrying[id])
-	lines.append("TecnologÃ­a (0â€“1): %.2f" % current.technology[id] if not current.technology.is_empty() else "TecnologÃ­a: No disponible")
-	lines.append("Altitud lÃ³gica: %.0f m" % world.elevation[id])
+	lines.append("Tecnología (0–1): %.2f" % current.technology[id] if not current.technology.is_empty() else "Tecnología: No disponible")
+	lines.append("Altitud lógica: %.0f m" % world.elevation[id])
 	lines.append("Bioma: %s" % WorldData.BIOME_NAMES_ES[clampi(world.biome[id],0,9)])
-	lines.append("\nLas cifras y entidades pertenecen al aÃ±o mostrado. Cultura RGB usa 3 de los 6 componentes reales.")
+	lines.append("\nLas cifras y entidades pertenecen al año mostrado. Cultura RGB usa 3 de los 6 componentes reales.")
 	var key := "%d/%d/%s" % [id,current.year,current.state_digest]
 	# Pause-only Go answers stay attached to their province/year/SHA key.
 	var extra: Dictionary=province_extra.get(key,{})
@@ -534,17 +639,17 @@ func _update_panel() -> void:
 			metrics.record("selection_query",{"ms":(Time.get_ticks_usec()-request_us)/1000.0,"id":id,"year":current.year})
 			var data: Dictionary=response.get("data",{})
 			var city_id: Variant=data.get("cityId")
-			_attach(key,"query","\nConsulta Go: cohesiÃ³n %s Â· integraciÃ³n %s\nFortificaciÃ³n: %s (Ã­ndice; no edificios)\nCiudad ID: %s\n" % [str(data.get("cohesion","â€”")),str(data.get("integration","â€”")),str(data.get("fortification","â€”")),AtlasEntities.link("city",int(city_id),"#%d" % int(city_id)) if (city_id is int or city_id is float) and int(city_id)>=0 else "â€”"]))
+			_attach(key,"query","\nConsulta Go: cohesión %s · integración %s\nFortificación: %s (índice; no edificios)\nCiudad ID: %s\n" % [str(data.get("cohesion","—")),str(data.get("integration","—")),str(data.get("fortification","—")),AtlasEntities.link("city",int(city_id),"#%d" % int(city_id)) if (city_id is int or city_id is float) and int(city_id)>=0 else "—"]))
 		source.query_history(id,func(response: Dictionary):
 			if current==null or key!=query_key or playing or int(response.get("year",-1))!=current.year: return
 			var records: Array=response.get("data",{}).get("records",[]) if response.get("data",{}).get("records") is Array else []
-			var text := "\nPropiedad observada cada 10 aÃ±os. Ãšltimas %d de %d observaciones:\n" % [mini(12,records.size()),records.size()]
+			var text := "\nPropiedad observada cada 10 años. Últimas %d de %d observaciones:\n" % [mini(12,records.size()),records.size()]
 			for entry: Dictionary in records.slice(maxi(0,records.size()-12)):
 				var holder := int(entry.get("ownerPolityId",0))
-				text+="%s Â· %s\n" % [AtlasEntities.fmt_year(entry.get("year")),AtlasEntities.link("polity",holder,AtlasEntities.label(current,"polity",holder)) if holder>0 else "sin estado"]
+				text+="%s · %s\n" % [AtlasEntities.fmt_year(entry.get("year")),AtlasEntities.link("polity",holder,AtlasEntities.label(current,"polity",holder)) if holder>0 else "sin estado"]
 			_attach(key,"history",text))
 	elif playing:
-		inspector.append_text("\nPausa para consultar detalle provincial e historial sin mezclar aÃ±os.")
+		inspector.append_text("\nPausa para consultar detalle provincial e historial sin mezclar años.")
 
 func _attach(key: String, part: String, text: String) -> void:
 	if not province_extra.has(key): province_extra={key:{}}
@@ -617,14 +722,14 @@ func _refresh_chronicle(force: bool) -> void:
 		if needle!="" and not (str(event.get("text",""))+" "+str(event.get("why",""))).to_lower().contains(needle): continue
 		matched+=1
 		if lines.size()<300: lines.append(AtlasEntities.event_line(current,world,event))
-	chronicle.text="[b]CrÃ³nica Go[/b] Â· %d de %d acontecimientos retenidos en la publicaciÃ³n de %s (mÃ¡s recientes primero; mÃ¡ximo 300 en pantalla).\n\n%s" % [matched,current.events.size(),AtlasEntities.fmt_year(current.year),"\n".join(lines) if not lines.is_empty() else "Sin acontecimientos que coincidan."]
+	chronicle.text="[b]Crónica Go[/b] · %d de %d acontecimientos retenidos en la publicación de %s (más recientes primero; máximo 300 en pantalla).\n\n%s" % [matched,current.events.size(),AtlasEntities.fmt_year(current.year),"\n".join(lines) if not lines.is_empty() else "Sin acontecimientos que coincidan."]
 
 func _refresh_search() -> void:
 	search_results.clear()
 	if current==null: return
 	var kind: String = "" if search_kind.selected<=0 else AtlasEntities.SEARCH_KINDS[search_kind.selected-1]
 	for item: Array in AtlasEntities.search(current,search_input.text,kind):
-		search_results.add_item("%s Â· %s #%d" % [item[2],AtlasEntities.NAMES[item[0]],item[1]])
+		search_results.add_item("%s · %s #%d" % [item[2],AtlasEntities.NAMES[item[0]],item[1]])
 		search_results.set_item_metadata(search_results.item_count-1,[item[0],item[1]])
 
 func _search_open(index: int) -> void:
@@ -641,20 +746,20 @@ func _refresh_world() -> void:
 			if record.get("alive",record.get("active",false)): alive+=1
 		counts[kind]=alive
 	var lines := PackedStringArray()
-	lines.append("[b]Mundo Go[/b] Â· %s Â· semilla %s Â· historia %s" % [AtlasEntities.fmt_year(current.year),AtlasEntities.escape(str(source.world_config.get("seed",""))),AtlasEntities.escape(source.history_seed)])
-	lines.append("PoblaciÃ³n total: %.0f" % current.world_population)
-	lines.append("Estados (tipo state, vivos): %d Â· entidades polÃ­ticas vivas de cualquier tipo: %d" % [current.state_count(),counts.polity])
-	lines.append("Pueblos vivos: %d Â· religiones activas: %d Â· ciudades ocupadas: %d Â· guerras activas: %d" % [counts.people,counts.religion,current.settlements.size(),current.wars.size()])
-	lines.append("SHA del estado: %s" % (current.state_digest if current.state_digest!="" else "diferido explÃ­cito (pausa para verificar)"))
+	lines.append("[b]Mundo Go[/b] · %s · semilla %s · historia %s" % [AtlasEntities.fmt_year(current.year),AtlasEntities.escape(str(source.world_config.get("seed",""))),AtlasEntities.escape(source.history_seed)])
+	lines.append("Población total: %.0f" % current.world_population)
+	lines.append("Estados (tipo state, vivos): %d · entidades políticas vivas de cualquier tipo: %d" % [current.state_count(),counts.polity])
+	lines.append("Pueblos vivos: %d · religiones activas: %d · ciudades ocupadas: %d · guerras activas: %d" % [counts.people,counts.religion,current.settlements.size(),current.wars.size()])
+	lines.append("SHA del estado: %s" % (current.state_digest if current.state_digest!="" else "diferido explícito (pausa para verificar)"))
 	if not current.stats.is_empty():
-		lines.append("\n[b]EstadÃ­sticas publicadas por Go[/b] (Ãºltimos registros)")
+		lines.append("\n[b]Estadísticas publicadas por Go[/b] (últimos registros)")
 		for entry: Variant in current.stats.slice(maxi(0,current.stats.size()-12)):
 			if not entry is Dictionary: continue
 			var era := int(entry.get("leadingEra",-1))
 			var era_name: String=str(source.era_names[era]) if era>=0 and era<source.era_names.size() else str(era)
-			lines.append("%s Â· poblaciÃ³n %.0f Â· estados %d Â· hordas %d Â· pueblos %d Â· era lÃ­der %s Â· mayor: %s" % [AtlasEntities.fmt_year(entry.get("year")),float(entry.get("population",0)),int(entry.get("polities",0)),int(entry.get("hordes",0)),int(entry.get("livingPeoples",0)),AtlasEntities.escape(era_name),AtlasEntities.escape(str(entry.get("biggest","â€”")))])
+			lines.append("%s · población %.0f · estados %d · hordas %d · pueblos %d · era líder %s · mayor: %s" % [AtlasEntities.fmt_year(entry.get("year")),float(entry.get("population",0)),int(entry.get("polities",0)),int(entry.get("hordes",0)),int(entry.get("livingPeoples",0)),AtlasEntities.escape(era_name),AtlasEntities.escape(str(entry.get("biggest","—")))])
 	if not historical.is_empty():
-		lines.append("\n[b]Mapa mostrado:[/b] capa histÃ³rica Go de %s (pedida: %s). No contiene propietarios; Go la conserva cada 50 aÃ±os (cada 250 si tiene mÃ¡s de 1500 aÃ±os)." % [AtlasEntities.fmt_year(historical.get("year")),AtlasEntities.fmt_year(historical.get("requested"))])
+		lines.append("\n[b]Mapa mostrado:[/b] capa histórica Go de %s (pedida: %s). No contiene propietarios; Go la conserva cada 50 años (cada 250 si tiene más de 1500 años)." % [AtlasEntities.fmt_year(historical.get("year")),AtlasEntities.fmt_year(historical.get("requested"))])
 	world_view.text="\n".join(lines)
 	var latest: int=source.years()[-1] if not source.years().is_empty() else current.year
 	history_year.min_value=_history_start()
@@ -692,21 +797,21 @@ func _exit_historical() -> void:
 	if current!=null and worker==null: queue.append(current)
 
 func _update_legend(value: Dictionary) -> void:
-	legend.text="Leyenda Â· "+_layer_label()+"\n"
+	legend.text="Leyenda · "+_layer_label()+"\n"
 	if value.get("kind")=="ramp":
-		legend.text+="Violeta â†’ azul â†’ verde â†’ amarillo â†’ rojo\n%s â†’ %s" % [str(value.get("min","")),str(value.get("max",""))]
+		legend.text+="Violeta → azul → verde → amarillo → rojo\n%s → %s" % [str(value.get("min","")),str(value.get("max",""))]
 	elif shown_layer=="cultures":
 		legend.text+="RGB: componentes culturales 1, 2 y 3; los seis se consultan en el panel."
 	elif value.get("kind")=="text":
 		legend.text+=str(value.get("text",""))
 	elif shown_layer in ["states","peoples","religions"]:
-		legend.text+="Colores de entidades Go. Selecciona para ver nombre e ID. Tierra sin entidad conserva el color fÃ­sico."
+		legend.text+="Colores de entidades Go. Selecciona para ver nombre e ID. Tierra sin entidad conserva el color físico."
 	elif value.get("kind")=="swatches":
 		var names := PackedStringArray()
 		for item: Array in value.get("items",[]): names.append(str(item[1]))
 		legend.text+=", ".join(names)
 	else:
-		legend.text+="Color fÃ­sico por elevaciÃ³n, temperatura y precipitaciÃ³n. Sombreado de pendientes."
+		legend.text+="Color físico por elevación, temperatura y precipitación. Sombreado de pendientes."
 
 func _post_draw() -> void:
 	if current==null or not bench_ready: return
@@ -752,7 +857,7 @@ func _export_smoke() -> void:
 func _fail(message: String) -> void:
 	_failure=true
 	playing=false
-	status.text="ERROR Â· "+message
+	status.text="ERROR · "+message
 	metrics.record("error",{"message":message})
 	if benchmark or options.has("smoke-out"): _close(1)
 
