@@ -9,7 +9,6 @@ func _ready() -> void:
 func _point(cell: int) -> Vector2:
 	var coordinate := Vector2(cell%map.world.width,floori(float(cell)/map.world.width))+Vector2(0.5,0.5)
 	var offset := coordinate-map.center
-	offset.x=wrapf(offset.x,-map.world.width*0.5,map.world.width*0.5)
 	return map.size*0.5+offset*map.zoom
 
 func _draw() -> void:
@@ -24,20 +23,19 @@ func _draw() -> void:
 			points.append(previous)
 			for k in range(1,cells.size()):
 				var point := _point(cells[k])
-				# Keep the polyline continuous across the longitude seam.
+				# A route crossing the map seam ends at each side of this atlas.
 				var span := map.world.width*map.zoom
-				point.x=previous.x+wrapf(point.x-previous.x,-span*0.5,span*0.5)
+				if absf(point.x-previous.x)>span*0.5:
+					if points.size()>1: draw_polyline(points,Color(0.95,0.78,0.35,0.9),maxf(1.0,minf(3.0,map.zoom*0.25)),true)
+					points.clear()
 				points.append(point)
 				previous=point
-			draw_polyline(points,Color(0.95,0.78,0.35,0.9),maxf(1.0,minf(3.0,map.zoom*0.25)),true)
+			if points.size()>1: draw_polyline(points,Color(0.95,0.78,0.35,0.9),maxf(1.0,minf(3.0,map.zoom*0.25)),true)
 	if map.zoom<10: return
 	var font := ThemeDB.fallback_font
 	for city: Dictionary in map.frame.settlements:
 		var id := int(city.cell)
-		var coordinate := Vector2(id%map.world.width,floori(float(id)/map.world.width))+Vector2(0.5,0.5)
-		var offset := coordinate-map.center
-		offset.x=wrapf(offset.x,-map.world.width*0.5,map.world.width*0.5)
-		var point := map.size*0.5+offset*map.zoom
+		var point := _point(id)
 		if Rect2(Vector2.ZERO,map.size).grow(30).has_point(point):
 			draw_circle(point,3.5,Color(1.0,0.88,0.54))
 			if map.zoom>20: draw_string(font,point+Vector2(6,-4),str(city.get("name","")),HORIZONTAL_ALIGNMENT_LEFT,140,13,Color.WHITE)

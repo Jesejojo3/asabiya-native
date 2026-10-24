@@ -13,7 +13,8 @@ la población provincial como población urbana. Historial provincial: observaci
 cada 10 años; no fecha exacta de conquista. Crónica: cinco de hasta 1000 eventos
 publicados por el adaptador; no pretende ser el archivo completo.
 
-Pendientes: Tierra real y licencias/dataset/versionado; leyendas y búsqueda
+La base terrestre usa los rasters conservados de v0.6; ver EARTH.md. Pendientes:
+mayor resolución regional, procedencia original/licencias del dataset; leyendas y búsqueda
 cartográfica más completas; editor de reglas/órdenes; consulta enciclopédica de
 todas las entidades; guardar/recuperar sesiones; navegación por todo el archivo
 histórico, no sólo últimas 24 publicaciones; accesibilidad y diseño final;

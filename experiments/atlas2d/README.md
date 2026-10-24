@@ -1,6 +1,8 @@
 # Asabiya Atlas 2D — Misión A
 
-Prototipo experimental Windows x64, motor Go real. Mundo **procedural**; no es la Tierra.
+Prototipo experimental Windows x64, motor Go real. **Tierra real con historia emergente**.
+Alcance y límites cartográficos: [EARTH.md](docs/EARTH.md). Se conserva la interfaz;
+el rediseño visual queda aplazado hasta establecer el mundo y su detalle regional.
 Base: PR #21 `79035761f1e61041a3ccbf74b648577e53ba7150`. Dirección: PR #26
 `10258dd16763a92e5ad0c5194f0e600e827ecad5`. Ninguna PR se integra.
 
@@ -20,7 +22,8 @@ Base: PR #21 `79035761f1e61041a3ccbf74b648577e53ba7150`. Dirección: PR #26
 8. Pausar detiene solicitudes y verifica el SHA del último año completo. Una solicitud en curso acaba atómicamente.
 9. El selector de años revisa hasta 24 publicaciones retenidas; **no rebobina Go**.
 
-Nueva sesión vuelve a generar el mundo con la semilla escrita. La sesión actual no
+Nueva sesión genera otra historia sobre la misma Tierra con la semilla escrita.
+El modo de prueba procedural sigue disponible con `-- --procedural`. La sesión actual no
 se guarda automáticamente. Cerrar finaliza el proceso Go propiedad de esta ventana.
 Los logs están en `%APPDATA%/AsabiyaAtlas2D/sessions`.
 

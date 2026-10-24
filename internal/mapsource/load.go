@@ -83,8 +83,11 @@ func Load(c sim.WorldConfig, s sim.WorldSource) (sim.WorldSource, sim.WorldInput
 		default:
 			return s, in, fmt.Errorf("unknown source role %s", asset.Role)
 		}
-		if s.Kind == "earth" && asset.Role == "height" || s.Kind != "earth" && asset.Role == "earth-html" {
+		if s.Kind == "earth" && asset.Role == "height" || (s.Kind != "earth" && s.Kind != "imported") && asset.Role == "earth-html" {
 			return s, in, fmt.Errorf("asset %s conflicts with source kind %s", asset.Role, s.Kind)
+		}
+		if asset.Role == "earth-html" && (c.Width != 400 || c.Height != 200 || c.Detail != 4) {
+			return s, in, fmt.Errorf("Earth asset requires logical 400x200, detail 4")
 		}
 		path, err := filepath.Abs(asset.Path)
 		if err != nil {
@@ -161,7 +164,12 @@ func Load(c sim.WorldConfig, s sim.WorldSource) (sim.WorldSource, sim.WorldInput
 	if s.Kind == "earth" && !seen["earth-html"] {
 		return s, in, fmt.Errorf("Earth requires an earth-html asset")
 	}
-	if s.Kind == "imported" && !seen["height"] {
+	if seen["earth-html"] && (seen["height"] || seen["koppen"]) {
+		return s, in, fmt.Errorf("earth-html already supplies elevation and Koppen; conflicting assets are not allowed")
+	}
+	// Importing the preserved rasters does not opt into the legacy Earth's
+	// fixed founders and hearths. History keeps the existing imported-world rules.
+	if s.Kind == "imported" && !seen["height"] && !seen["earth-html"] {
 		return s, in, fmt.Errorf("imported world requires a height image")
 	}
 	return s, in, nil

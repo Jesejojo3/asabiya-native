@@ -65,15 +65,16 @@ func publish(packet: Dictionary) -> float:
 	_dirty=true
 	return (Time.get_ticks_usec()-started)/1000.0
 
-func _clamp_vertical_camera() -> void:
-	if world==null or size.y<=0: return
-	# The planet wraps horizontally, not vertically. Constrain the camera
-	# so polar edges cannot leave a large empty strip in the map viewport.
-	var half_visible := size.y*0.5/maxf(target_zoom,0.001)
-	if half_visible*2.0>=world.height:
-		target_center.y=world.height*0.5
-	else:
-		target_center.y=clampf(target_center.y,half_visible,world.height-half_visible)
+func _bounded_center(at: Vector2, magnification: float) -> Vector2:
+	var extent := Vector2(world.width,world.height)
+	var half_visible := size/(2.0*maxf(magnification,0.001))
+	var margin := half_visible.min(extent*0.5)
+	return at.clamp(margin,extent-margin)
+
+func _clamp_camera() -> void:
+	if world==null: return
+	target_zoom=clampf(target_zoom,zoom_base(),maxf(160.0,zoom_base()))
+	target_center=_bounded_center(target_center,target_zoom)
 
 func zoom_to(multiplier: float) -> void:
 	if world == null: return
@@ -82,7 +83,7 @@ func zoom_to(multiplier: float) -> void:
 	elif selected>=0:
 		target_center=Vector2(selected%world.width,floori(float(selected)/world.width))+Vector2(0.5,0.5)
 	target_zoom=zoom_base()*multiplier
-	_clamp_vertical_camera()
+	_clamp_camera()
 
 func zoom_base() -> float:
 	return maxf(0.1,minf(size.x/world.width,size.y/world.height)) if world!=null else 1.0
@@ -92,21 +93,20 @@ func screen_to_world(point: Vector2) -> Vector2:
 
 func _process(delta: float) -> void:
 	if world == null: return
-	_clamp_vertical_camera()
+	_clamp_camera()
 	var shift := target_center-center
-	shift.x=wrapf(shift.x,-world.width*0.5,world.width*0.5)
 	# Redraw only while the camera moves or after a published change. The
 	# easing tail ends once it is far below one screen pixel.
 	if shift.length()*zoom<0.01 and absf(zoom-target_zoom)<target_zoom*1e-5:
 		if center==target_center and zoom==target_zoom and not _dirty: return
-		center=Vector2(fposmod(target_center.x,world.width),target_center.y)
+		center=target_center
 		zoom=target_zoom
 	else:
 		var weight := 1.0-exp(-delta*16.0)
 		center+=shift*weight
-		center.x=fposmod(center.x,world.width)
 		zoom=lerpf(zoom,target_zoom,weight)
-	target_center.x=fposmod(target_center.x,world.width)
+	zoom=maxf(zoom,zoom_base())
+	center=_bounded_center(center,zoom)
 	_dirty=false
 	shader.set_shader_parameter("cell_pixels",zoom)
 	queue_redraw()
@@ -117,9 +117,10 @@ func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index in [MOUSE_BUTTON_WHEEL_UP,MOUSE_BUTTON_WHEEL_DOWN] and event.pressed:
 			var at: Vector2 = target_center+(event.position-size*0.5)/target_zoom
-			target_zoom=clampf(target_zoom*(1.2 if event.button_index==MOUSE_BUTTON_WHEEL_UP else 1.0/1.2),0.3,160.0)
+			var direction := 1.0 if event.button_index==MOUSE_BUTTON_WHEEL_UP else -1.0
+			target_zoom=clampf(target_zoom*pow(1.2,direction*event.factor),zoom_base(),maxf(160.0,zoom_base()))
 			target_center=at-(event.position-size*0.5)/target_zoom
-			_clamp_vertical_camera()
+			_clamp_camera()
 			accept_event()
 		elif event.button_index==MOUSE_BUTTON_LEFT:
 			dragging=event.pressed
@@ -131,8 +132,7 @@ func _gui_input(event: InputEvent) -> void:
 	elif event is InputEventMouseMotion and dragging:
 		if event.position.distance_to(drag_origin)>4: moved=true
 		target_center-=event.relative/target_zoom
-		target_center.x=fposmod(target_center.x,world.width)
-		target_center.y=clampf(target_center.y,0,world.height)
+		_clamp_camera()
 
 func select_at(point: Vector2) -> int:
 	var started := Time.get_ticks_usec()
@@ -147,12 +147,7 @@ func _notification(what: int) -> void:
 
 func _draw() -> void:
 	if world==null: return
-	# Only copies intersecting the viewport; no per-province nodes or meshes.
+	# One bounded equirectangular world. Empty margins never become extra Earths.
 	var span := Vector2(world.width,world.height)*zoom
 	var origin := size*0.5-center*zoom
-	var first := floori((-origin.x-span.x)/span.x)
-	var last := ceili((size.x-origin.x)/span.x)
-	for wrap in range(first,last+1):
-		var rect := Rect2(origin+Vector2(wrap*span.x,0),span)
-		if rect.intersects(Rect2(Vector2.ZERO,size)):
-			draw_texture_rect(texture,rect,false)
+	draw_texture_rect(texture,Rect2(origin,span),false)

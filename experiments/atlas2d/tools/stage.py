@@ -20,6 +20,11 @@ def stage(destination):
     destination.mkdir(parents=True, exist_ok=True)
     shutil.copytree(ROOT / "experiments/atlas2d/godot", destination, dirs_exist_ok=True,
                     ignore=shutil.ignore_patterns(".godot", "*.uid"))
+    earth = (ROOT / "reference/v0.6/Asabiya History Engine (Copy).html").read_bytes()
+    earth_sha = hashlib.sha256(earth).hexdigest()
+    if earth_sha != "988ce360e70d2d034a3898f60b9a4c38d40b0ab56dd7a147329740f15fa8e9e9":
+        raise ValueError("Preserved Earth reference SHA-256 differs")
+    (destination / "earth-v06.html").write_bytes(earth)
     shared = destination / "shared"
     shared.mkdir(exist_ok=True)
     hashes = {}
@@ -33,7 +38,7 @@ def stage(destination):
         if source.is_file() and "__pycache__" not in source.parts and source.suffix not in (".pyc", ".uid"):
             tree_hash.update(str(source.relative_to(ROOT)).encode()+b"\0"+source.read_bytes())
     atlas_hashes = {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted((ROOT / "experiments/atlas2d/godot").glob("*")) if p.is_file() and p.suffix != ".uid"}
-    manifest = {"atlasSourcesSHA256": atlas_hashes, "experimentTreeSHA256": tree_hash.hexdigest(), "schema": "asabiya/atlas2d-build-v1", "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
+    manifest = {"earthReferenceSHA256": earth_sha, "atlasSourcesSHA256": atlas_hashes, "experimentTreeSHA256": tree_hash.hexdigest(), "schema": "asabiya/atlas2d-build-v1", "base": "79035761f1e61041a3ccbf74b648577e53ba7150",
                 "commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
                 "sharedAdaptersSHA256": hashes}
     (destination / "build-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")

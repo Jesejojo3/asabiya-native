@@ -35,7 +35,7 @@ func _run() -> void:
 	var w: WorldData=app.world
 	var id: int=w.land_cells[w.land_cells.size()/2]
 	var at := Vector2(id%w.width,floori(float(id)/w.width))+Vector2(0.5,0.5)
-	require(AtlasProjection.pick(w,at)==AtlasProjection.pick(w,at+Vector2(w.width,0)),"Horizontal wrapping changed ID")
+	require(AtlasProjection.pick(w,at+Vector2(w.width,0))==-1,"A horizontal copy must not select a province")
 	require(AtlasProjection.pick(w,Vector2(0,-0.1))==-1,"Polar outside area must not select a province")
 	for cell in w.land_cells:
 		var point := Vector2(cell%w.width,floori(float(cell)/w.width))+Vector2(0.5,0.5)
@@ -68,10 +68,10 @@ func _run() -> void:
 	app.map.center=Vector2(w.width-0.1,w.height*0.5)
 	app.map.target_center=Vector2(0.1,w.height*0.5)
 	app.map._process(0.016)
-	require(absf(wrapf(app.map.center.x,-w.width*0.5,w.width*0.5))<0.2,"Camera crossed the whole world at the horizontal seam")
+	require(app.map.center==app.map._bounded_center(app.map.center,app.map.zoom),"Camera left the single bounded map")
 	app._selected(id)
 	app.map.zoom_to(24)
-	require(AtlasProjection.pick(w,app.map.target_center)==id,"Province zoom did not focus the selected ID")
+	require(app.map.target_center==app.map._bounded_center(at,app.map.target_zoom),"Province zoom did not focus the selected ID within map bounds")
 	app.map.zoom_to(1)
 	require(app.map.target_center==Vector2(w.width,w.height)*0.5,"World view did not recenter the world")
 	require(app.inspector.text.contains("#%d"%id),"Selected ID absent from panel")
