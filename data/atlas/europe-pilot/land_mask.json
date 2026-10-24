@@ -1,0 +1,21 @@
+{
+  "schema": "asabiya/atlas-land-mask-v1",
+  "source": {
+    "zip": "ne_50m_land.zip",
+    "sha256": "0b8e670cf80dce9cbebe2a193bc44ba5602758c22e1fa603980553646d7ff162"
+  },
+  "crs": "EPSG:4326",
+  "projection": "equirectangular",
+  "bbox": [
+    -12,
+    29,
+    45,
+    72
+  ],
+  "pxPerDeg": 20,
+  "width": 1140,
+  "height": 860,
+  "landPixels": 583878,
+  "sha256": "f4f3232ec1344ce63b57348386ccfb6c0f320efec055f27a6e35e8acf4d2b08c",
+  "note": "Contemporary coast; not paleogeographic. 255=land 0=sea."
+}
