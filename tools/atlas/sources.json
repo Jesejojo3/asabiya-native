@@ -27,6 +27,20 @@
       "license": "HydroSHEDS License Agreement (free incl. commercial). Redistribution of derivatives confirmed permitted by the project owner after reading the agreement (2026-10-24); exact attribution clauses not independently reviewed by Claude.",
       "attribution": "Lehner, B., Grill G. (2013), Hydrological Processes 27(15):2171-2186; www.hydrosheds.org",
       "use": "Derived reaches may be versioned and shipped; keep the Lehner & Grill (2013) citation and hydrosheds.org link with them"
+    },
+    {
+      "id": "hydrobasins_eu_lev06",
+      "institution": "HydroSHEDS (WWF / Lehner et al.)",
+      "dataset": "HydroBASINS standard, Europe, Pfafstetter level 6",
+      "version": "v1c",
+      "url": "https://data.hydrosheds.org/file/HydroBASINS/standard/hybas_eu_lev06_v1c.zip",
+      "sha256": "6a4d9bcbadacbf6e32936970f84ec77c21809948085d79d1d1d4388964d607fa",
+      "sha1_published": null,
+      "crs": "EPSG:4326",
+      "coverage": "Europe (incl. Iceland, Mediterranean islands, Caucasus fringe)",
+      "license": "Same HydroSHEDS License Agreement as HydroRIVERS (stated in the HydroBASINS technical document). Owner confirmed redistribution of derivatives permitted (2026-10-24).",
+      "attribution": "Lehner, B., Grill G. (2013), Hydrological Processes 27(15):2171-2186; www.hydrosheds.org",
+      "use": "Basis for stable geographic units"
     }
   ]
 }
