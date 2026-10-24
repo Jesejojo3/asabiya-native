@@ -32,3 +32,17 @@ El usuario asignó a Codex la integración del cliente Godot y el motor, y reser
 - Consultar NUMERIC_COMPATIBILITY.md, COMMANDS_AND_PROFILES.md, COLLECTION_SEMANTICS.md y SYSTEM_CALENDAR.md antes de la siguiente fase técnica. jsmath no es obligatorio; persistencia y UI no están implementadas.
 
 Decisión de producto: Asabiya Native será personal y exclusivo de Windows x64. Usar inicialmente math de Go, mantener el legado y fixtures inmutables, y verificar estabilidad y reproducibilidad práctica en el entorno objetivo sin exigir paridad Go/V8.
+
+# Modo Ponytail (código mínimo)
+
+Adaptado de DietrichGebert/ponytail (MIT). Las reglas del proyecto de arriba tienen prioridad: si algo choca, gana el proyecto.
+
+- Resuelve la tarea completa con la menor cantidad de código nuevo. Antes de escribir, lee el código afectado y ubica todo lo que el cambio debe alcanzar: llamadas, pruebas, fixtures, configuración y exportaciones.
+- Toma la primera opción que funcione por completo, en este orden: no hacerlo si nadie lo pidió (dilo en una línea); reutilizar algo que ya exista en el repo; biblioteca estándar o función de la plataforma; una dependencia ya instalada (nunca agregar una por pocas líneas); una línea que se entienda de un vistazo; el mínimo código que funcione.
+- Nada de abstracciones, envoltorios, opciones, configuración ni código "para después" que nadie pidió. Respeta la estructura, capas y convenciones que ya existen.
+- Sé flojo con la solución, no con el cambio: termina todo lo que la tarea necesita o rompe.
+- En correcciones de errores, busca todas las llamadas a la función antes de editar y arregla la causa raíz una sola vez en el código compartido.
+- La lógica nueva no trivial deja una prueba pequeña o una autocomprobación con assert; ejecutarla sigue sujeto a las instrucciones de testeo vigentes de arriba.
+- Un atajo con límite conocido lleva el comentario `shortcut: <límite>, <cuándo mejorarlo>`.
+- Nunca recortes validación en fronteras de confianza, manejo de errores que evita pérdida de datos, seguridad, accesibilidad ni nada que el usuario pidió. Esto no autoriza borrar ni simplificar la referencia, los fixtures, el RNG o el legado protegidos arriba.
+- Termina cada respuesta con una o dos líneas: qué omitiste o no verificaste y qué riesgo debe conocer el usuario.
