@@ -1,0 +1,62 @@
+{
+  "schema": "asabiya/atlas-relief-v1",
+  "source": "Copernicus DEM GLO-90 (COP-DEM_GLO-90)",
+  "provider": "https://copernicus-dem-90m.s3.amazonaws.com/ (AWS Open Data)",
+  "attribution": "produced using Copernicus WorldDEM-90 \u00a9 DLR e.V. 2010-2014 and \u00a9 Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved",
+  "note": "DSM (includes vegetation/buildings). Shading uses zfactor; elevation PNG is unexaggerated metres (16-bit).",
+  "crs": "EPSG:4326",
+  "projection": "equirectangular",
+  "bbox": [
+    6,
+    44,
+    12,
+    48
+  ],
+  "pxPerDeg": 300,
+  "sourcePxPerDeg": 1200,
+  "downsample": 4,
+  "width": 1800,
+  "height": 1200,
+  "zfactor": 2.0,
+  "light": {
+    "azimuthDeg": 315,
+    "altitudeDeg": 45
+  },
+  "elevationM": {
+    "min": 0.0,
+    "max": 4792.6611328125,
+    "note": "min/max of full-resolution DEM"
+  },
+  "tiles": {
+    "Copernicus_DSM_COG_30_N44_00_E006_00_DEM": "c92a34d911fbde3874ffb83e7d1d467fe1ce98489b8c73d70cfc897835b70c09",
+    "Copernicus_DSM_COG_30_N44_00_E007_00_DEM": "cd6c0889a74430c09c40e5bd8df27af8d50bb9cf27f3ebd254ce2e6f4f6c55b6",
+    "Copernicus_DSM_COG_30_N44_00_E008_00_DEM": "d132d66094bba8584310d6767c5a97b60826407c04ab8b4f4e4758267f43f1af",
+    "Copernicus_DSM_COG_30_N44_00_E009_00_DEM": "6d6f05365b9a81b9ee70181263da57d7d3cf4418e73f027eff206d438ded39ae",
+    "Copernicus_DSM_COG_30_N44_00_E010_00_DEM": "6527d4a1c54510ad2204792c097c2db8ad75ecac801c95439bc49e2f9f381fbd",
+    "Copernicus_DSM_COG_30_N44_00_E011_00_DEM": "393e90c584572eb43c59b9171c26bc39184370aa54151a6fc9ef43ae9dc52df9",
+    "Copernicus_DSM_COG_30_N45_00_E006_00_DEM": "a002f90ad4b187486930ca502cc8ad67bcf6c65f973e5920702b6d068fc876ce",
+    "Copernicus_DSM_COG_30_N45_00_E007_00_DEM": "a581f2d9539b30e64dce807b9105752689fba3261e0c7ae62602d7f24f1f0d43",
+    "Copernicus_DSM_COG_30_N45_00_E008_00_DEM": "17ef05156ba29d063dfdfc75f015417099cf515e1d1cd0c14fa39c5aa5dfda55",
+    "Copernicus_DSM_COG_30_N45_00_E009_00_DEM": "c897ede243e6ed465f1a5be9b43a3f98ae6a06a45dfbcccab2ec650269a634de",
+    "Copernicus_DSM_COG_30_N45_00_E010_00_DEM": "6cd81a31efb6e686745029dbd7eb65a5458a8b2b149c920cacb06f6cf06477b0",
+    "Copernicus_DSM_COG_30_N45_00_E011_00_DEM": "cc9138fc2b405f0b24b6c7ad1d9376a2184a8ca575504eedc8690ccb36377bee",
+    "Copernicus_DSM_COG_30_N46_00_E006_00_DEM": "1a790f6987d5644281c76a92bad2d1997e08170c9912832443f99d1b5ad24bcf",
+    "Copernicus_DSM_COG_30_N46_00_E007_00_DEM": "3528ab5ba11ec63b6fd3dff91736911e69a0af0d87e50c7b61bc259deab9e732",
+    "Copernicus_DSM_COG_30_N46_00_E008_00_DEM": "27f1c6555357b4933eaeda91b39bdfab79a2d4688c6562ca26af374f6e3ab4fc",
+    "Copernicus_DSM_COG_30_N46_00_E009_00_DEM": "6860c0b93a271f3b702a4a16aa885ba19c4907e808c56f94a620c6a657aa5f18",
+    "Copernicus_DSM_COG_30_N46_00_E010_00_DEM": "4c0c831912f0ca9fe1cd53b27509aa30e76b08cf98a092b070aa9177c1a010e0",
+    "Copernicus_DSM_COG_30_N46_00_E011_00_DEM": "0bf8bc145ec8f14bbc35c8f04b4ddbcfa42d9a5827245c0a1f0494d5caea174c",
+    "Copernicus_DSM_COG_30_N47_00_E006_00_DEM": "dc2d4bee6c974402f70949a889453e3f6ffbc32a178388bd9ff859ac247e63e9",
+    "Copernicus_DSM_COG_30_N47_00_E007_00_DEM": "a835078ef2bb7b512586e9c2c53d0e39fb767f3aea5426737c076e33b71203f7",
+    "Copernicus_DSM_COG_30_N47_00_E008_00_DEM": "33952fed93b6d8454bba21d4368ae8bca5b3958ad010e774527524c4bf0349f3",
+    "Copernicus_DSM_COG_30_N47_00_E009_00_DEM": "51f5f20d1a5c8351dd8f8a18e8ae376bf93253c300d95a6e0b54c9fe75640a4c",
+    "Copernicus_DSM_COG_30_N47_00_E010_00_DEM": "ec174c3c040e2795a98e8587107f051c109ca3d46e4dfafb4e67cb1f9fcf1f63",
+    "Copernicus_DSM_COG_30_N47_00_E011_00_DEM": "fa7d946d23516eafb3eb6f4c2f98de750b0dd711a82bb65bb12a3c00bc01a252"
+  },
+  "missingTilesTreatedAsSea": [],
+  "outputs": {
+    "relief.png": "6fd2a63e2bed7ff16d9900ec7db8a04f5c8da4a6d890c260aaa40f964ff71d80",
+    "slope.png": "83042d083ea24124a2e106bb3642e17e950e227bd65b7f8eb3c083dfc8b24049",
+    "elevation_u16.png": "38601b8920a3459fecd386cd362d0753275bed47876b606c99e4bcadd4f41a8a"
+  }
+}
