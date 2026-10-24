@@ -24,9 +24,9 @@
       "sha1_published": "75bfeffb8d783d76158079fe712fbadc7f6cb8de",
       "crs": "EPSG:4326",
       "coverage": "Europe and Middle East",
-      "license": "HydroSHEDS License Agreement (free incl. commercial). Redistribution terms NOT reviewed: do not commit raw or derived geometry.",
+      "license": "HydroSHEDS License Agreement (free incl. commercial). Redistribution of derivatives confirmed permitted by the project owner after reading the agreement (2026-10-24); exact attribution clauses not independently reviewed by Claude.",
       "attribution": "Lehner, B., Grill G. (2013), Hydrological Processes 27(15):2171-2186; www.hydrosheds.org",
-      "use": "Local build only until redistribution terms are confirmed"
+      "use": "Derived reaches may be versioned and shipped; keep the Lehner & Grill (2013) citation and hydrosheds.org link with them"
     }
   ]
 }

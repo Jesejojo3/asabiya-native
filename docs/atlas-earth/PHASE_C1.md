@@ -10,16 +10,19 @@
 - ORD_FLOW ≤ 4 (continental): 14 321 tramos, 3,0 MB; ≤ 6: 33 MB (demasiado para el cliente: requiere teselas, no está hecho). Tiempo ~13 s.
 - Observación del dato: hay 8 pares con descenso de clase por <5 % de caudal y 65 con caídas >10 % de caudal aguas abajo, concentradas en el Oriente Medio árido (p. ej. Tigris/Éufrates ≈ 821→701 m³/s): pérdidas modeladas. Se registran en los metadatos, no se corrigen.
 
-## Licencia — SIN RESOLVER
-Los términos publicados dicen «libre para uso científico, educativo y comercial» y remiten a la HydroSHEDS License Agreement para la redistribución. **No pude leer ese texto** (la página no devolvió contenido). Por tanto **no se versiona ningún dato fluvial, bruto ni derivado**: la salida va a `build/` (ignorado). Pendiente: leer el acuerdo en hydrosheds.org y decidir si los derivados pueden distribuirse con el paquete Windows. Cita exigida/solicitada: Lehner & Grill (2013), incluida en los metadatos.
+## Licencia
+Los términos publicados: libre para uso científico, educativo y comercial; la redistribución se rige por la HydroSHEDS License Agreement. El propietario del proyecto leyó el acuerdo el 24-oct-2026 y confirmó que **sí se pueden redistribuir** los derivados. Claude no ha leído el texto completo: se conserva la cita de Lehner & Grill (2013) y el enlace a hydrosheds.org en los metadatos y debe mostrarse en la interfaz (**pendiente**). Se versiona solo el nivel continental (`ORD_FLOW ≤ 4`) en `data/atlas/europe-pilot/rivers_l4.json`; los niveles regionales siguen generándose en `build/` hasta que haya teselado.
 
 ## Reproducir
 ```sh
 python3 tools/atlas/fetch.py build/atlas/cache
-python3 -I tools/atlas/rivers.py build/atlas/cache/HydroRIVERS_v10_eu_shp.zip build/atlas/rivers_eu_l6.json --max-ord-flow 6
+python3 -I tools/atlas/rivers.py build/atlas/cache/HydroRIVERS_v10_eu_shp.zip data/atlas/europe-pilot/rivers_l4.json --max-ord-flow 4
 ```
 
 ## Límites y siguiente
 - Sin vínculo con unidades territoriales, provincias ni celdas del motor; sin render en el cliente.
 - Lagos/humedales no incluidos (HydroLAKES sin evaluar). Deltas y distribuidarios: HydroRIVERS es un árbol, así que no representa bifurcaciones.
 - Siguiente: unidades territoriales estables (cuencas HydroBASINS + relieve) y mapeo a celdas del motor; teselado de ríos por LOD.
+
+## Coherencia entre capas (comprobación visual)
+Superpuestos los 733 tramos de `rivers_l4.json` sobre el relieve del recorte alpino (DEM Copernicus + costa Natural Earth) en la misma rejilla lon/lat, los cauces siguen los valles del relieve (Po, Tesino, Adda, Rin en Basilea) sin desplazamientos apreciables. Es una inspección a simple vista, no una medición de error; con ORD_FLOW ≤ 4 no se dibujan los valles alpinos altos. Los datos regenerados son idénticos byte a byte (SHA-256 `89b2122d…d4a5`).
