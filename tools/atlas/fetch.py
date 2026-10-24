@@ -17,7 +17,10 @@ def main():
     for s in json.loads((here / "sources.json").read_text())["sources"]:
         dst = cache / Path(s["url"]).name
         if not dst.exists():
-            urllib.request.urlretrieve(s["url"], dst)
+            req = urllib.request.Request(s["url"], headers={"User-Agent": "asabiya-atlas-fetch/1"})
+            with urllib.request.urlopen(req) as r, open(dst, "wb") as f:
+                while chunk := r.read(1 << 20):
+                    f.write(chunk)
         got = sha256(dst)
         if got != s["sha256"]:
             sys.exit(f"{s['id']}: hash mismatch {got} != {s['sha256']}")

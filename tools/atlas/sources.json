@@ -13,6 +13,20 @@
       "license": "Public domain (https://www.naturalearthdata.com/about/terms-of-use/)",
       "attribution": "Made with Natural Earth (courtesy, not required)",
       "use": "Contemporary coastline; provisional land/sea base, not a paleogeographic coast"
+    },
+    {
+      "id": "hydrorivers_v10_eu",
+      "institution": "HydroSHEDS (WWF / Lehner et al.)",
+      "dataset": "HydroRIVERS v10, Europe and Middle East, shapefile",
+      "version": "v10",
+      "url": "https://data.hydrosheds.org/file/HydroRIVERS/HydroRIVERS_v10_eu_shp.zip",
+      "sha256": "500da7d36ceee0aa4c82dd625f5c53d80ba2f7ac14ad022cd3a6601bf55068e5",
+      "sha1_published": "75bfeffb8d783d76158079fe712fbadc7f6cb8de",
+      "crs": "EPSG:4326",
+      "coverage": "Europe and Middle East",
+      "license": "HydroSHEDS License Agreement (free incl. commercial). Redistribution terms NOT reviewed: do not commit raw or derived geometry.",
+      "attribution": "Lehner, B., Grill G. (2013), Hydrological Processes 27(15):2171-2186; www.hydrosheds.org",
+      "use": "Local build only until redistribution terms are confirmed"
     }
   ]
 }
