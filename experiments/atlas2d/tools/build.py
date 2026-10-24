@@ -29,7 +29,7 @@ def build(godot, go, template, destination):
     preset = preset.replace('custom_template/release=""', 'custom_template/release=' + json.dumps(str(Path(template).resolve()).replace('\\', '/')))
     preset = preset.replace('application/product_name="Asabiya Native"', 'application/product_name="Asabiya Atlas 2D"')
     preset = preset.replace('Asabiya Native - cliente 3D', 'Atlas 2D experimental')
-    preset = preset.replace('exclude_filter="tests/*, tools/*"', 'exclude_filter="test_*.gd,probe.gd,licenses.gd"')
+    preset = preset.replace('exclude_filter="tests/*, tools/*"', 'exclude_filter="test_*.gd,probe.gd,licenses.gd,earth-v06.html"')
     (project / "export_presets.cfg").write_text(preset)
     environment = os.environ.copy()
     environment.update(GOOS="windows", GOARCH="amd64", GOAMD64="v1", CGO_ENABLED="0", GOTOOLCHAIN="local")
@@ -40,6 +40,8 @@ def build(godot, go, template, destination):
     if imported.returncode or "SCRIPT ERROR" in imported.stdout or "Parse Error" in imported.stdout:
         raise RuntimeError("Godot import failed; see build-import.log")
     run([godot, "--headless", "--path", project, "--export-release", "Windows x64", destination / "AsabiyaAtlas2D.exe"])
+    shutil.copyfile(project / "earth-v06.html", destination / "earth-v06.html")
+    shutil.copyfile(ROOT / "experiments/atlas2d/docs/EARTH.md", destination / "TIERRA.md")
     for name in ("README.md", "docs/SYSTEMS.md", "docs/BENCHMARK.md"):
         shutil.copyfile(ROOT / "experiments/atlas2d" / name, destination / Path(name).name)
     shutil.copytree(ROOT / "experiments/atlas2d/docs", destination / "docs", dirs_exist_ok=True)

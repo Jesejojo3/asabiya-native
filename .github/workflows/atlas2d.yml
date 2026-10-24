@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'experiments/atlas2d/**'
+      - 'internal/mapsource/**'
       - '.github/workflows/atlas2d.yml'
   workflow_dispatch:
 permissions:
@@ -34,16 +35,19 @@ jobs:
           chmod +x godot
       - name: Engine, protocol, reference, golden and 3D client unchanged by the Atlas
         run: |
-          git diff --exit-code 79035761f1e61041a3ccbf74b648577e53ba7150 -- internal cmd go.mod go.sum reference tests/native client
+          git diff --exit-code 79035761f1e61041a3ccbf74b648577e53ba7150 -- internal cmd go.mod go.sum reference tests/native client ':(exclude)internal/mapsource'
       - name: Tools, producer and deterministic observer contracts
         run: |
           python3 -m unittest discover -s experiments/atlas2d/tests -v
+          go test ./internal/mapsource
           go vet ./experiments/atlas2d/probes/fixture ./experiments/atlas2d/probes/ebiten
           go build -o build/bin/asabiya-server ./cmd/asabiya-server
           go run ./experiments/atlas2d/probes/fixture --small --years 3 --out build/atlas2d/test-fixture
           python3 experiments/atlas2d/tools/stage.py
           ./godot --headless --path build/atlas2d/project --import > build/atlas2d/import.log 2>&1
           if grep -E 'SCRIPT ERROR|Parse Error' build/atlas2d/import.log; then exit 1; fi
+          timeout 120 ./godot --headless --path build/atlas2d/project --script res://test_earth.gd -- --server="$PWD/build/bin/asabiya-server" | tee build/atlas2d/earth.log
+          grep -E 'EARTH: [0-9]+ checks, 0 failures' build/atlas2d/earth.log
           timeout 60 ./godot --headless --path build/atlas2d/project --script res://test_atlas.gd -- --server="$PWD/build/bin/asabiya-server" --small --expected="$PWD/build/atlas2d/test-fixture/state.json" | tee build/atlas2d/tests.log
           if grep -E 'SCRIPT ERROR|ERROR:' build/atlas2d/tests.log; then exit 1; fi
           grep -F 'ATLAS TESTS: 0 failures' build/atlas2d/tests.log

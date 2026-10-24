@@ -51,6 +51,7 @@ var received_us := {}
 var options := {}
 var metrics := AtlasMetrics.new()
 var benchmark := false
+var earth_mode := true
 var bench_request_us := 0
 var bench_ready := false
 var preparing := false
@@ -71,6 +72,8 @@ func _ready() -> void:
 			var parts := arg.trim_prefix("--").split("=",true,1)
 			options[parts[0]]=parts[1] if parts.size()==2 else "true"
 	benchmark=options.has("bench-out")
+	earth_mode=not options.has("procedural") and not options.has("small")
+	if earth_mode: desired_layer="terrain"
 	if options.has("width"):
 		get_window().size=Vector2i(int(options.width),int(options.get("height","1080")))
 	if benchmark: DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
@@ -94,7 +97,7 @@ func _ready() -> void:
 			"schema":"asabiya/atlas2d-measure-v2","godot":Engine.get_version_info(),
 			"os":OS.get_name(),"cpu":OS.get_processor_name(),"gpu":RenderingServer.get_video_adapter_name(),
 			"active":options.has("active"),"camera_pan":not options.has("no-pan"),"automated_selection":not options.has("no-selection"),"renderer":RenderingServer.get_current_rendering_method(),"pid":OS.get_process_id(),
-			"size":str(DisplayServer.window_get_size()),"vsync_requested":"disabled","scene":"procedural",
+			"size":str(DisplayServer.window_get_size()),"vsync_requested":"disabled","scene":"earth-emergent" if earth_mode else "procedural",
 			"target_hardware_verified":false,"diag":str(options.get("diag","none")),
 			"gpu_vendor":RenderingServer.get_video_adapter_vendor(),"instrumentation":str(options.get("instrumentation","detailed")),"headless":DisplayServer.get_name()=="headless",
 			"build":JSON.parse_string(FileAccess.get_file_as_string("res://build-manifest.json"))})
@@ -177,7 +180,7 @@ func _build_ui() -> void:
 	title.add_theme_color_override("font_color",Color("#d9d8b2"))
 	heading.add_child(title)
 	var subtitle := Label.new()
-	subtitle.text="Observatorio de civilizaciones  ·  Mundo procedural de prueba; Tierra real pendiente"
+	subtitle.text="Tierra real · relieve y biomas · historia emergente de Go" if earth_mode else "Observatorio de civilizaciones · mundo procedural de prueba"
 	subtitle.add_theme_font_size_override("font_size",12)
 	subtitle.add_theme_color_override("font_color",Color("#a6afa9"))
 	heading.add_child(subtitle)
@@ -189,7 +192,7 @@ func _build_ui() -> void:
 	seed_input=LineEdit.new()
 	seed_input.text=str(options.get("seed","Asabiya"))
 	seed_input.custom_minimum_size=Vector2(128,34)
-	seed_input.tooltip_text="Semilla geográfica Go; crea una sesión nueva."
+	seed_input.tooltip_text="Semilla de historia: la Tierra se conserva; crea una sesión nueva." if earth_mode else "Semilla geográfica Go; crea una sesión nueva."
 	main_bar.add_child(seed_input)
 	init_button=_button(main_bar,"Nueva sesión",_initialize)
 	step_button=_button(main_bar,"+1 año",_step)
@@ -396,6 +399,13 @@ func _initialize() -> void:
 	var executable: String=str(options.get("server",OS.get_executable_path().get_base_dir().path_join("asabiya-server.exe")))
 	source=BridgeSource.new(null,executable)
 	source.world_config.seed=seed_input.text
+	if earth_mode:
+		var earth_path := OS.get_executable_path().get_base_dir().path_join("earth-v06.html") if OS.has_feature("template") else ProjectSettings.globalize_path("res://earth-v06.html")
+		source.world_config.seed="Asabiya-Earth-v1"
+		source.history_seed=seed_input.text
+		# Imported geography uses Go's emergent history, avoiding legacy fixed founders/hearths.
+		source.source_config={"kind":"imported","fitClimate":true,"assets":[{"role":"earth-html","path":earth_path,
+			"sha256":"988ce360e70d2d034a3898f60b9a4c38d40b0ab56dd7a147329740f15fa8e9e9","bytes":1553001}]}
 	if options.has("small"):
 		source.world_config.width=48
 		source.world_config.height=24
@@ -616,6 +626,8 @@ func _update_panel() -> void:
 	lines.append("[font_size=20][b]Provincia #%d[/b][/font_size]\n[color=#a6afa9]%s[/color]" % [id,AtlasEntities.fmt_year(current.year)])
 	lines.append("\n[color=#b3b68a][b]TERRITORIO[/b][/color]")
 	lines.append("%s · coordenadas (%d, %d)" % ["Tierra" if world.is_land(id) else "Océano",id%world.width,id/world.width])
+	if earth_mode:
+		lines.append("Latitud %.2f° · longitud %.2f°" % [90.0-(floori(float(id)/world.width)+0.5)*180.0/world.height,(id%world.width+0.5)*360.0/world.width-180.0])
 	lines.append("Bioma: %s" % WorldData.BIOME_NAMES_ES[clampi(world.biome[id],0,9)])
 	lines.append("Altitud: %.0f m" % world.elevation[id])
 	lines.append("\n[color=#b3b68a][b]SOCIEDAD Y GOBIERNO[/b][/color]")

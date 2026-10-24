@@ -3,8 +3,8 @@ extends RefCounted
 ## Pure presentation: no clocks, RNG or mutation of engine publications.
 
 static func pick(w: WorldData, point: Vector2) -> int:
-	if w == null or point.y < 0 or point.y >= w.height: return -1
-	var x := fposmod(point.x, w.width)
+	if w == null or point.x < 0 or point.x >= w.width or point.y < 0 or point.y >= w.height: return -1
+	var x := point.x
 	var id := floori(point.y) * w.width + floori(x)
 	var fx := clampi(floori(x * w.detail), 0, w.fine_width - 1)
 	var fy := clampi(floori(point.y * w.detail), 0, w.fine_height - 1)
