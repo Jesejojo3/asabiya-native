@@ -1,5 +1,7 @@
 # Fase C2 — unidades territoriales estables (Nivel C)
 
+> **Revisión 26-oct-2026** (ver `PHASE_C4.md`): el conjunto versionado ahora une HydroBASINS Europa + África (**1 348 unidades**, 228 africanas; el archivo de Asia no aporta ninguna en este recuadro). La geometría ya no se simplifica con Douglas–Peucker por anillo —eso producía solapes entre unidades vecinas— sino ajustando los vértices a una rejilla de 0,01° y quitando solo los exactamente colineales. Las cifras de abajo (1 120 unidades, 0 solapes por «6 anillos…») describen la primera versión, solo Europa; el comando de reproducción vigente está en C4.
+
 ## Decisión
 Se evaluaron cuencas HydroBASINS de nivel 5/6/7 frente a la malla del motor (≈6 000–10 000 km² por celda lógica de 0,9°):
 

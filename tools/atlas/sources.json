@@ -41,6 +41,20 @@
       "license": "Same HydroSHEDS License Agreement as HydroRIVERS (stated in the HydroBASINS technical document). Owner confirmed redistribution of derivatives permitted (2026-10-24).",
       "attribution": "Lehner, B., Grill G. (2013), Hydrological Processes 27(15):2171-2186; www.hydrosheds.org",
       "use": "Basis for stable geographic units"
+    },
+    {
+      "id": "hydrobasins_af_lev06",
+      "institution": "HydroSHEDS (WWF / Lehner et al.)",
+      "dataset": "HydroBASINS standard, Africa, Pfafstetter level 6",
+      "version": "v1c",
+      "url": "https://data.hydrosheds.org/file/HydroBASINS/standard/hybas_af_lev06_v1c.zip",
+      "sha256": "2c141c97db1b3fcd35a2914a6a39e575b6ee44a8df4b11f400b7f137648daacb",
+      "sha1_published": null,
+      "crs": "EPSG:4326",
+      "coverage": "Africa",
+      "license": "Same HydroSHEDS License Agreement; owner confirmed redistribution of derivatives permitted (2026-10-24).",
+      "attribution": "Lehner, B., Grill G. (2013), Hydrological Processes 27(15):2171-2186; www.hydrosheds.org",
+      "use": "Units for the North Africa part of the pilot box"
     }
   ]
 }

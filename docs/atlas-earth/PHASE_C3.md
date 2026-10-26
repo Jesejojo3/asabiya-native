@@ -24,7 +24,7 @@ Se exportó la Tierra con `asabiya-headless --seed Earth --earth-html … --year
 
 38 de las 40 discrepancias son celdas costeras con fracción de tierra Natural Earth entre 0,15 y 0,85 (ambigüedad inherente a 0,9°). Conclusión acotada: **a escala de celda, la costa del raster heredado coincide con una fuente verificable en esta región**; no valida su relieve ni su clima, y no resuelve la falta de licencia de ese raster.
 
-## Hallazgo: cobertura de unidades incompleta en el recuadro piloto
+## Hallazgo: cobertura de unidades incompleta en el recuadro piloto (resuelto en C4: 307 → 61 celdas de tierra sin unidad)
 268 celdas de tierra del motor sin unidades están en el norte de África y el Levante (latitud < 37,5°), que HydroBASINS **no** incluye en el archivo «Europe»; hay que añadir las regiones `af` y `as` (misma licencia). Otras 39 son celdas de costa/fiordo o del borde de ventana. Hasta entonces, el atlas solo cubre con unidades la parte europea del recuadro.
 
 ## Pendiente

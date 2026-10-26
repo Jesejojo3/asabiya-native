@@ -40,7 +40,8 @@ def main():
     ap.add_argument("--sub", type=int, default=18)
     a = ap.parse_args()
     d = Path(a.units)
-    U = json.loads((d / "units.json").read_text()); G = json.loads((d / "units_geom.json").read_text())["rings"]
+    U = json.loads((d / "units.json").read_text()); gj = json.loads((d / "units_geom.json").read_text()); sc = gj["scale"]
+    G = {k: [[(x / sc, y / sc) for x, y in r] for r in rs] for k, rs in gj["rings"].items()}
     meta, units = U["meta"], U["units"]
     W, H, S = a.width, a.height, a.sub
     cw, ch = 360 / W, 180 / H
